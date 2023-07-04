@@ -2,8 +2,10 @@
 
 # Yap
 Yet Another Genshin Impact Pickupper
+
 又一个原神拾取器
-_Named from [Yas](https://github.com/wormtql/yas) _
+
+_Named from [Yas](https://github.com/wormtql/yas)_
 
 </div>
 
