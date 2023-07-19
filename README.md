@@ -15,3 +15,13 @@ _Named from [Yas](https://github.com/wormtql/yas)_
 
 1. fix pos + CRNN
 2. fix pos + Image classification
+
+
+## Way 1
+基于CRNN进度
+
+- [x] 1. 模型训练
+- [x] 2. 模型转换
+- [ ] 3. 模型部署及测试
+- [x] 4. F key 寻找
+- [ ] 4. fix pos 选择
