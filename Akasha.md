@@ -38,3 +38,53 @@ def main():
         pydirectinput.move(1, 0)
 cProfile.run('main()')
 ```
+
+# 模板匹配耗时
+
+using SumOfSquaredErrors
+```
+1 use: 6.5174ms
+2 use: 4.8972ms
+3 use: 5.6497ms
+4 use: 5.5215ms
+5 use: 7.1212ms
+6 use: 5.9446ms
+7 use: 7.0301ms
+```
+avg: 6.004ms
+
+using SumOfSquaredErrorsNormalized
+```
+1 use: 7.1286ms
+2 use: 6.7157ms
+3 use: 6.8852ms
+4 use: 7.3145ms
+5 use: 6.4137ms
+6 use: 6.3717ms
+7 use: 5.7694ms
+```
+avg: 6.676ms
+
+using CrossCorrelation
+```
+1 use: 5.4954ms
+2 use: 5.2545ms
+3 use: 5.1441ms
+4 use: 5.644ms
+5 use: 6.0413ms
+6 use: 4.4601ms
+7 use: 6.5377ms
+```
+avg: 5.548ms
+
+using CrossCorrelationNormalized
+```
+1 use: 7.0845ms
+2 use: 5.7376ms
+3 use: 6.151ms
+4 use: 6.003ms
+5 use: 6.8834ms
+6 use: 4.5365ms
+7 use: 7.1115ms
+```
+avg: 6.188ms
