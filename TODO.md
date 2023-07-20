@@ -1,4 +1,0 @@
-- [ ] CRNN training
-    - [ ] data
-    - [ ] model
-- [ ] Algorithm design and implementation
