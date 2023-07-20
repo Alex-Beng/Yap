@@ -9,6 +9,15 @@ edition = "2021"
 image = "0.24.6"
 imageproc = "0.23.0"
 rayon = "1.5.1"
+serde_json = "1.0.68"
+serde = { version = "1.0.130", features = ["derive"]}
+reqwest = { version = "0.11", features = ["blocking", "json"] }
+log = "0.4.14"
+tract-onnx = "0.15.4"
+env_logger = "0.10.0"
+enigo = "0.0.13"
+
+
 
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["winuser", "winbase", "wingdi", "winnt", "securitybaseapi", "libloaderapi"] }

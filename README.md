@@ -23,10 +23,10 @@ _Named from [Yas](https://github.com/wormtql/yas)_
 - [x] 1. 模型训练
 - [x] 2. 模型转换
 - [x] 4. F key 寻找
-- [ ] 10. F key Find api
+- [x] 10. F key Find api
 - [ ] 5. version update detection
-- [ ] 6. Capture
-- [ ] 7. image Preprocess
-- [ ] 3. 模型部署及测试
-- [ ] 8. F key press
-- [ ] 9. Scroll press
+- [x] 6. Capture
+- [x] 7. image Preprocess
+- [x] 3. 模型部署及测试
+- [x] 8. F key press
+- [x] 9. Scroll press
