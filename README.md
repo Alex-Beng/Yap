@@ -18,10 +18,14 @@ _Named from [Yas](https://github.com/wormtql/yas)_
 
 
 ## Way 1
-基于CRNN进度
+基于CRNN的进度
 
 - [x] 1. 模型训练
 - [x] 2. 模型转换
-- [ ] 3. 模型部署及测试
 - [x] 4. F key 寻找
-- [ ] 5. fix pos 选择
+- [ ] 5. version update detection
+- [ ] 6. Capture
+- [ ] 7. image Preprocess
+- [ ] 3. 模型部署及测试
+- [ ] 8. F key press
+- [ ] 9. Scroll press
