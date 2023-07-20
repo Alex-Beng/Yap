@@ -24,4 +24,4 @@ _Named from [Yas](https://github.com/wormtql/yas)_
 - [x] 2. 模型转换
 - [ ] 3. 模型部署及测试
 - [x] 4. F key 寻找
-- [ ] 4. fix pos 选择
+- [ ] 5. fix pos 选择
