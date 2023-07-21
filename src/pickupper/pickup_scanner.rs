@@ -7,8 +7,9 @@ use crate::{info::PickupInfo, common};
 use crate::inference::inference::CRNNModel;
 use crate::capture::{RawCaptureImage, self, PixelRect, RawImage};
 
-use image::imageops::grayscale;
-use image::{GrayImage, ImageBuffer, Luma, ColorType};
+use image::imageops::{grayscale, self};
+use image::{GrayImage, ImageBuffer, Luma, ColorType, GenericImage};
+use imageproc::definitions::Image;
 use tract_onnx::prelude::*;
 use serde_json;
 use enigo::*;
@@ -104,7 +105,7 @@ impl PickupScanner {
     pub fn start(&mut self, c: i32) {
         let mut cnt = c;
         loop {
-            
+            sleep(100);
             let f_area_cap = self.capture_f_area().unwrap();
             let f_area_cap_gray = grayscale(&f_area_cap);
             f_area_cap_gray.save("farea.jpg").unwrap();
@@ -118,20 +119,29 @@ impl PickupScanner {
             // otsu阈值分割获取f对应的文字
             let f_text_cap = self.capture_f_text(rel_y).unwrap();
             let f_text_cap_gray = grayscale(&f_text_cap);
-            f_text_cap.save(format!("dumps/{}_raw.jpg", cnt)).unwrap();
+            f_text_cap.save(format!("dumps2/{}_raw.jpg", cnt)).unwrap();
             cnt += 1;
             let otsu_thr = imageproc::contrast::otsu_level(&f_text_cap_gray);
             let f_text_cap_bin: ImageBuffer<Luma<u8>, Vec<u8>> = imageproc::contrast::threshold(&f_text_cap_gray, otsu_thr);
             
             // f_text_cap_bin.save("f_text_bin.jpg").unwrap();
-            let vec: Vec<f32> = f_text_cap_bin.pixels().map(|p| p[0] as f32 / 255.0).collect();
+            
+            let bin_resized = imageops::resize(&f_text_cap_bin, 145, 32, imageops::FilterType::Gaussian);
+
+            let mut padded_image = ImageBuffer::new(384, 32);
+            padded_image.copy_from(&bin_resized, 0, 0).unwrap();
+
+            let vec: Vec<f32> = padded_image.pixels().map(|p| p[0] as f32 / 255.0).collect();
             let raw_img = RawImage {
                 data: vec,
-                h: f_text_cap_bin.height(),
-                w: f_text_cap_bin.width(),
+                h: padded_image.height(),
+                w: padded_image.width(),
             };
             // raw_img.to_gray_image().save("cao.jpg");
             // processed_img.to_gray_image().save("processed.jpg");
+
+            // 还需要缩放到 32, x
+            println!("h: {}, w: {}", raw_img.h, raw_img.w);
             
             let inference_result = self.model.inference_string(&raw_img);
             
