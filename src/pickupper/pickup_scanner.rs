@@ -35,7 +35,11 @@ impl PickupScanner {
         // println!("black list path: {}", black_list_path);
         // 从black_list_path读取json中每一个String，加入到bk_list中
         // 老子也硬编码得了
-        let content = String::from(include_str!("../../models/black_lists.json"));
+        let black_list_path = "./black_lists.json";
+        let mut file = File::open(black_list_path).expect("Failed to open black list file");
+        let mut content = String::new();
+        file.read_to_string(&mut content).expect("Failed to read black list file");
+
         let json: serde_json::Value = serde_json::from_str(content.as_str()).unwrap();
         let bk_items = json.as_array().unwrap();
         for item in bk_items {
