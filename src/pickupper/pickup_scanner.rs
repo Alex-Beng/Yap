@@ -59,7 +59,7 @@ impl PickupScanner {
         }
 
 
-        let template =image::open("models/FFF.bmp".to_string()).unwrap();
+        let template =image::open("FFF.bmp".to_string()).unwrap();
         let template = grayscale(&template);
 
         PickupScanner {
