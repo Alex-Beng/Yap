@@ -1,4 +1,6 @@
 use std::collections::HashSet;
+use std::fs::File;
+use std::io::Read;
 use std::time::SystemTime;
 
 use crate::common::sleep;
@@ -123,7 +125,7 @@ impl PickupScanner {
             // otsu阈值分割获取f对应的文字
             let f_text_cap = self.capture_f_text(rel_y).unwrap();
             let f_text_cap_gray = grayscale(&f_text_cap);
-            f_text_cap.save(format!("dumps2/{}_raw.jpg", cnt)).unwrap();
+            
             cnt += 1;
             let otsu_thr = imageproc::contrast::otsu_level(&f_text_cap_gray);
             let f_text_cap_bin: ImageBuffer<Luma<u8>, Vec<u8>> = imageproc::contrast::threshold(&f_text_cap_gray, otsu_thr);
@@ -145,16 +147,24 @@ impl PickupScanner {
             // processed_img.to_gray_image().save("processed.jpg");
 
             // 还需要缩放到 32, x
-            println!("h: {}, w: {}", raw_img.h, raw_img.w);
+            // println!("h: {}, w: {}", raw_img.h, raw_img.w);
             
             let inference_result = self.model.inference_string(&raw_img);
-            
+            // 模型推断为空
+            if inference_result.is_empty() {
+                continue;
+            }
+
+            f_text_cap.save(format!("text_dumps/{}_raw.jpg", cnt)).unwrap();
+
             if ! self.all_list.contains(&inference_result) {
                 warn!("not in all list: {}", inference_result);
+                self.enigo.mouse_scroll_y(-1);
                 continue;
             }
             if self.black_list.contains(&inference_result) {
                 warn!("black list: {}", inference_result);
+                self.enigo.mouse_scroll_y(-1);
                 continue;
             }
             info!("pick up: {}", inference_result);
