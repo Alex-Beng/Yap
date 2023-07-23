@@ -115,7 +115,7 @@ impl PickupScanner {
             let f_area_cap = self.capture_f_area().unwrap();
             let f_area_cap_gray = grayscale(&f_area_cap);
             f_area_cap_gray.save("farea.jpg").unwrap();
-            self.f_template.save("f_template.jpg").unwrap();
+            // self.f_template.save("f_template.jpg").unwrap();
             let (rel_x, rel_y) = run_match_template(&f_area_cap_gray, &self.f_template, 0.2);
             
             if rel_x < 0 {
