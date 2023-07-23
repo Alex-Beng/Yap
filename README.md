@@ -37,21 +37,12 @@ _Named from [Yas](https://github.com/wormtql/yas)_
 
 下载 or 编译得到可执行文件
 
-编译使用
+编译
 ```
 cargo build --release
 ```
 
-## 2. 配置F key图像
-
-需要复制项目中的`models/FFF.bmp`（见下图）至可执行文件同目录下。
-
-![f key image](./models/FFF.bmp)
-
-注：图像大小目前在代码中是硬编码的，更改后应该会报错
-
-
-## 3. 配置黑名单
+## 2. 配置黑名单
 
 需要复制项目中的`black_lists.json`（见下图）至可执行文件同目录下。
 
@@ -67,17 +58,30 @@ cargo build --release
 ]
 ```
 
-## 4. 运行
-
-Enjoy it!
-
-就是目前模型还处于不太认识字的情况233，基本只认识蒙德区域的拾取物品。
-
-目前会默认将可能是文字的图片保存，所以需要指定一个起始的idx，后面再改了。
+## 3. 运行
 
 ```bash
-./yap.exe 0
+cargo run
 ```
+
+如果需要进行debug调试，可参考命令行参数：
+```
+./target/debug/yap --help
+USAGE:
+    yap.exe [OPTIONS]
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+OPTIONS:
+        --dump <dump>              输出模型预测结果、二值化图像至指定的文件夹，debug专用 [default: ./dumps/]
+    -i, --dump-idx <dump_idx>      执行dump时，输出结果起始的index [default: 0]
+    -g, --infer-gap <infer_gap>    一次检测推理拾取的间隔，单位ms [default: 100]
+```
+
+
+Just enjoy it!
 
 
 # 优劣

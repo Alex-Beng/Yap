@@ -58,8 +58,7 @@ impl PickupScanner {
             all_list.insert(item.as_str().unwrap().to_string());
         }
 
-
-        let template =image::open("FFF.bmp".to_string()).unwrap();
+        let template = image::load_from_memory(include_bytes!("../../models/FFF.bmp")).unwrap();
         let template = grayscale(&template);
 
         PickupScanner {
