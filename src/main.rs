@@ -25,6 +25,8 @@ use imageproc::template_matching::{find_extremes, match_template, MatchTemplateM
 
 use winapi::um::winuser::{SetForegroundWindow, GetDpiForSystem, SetThreadDpiAwarenessContext, ShowWindow, SW_SHOW, SW_RESTORE, GetSystemMetrics, SetProcessDPIAware};
 
+use clap::{Arg, App};
+
 use env_logger::{Env, Builder, Target};
 use log::{info, LevelFilter, warn};
 
@@ -42,14 +44,17 @@ fn main() {
         warn!("检测到新版本，请手动更新：{}", v);
     }
 
-
-    // 读取参数
-    let args: Vec<String> = env::args().collect();
-    let cnt: i32 = args[1].parse().unwrap();
-
-    // TODO: 管理员运行？
-    // TODO: 运行参数
-    // TODO: 更新检查
+    let matches = App::new("YAP - 原神自动拾取器")
+        .author("Alex-Beng <pc98@qq.com>")
+        .about("Genshin Impact Pickup Helper")
+        .arg(Arg::with_name("dump")
+            .long("dump")
+            .required(false)
+            .takes_value(true)
+            .default_value("0")
+            .help("指定起始的index，输出模型预测结果、二值化图像，debug专用"))
+        .get_matches();
+    let cnt:u32 = matches.value_of("dump").unwrap_or("0").parse::<u32>().unwrap();
 
 
     let hwnd = match capture::find_window("原神") {

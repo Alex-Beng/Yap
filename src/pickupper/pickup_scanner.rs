@@ -108,7 +108,7 @@ impl PickupScanner {
 
     
 
-    pub fn start(&mut self, c: i32) {
+    pub fn start(&mut self, c: u32) {
         let mut cnt = c;
         loop {
             sleep(100);
