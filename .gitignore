@@ -4,3 +4,4 @@
 .vscode
 /dumps2
 /text_dumps
+*.pk
