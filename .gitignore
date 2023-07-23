@@ -4,4 +4,4 @@
 /dump[s0-9]*
 /text_dumps
 *.pk
-./test.png
+test.png
