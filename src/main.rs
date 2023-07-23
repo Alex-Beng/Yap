@@ -29,9 +29,7 @@ use env_logger::{Env, Builder, Target};
 use log::{info, LevelFilter, warn};
 
 
-// possible area
-// 1095, 340
-// 1136, 720
+
 fn main() {
     Builder::new().filter_level(LevelFilter::Info).init();
 
