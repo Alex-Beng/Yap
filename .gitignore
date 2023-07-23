@@ -1,7 +1,6 @@
 /target
 /pics
-/dumps
 .vscode
-/dumps2
+/dump[s0-9]*
 /text_dumps
 *.pk

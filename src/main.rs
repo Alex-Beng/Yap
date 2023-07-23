@@ -52,7 +52,7 @@ fn main() {
             .required(false)
             .takes_value(true)
             .default_value("0")
-            .help("指定起始的index，输出模型预测结果、二值化图像，debug专用"))
+            .help("指定起始的index，输出模型预测结果、二值化图像至./dumps/，debug专用"))
         .get_matches();
     let cnt:u32 = matches.value_of("dump").unwrap_or("0").parse::<u32>().unwrap();
 
