@@ -75,7 +75,7 @@ FLAGS:
     -V, --version    Prints version information
 
 OPTIONS:
-        --dump <dump>              输出模型预测结果、原始图像、二值图像至指定的文件夹，debug专用 [default: ./dumps/]
+        --dump <dump>              输出模型预测结果、原始图像、二值图像至指定的文件夹，debug专
     -i, --dump-idx <dump_idx>      执行dump时，输出结果起始的index [default: 0]
     -g, --infer-gap <infer_gap>    一次检测推理拾取的间隔，单位ms [default: 100]
 ```

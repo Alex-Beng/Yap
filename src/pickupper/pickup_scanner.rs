@@ -153,7 +153,8 @@ impl PickupScanner {
                 continue;
             }
             if dump {
-                f_text_cap.save(format!("{}/{}_{}.jpg", dump_path, cnt, inference_result)).unwrap();
+                f_text_cap.save(format!("{}/{}_{}_raw.jpg", dump_path, cnt, inference_result)).unwrap();
+                f_text_cap_bin.save(format!("{}/{}_{}_bin.jpg", dump_path, cnt, inference_result)).unwrap();
                 cnt += 1;
             }
 

@@ -52,7 +52,7 @@ fn main() {
         .arg(Arg::with_name("dump")
             .long("dump")
             .required(false)
-            .takes_value(false)
+            .takes_value(true)
             .help("输出模型预测结果、原始图像、二值图像至指定的文件夹，debug专用"))
         .arg(Arg::with_name("dump_idx")
             .long("dump-idx")
@@ -76,7 +76,7 @@ fn main() {
     let infer_gap: u32 = matches.value_of("infer_gap").unwrap_or("100").parse::<u32>().unwrap();
     
     // 检查dump_path是否存在，不存在则创建
-    if !Path::new(dump_path).exists() {
+    if dump && !Path::new(dump_path).exists() {
         fs::create_dir_all(dump_path).unwrap();
     }
 
