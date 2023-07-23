@@ -68,7 +68,7 @@ while cnt <= args.end:
         y = y[:-1]
         print(y[-10:])
         print(len(set(y)))
-        cnt -= 2
+        cnt = x[-1] if len(x) else args.start-1
     elif k == ord('q'):
         pickle.dump(x, open(f'{root_path}x.pk', 'wb'))
         pickle.dump(y, open(f'{root_path}y.pk', 'wb'))
