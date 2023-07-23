@@ -60,3 +60,50 @@ pub fn is_admin() -> bool {
     }
 }
 
+// 版本更新
+static mut VERSION: String = String::new();
+unsafe fn get_version_unsafe() -> String {
+    if VERSION.len() == 0 {
+        let s = include_str!("../../Cargo.toml");
+        for line in s.lines() {
+            if line.starts_with("version = ") {
+                let temp = line.split("\"").collect::<Vec<_>>();
+                let version = String::from(temp[temp.len() - 2]);
+                VERSION = version;
+            }
+        }
+    }
+
+    VERSION.clone()
+}
+
+pub fn get_version() -> String {
+    unsafe {
+        get_version_unsafe()
+    }
+}
+
+pub fn check_update() -> Option<String> {
+    let client = Client::new();
+
+    let resp = client.get("https://api.github.com/repos/Alex-Beng/Yap/tags")
+        .timeout(Duration::from_secs(5))
+        .header(USER_AGENT, HeaderValue::from_static("reqwest"))
+        .send().ok()?.json::<Vec<GithubTag>>().ok()?;
+
+    let latest = if resp.len() == 0 {
+        return None
+    } else {
+        resp[0].name.clone()
+    };
+    let latest = &latest[1..];
+
+    let latest_sem: semver::Version = semver::Version::parse(&latest).unwrap();
+    let current_sem: semver::Version = semver::Version::parse(&get_version()).unwrap();
+
+    if latest_sem > current_sem {
+        Some(String::from(latest))
+    } else {
+        None
+    }
+}

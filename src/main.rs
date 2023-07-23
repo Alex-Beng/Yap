@@ -38,6 +38,10 @@ fn main() {
         common::error_and_quit("请以管理员身份运行该程序");
     }
 
+    if let Some(v) = common::check_update() {
+        warn!("检测到新版本，请手动更新：{}", v);
+    }
+
 
     // 读取参数
     let args: Vec<String> = env::args().collect();
