@@ -33,6 +33,12 @@ use log::{info, LevelFilter, warn};
 fn main() {
     Builder::new().filter_level(LevelFilter::Info).init();
 
+
+    if !common::is_admin() {
+        common::error_and_quit("请以管理员身份运行该程序");
+    }
+
+
     // 读取参数
     let args: Vec<String> = env::args().collect();
     let cnt: i32 = args[1].parse().unwrap();
