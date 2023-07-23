@@ -43,18 +43,43 @@ fn main() {
     if let Some(v) = common::check_update() {
         warn!("检测到新版本，请手动更新：{}", v);
     }
+    let version = common::get_version();
 
     let matches = App::new("YAP - 原神自动拾取器")
         .author("Alex-Beng <pc98@qq.com>")
         .about("Genshin Impact Pickup Helper")
+        .version(version.as_str())
         .arg(Arg::with_name("dump")
             .long("dump")
             .required(false)
+            .takes_value(false)
+            .default_value("./dumps/")
+            .help("输出模型预测结果、二值化图像至指定的文件夹，debug专用"))
+        .arg(Arg::with_name("dump_idx")
+            .long("dump-idx")
+            .short("i")
+            .required(false)
             .takes_value(true)
             .default_value("0")
-            .help("指定起始的index，输出模型预测结果、二值化图像至./dumps/，debug专用"))
+            .help("执行dump时，输出结果起始的index"))
+        .arg(Arg::with_name("infer_gap")
+            .long("infer-gap")
+            .short("g")
+            .required(false)
+            .takes_value(true)
+            .default_value("100")
+            .help("一次检测推理拾取的间隔，单位ms"))
         .get_matches();
-    let cnt:u32 = matches.value_of("dump").unwrap_or("0").parse::<u32>().unwrap();
+    
+    let dump: bool = matches.is_present("dump");
+    let dump_path = matches.value_of("dump").unwrap_or("./dumps/");
+    let cnt:u32 = matches.value_of("dump_idx").unwrap_or("0").parse::<u32>().unwrap();
+    let infer_gap: u32 = matches.value_of("infer_gap").unwrap_or("100").parse::<u32>().unwrap();
+    
+    // 检查dump_path是否存在，不存在则创建
+    if !Path::new(dump_path).exists() {
+        fs::create_dir_all(dump_path).unwrap();
+    }
 
 
     let hwnd = match capture::find_window("原神") {
@@ -84,7 +109,7 @@ fn main() {
     // Pickup 主逻辑
     let mut pickupper = PickupScanner::new(info, String::from("./black_lists.json"));
 
-    pickupper.start(cnt);
+    pickupper.start(dump, dump_path.to_string(), cnt, infer_gap);
 
 
 }

@@ -46,7 +46,7 @@ impl PickupScanner {
         let bk_items = json.as_array().unwrap();
         for item in bk_items {
             bk_list.insert(item.as_str().unwrap().to_string());
-            info!("black list: {}", item.as_str().unwrap().to_string());
+            info!("添加到黑名单: {}", item.as_str().unwrap().to_string());
             
         }
 
@@ -108,10 +108,10 @@ impl PickupScanner {
 
     
 
-    pub fn start(&mut self, c: u32) {
-        let mut cnt = c;
+    pub fn start(&mut self, dump: bool, dump_path: String, cnt: u32, infer_gap: u32) {
+        let mut cnt = cnt;
         loop {
-            sleep(100);
+            sleep(infer_gap);
             let f_area_cap = self.capture_f_area().unwrap();
             let f_area_cap_gray = grayscale(&f_area_cap);
             // f_area_cap_gray.save("farea.jpg").unwrap();
@@ -126,7 +126,6 @@ impl PickupScanner {
             let f_text_cap = self.capture_f_text(rel_y).unwrap();
             let f_text_cap_gray = grayscale(&f_text_cap);
             
-            cnt += 1;
             let otsu_thr = imageproc::contrast::otsu_level(&f_text_cap_gray);
             let f_text_cap_bin: ImageBuffer<Luma<u8>, Vec<u8>> = imageproc::contrast::threshold(&f_text_cap_gray, otsu_thr);
             
@@ -154,20 +153,23 @@ impl PickupScanner {
             if inference_result.is_empty() {
                 continue;
             }
+            if dump {
+                f_text_cap.save(format!("{}/{}_{}.jpg", dump_path, cnt, inference_result)).unwrap();
+                cnt += 1;
+            }
 
-            f_text_cap.save(format!("text_dumps/{}_raw.jpg", cnt)).unwrap();
 
             if ! self.all_list.contains(&inference_result) {
-                warn!("not in all list: {}", inference_result);
+                warn!("不在大名单: {}", inference_result);
                 self.enigo.mouse_scroll_y(-1);
                 continue;
             }
             if self.black_list.contains(&inference_result) {
-                warn!("black list: {}", inference_result);
+                warn!("黑名单: {}", inference_result);
                 self.enigo.mouse_scroll_y(-1);
                 continue;
             }
-            info!("pick up: {}", inference_result);
+            info!("拾起: {}", inference_result);
 
             self.enigo.key_down(enigo::Key::Layout('f'));
             sleep(12);
