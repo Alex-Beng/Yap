@@ -51,7 +51,7 @@ cargo build --release
 
 ## 3. 配置黑名单
 
-需要复制项目中的`models/black_lists.json`（见下图）至可执行文件同目录下。
+需要复制项目中的`black_lists.json`（见下图）至可执行文件同目录下。
 
 
 将需要拉黑的拾取物品名称添加至`black_lists.json`中，如下所示。
@@ -60,6 +60,8 @@ cargo build --release
     "史莱姆凝液",
     "污秽的面具",
     "破损的面具",
+    "七天神像",
+    "所有需要使用F键交互的对象"
 ]
 ```
 
