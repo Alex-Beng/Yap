@@ -1,7 +1,13 @@
+import os
 import cv2
 from pytesseract import image_to_string
 import pickle
 import argparse
+
+def exist_or_create_pk(path):
+    if not os.path.exists(path):
+        pickle.dump([], open(path, 'wb'))
+    
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--start', type=int, default=0)
@@ -11,9 +17,12 @@ args = parser.parse_args()
 print(args.start, args.end)
 
 
-root_path = 'dumps/'
-x = pickle.load(open('x.pk', 'rb'))
-y = pickle.load(open('y.pk', 'rb'))
+root_path = 'text_dumps/'
+exist_or_create_pk(f'{root_path}x.pk')
+exist_or_create_pk(f'{root_path}y.pk')
+x = pickle.load(open(f'{root_path}x.pk', 'rb'))
+y = pickle.load(open(f'{root_path}y.pk', 'rb'))
+
 
 print('labeled:', len(y))
 # print(y[-10:])
@@ -26,7 +35,9 @@ beg_cnt = cnt
 start = time.time()
 
 while cnt <= args.end:
-    
+    if not os.path.exists(f'{root_path}{cnt}_raw.jpg'):
+        cnt += 1
+        continue
 
     path = f'{root_path}{cnt}_raw.jpg'
     print(f'labeling, {path}')
