@@ -70,8 +70,8 @@ while cnt <= args.end:
         print(len(set(y)))
         cnt -= 2
     elif k == ord('q'):
-        pickle.dump(x, open('x.pk', 'wb'))
-        pickle.dump(y, open('y.pk', 'wb'))
+        pickle.dump(x, open(f'{root_path}x.pk', 'wb'))
+        pickle.dump(y, open(f'{root_path}y.pk', 'wb'))
         break
     elif k == ord('a'):
         x.append(cnt)
