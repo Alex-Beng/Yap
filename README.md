@@ -17,19 +17,15 @@ _Named from [Yas](https://github.com/wormtql/yas)_
 
 视频演示：[bilibili](https://www.bilibili.com/video/BV1zk4y1G72J)
 
+# 原理
 
-除了版本更新检测外，已基本完工。（可能也不会考虑去做另一个基于图像分类的方案了）
+与[Yas](https://github.com/wormtql/yas)一眼，使用SVTR网络对文字进行识别。
 
-- [x] 1. 模型训练
-- [x] 2. 模型转换
-- [x] 4. F key 寻找
-- [x] 10. F key Find api
-- [ ] 5. version update detection
-- [x] 6. Capture
-- [x] 7. image Preprocess
-- [x] 3. 模型部署及测试
-- [x] 8. F key press
-- [x] 9. Scroll press
+对于F键的定位，使用基于灰度通道的模板匹配。
+
+# 已知问题 and TODO
+
+1. 需要试验更好的F键定位，灰度通道精度太低
 
 # 使用
 
@@ -75,7 +71,7 @@ FLAGS:
     -V, --version    Prints version information
 
 OPTIONS:
-        --dump <dump>              输出模型预测结果、原始图像、二值图像至指定的文件夹，debug专
+        --dump <dump>              输出模型预测结果、原始图像、二值图像至指定的文件夹，debug专用
     -i, --dump-idx <dump_idx>      执行dump时，输出结果起始的index [default: 0]
     -g, --infer-gap <infer_gap>    一次检测推理拾取的间隔，单位ms [default: 100]
 ```
@@ -89,7 +85,7 @@ Just enjoy it!
 ## 优点
 1. 跑的快，单次推理速度低于10ms
 2. 不占用GPU，使用CPU推理
-3. 可执行文件体积小，加上CRNN模型仅14+MB
+3. 可执行文件体积小，加上CRNN模型仅10+MB
 4. 更低的内存占用（对比各种python实现）
 5. **开箱即用**，无需等待配置环境时的pip及github下载。
 6. 专注于拾取，配置黑名单，锄地玩家解放F键
@@ -100,7 +96,7 @@ Just enjoy it!
 3. 目前仅支持16:9的分辨率
 4. 拾取逻辑默认往下滚动，带来冗余
 5. 跑的太快，两次检测之间硬编码了一个100ms的延迟
-6. 因为使用中文识别，所以添加新词还需要改网络架构重新训练
+6. 因为使用中文识别，所以添加新字还需要改网络架构重新训练
 7. F键寻找的算法（模板匹配）在灰度通道精度太低，需要尝试其他通道
 
 
