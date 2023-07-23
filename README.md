@@ -15,6 +15,8 @@ _Named from [Yas](https://github.com/wormtql/yas)_
 
 一个跑的飞快、占用资源低、可配置黑名单的自动拾取器，解放玩家的F键。
 
+视频演示：[bilibili](https://www.bilibili.com/video/BV1zk4y1G72J)
+
 
 除了版本更新检测外，已基本完工。（可能也不会考虑去做另一个基于图像分类的方案了）
 
