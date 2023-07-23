@@ -22,6 +22,7 @@ exist_or_create_pk(f'{root_path}x.pk')
 exist_or_create_pk(f'{root_path}y.pk')
 x = pickle.load(open(f'{root_path}x.pk', 'rb'))
 y = pickle.load(open(f'{root_path}y.pk', 'rb'))
+assert(len(x) == len(y))
 
 
 print('labeled:', len(y))
@@ -42,6 +43,7 @@ while cnt <= args.end:
     path = f'{root_path}{cnt}_raw.jpg'
     print(f'labeling, {path}')
     img = cv2.imread(path)
+    # img = cv2.resize(img, (145, 32))
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     if (beg_cnt - cnt - 1)%100 == 0:
@@ -54,16 +56,20 @@ while cnt <= args.end:
     cv2.imshow("raw", img)
 
     img = cv2.threshold(img, 127, 255, cv2.THRESH_OTSU)[1]
+    # img = cv2.copyMakeBorder(img, 0,0,0,384-145, cv2.BORDER_CONSTANT, value=0)
     text = image_to_string(img, lang='chi_sim')
     text = text.strip()
     print(f"=={text}==")
     
     cv2.imshow("le", img)
+    # print(img.shape)
     cv2.setWindowProperty('le', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
 
     k = cv2.waitKey(0)
-    if k == ord('w'):
+    # 我测这个键位左手太累了，本来打字就很多左手了
+    # 左右手镜像键位
+    if k == ord('i') or k == ord('w'):
         x = x[:-1]
         y = y[:-1]
         print(y[-10:])
@@ -73,30 +79,24 @@ while cnt <= args.end:
         pickle.dump(x, open(f'{root_path}x.pk', 'wb'))
         pickle.dump(y, open(f'{root_path}y.pk', 'wb'))
         break
-    elif k == ord('a'):
+    elif k == ord(';') or k == ord('a'):
         x.append(cnt)
         y.append(text)
         print(y[-10:])
         print(len(set(y)))
-    elif k == ord('s'):
+    elif k == ord('l') or k == ord('s'):
         text = input("Input the text: ")
         x.append(cnt)
         y.append(text)
         print(y[-10:])
         print(len(set(y)))
-    elif k == ord('d'):
+    elif k == ord('k') or k == ord('d'):
         text = ''
         x.append(cnt)
         y.append(text)
         print(y[-10:])
         print(len(set(y)))
-    elif k == ord('j'):
-        text = y[-1]
-        x.append(cnt)
-        y.append(text)
-        print(y[-10:])
-        print(len(set(y)))
-    elif k == ord('f'):
+    elif k == ord('j') or k == ord('f'):
         # 上一个不为空的text
         ti = -1
         while ti >= -len(y) and y[ti] == '':
@@ -108,6 +108,8 @@ while cnt <= args.end:
         print(len(set(y)))
     cnt += 1
 
+pickle.dump(x, open(f'{root_path}x.pk', 'wb'))
+pickle.dump(y, open(f'{root_path}y.pk', 'wb'))
 '''
 16:24 3498
 16:34 4001
