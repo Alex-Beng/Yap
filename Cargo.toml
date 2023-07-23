@@ -17,7 +17,7 @@ tract-onnx = "0.15.4"
 env_logger = "0.10.0"
 enigo = "0.0.13"
 clap = "2.33.3"
-
+semver = "1.0.7"
 
 
 [target.'cfg(windows)'.dependencies]
