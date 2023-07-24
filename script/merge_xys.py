@@ -14,7 +14,8 @@ def exist_or_create_json(path):
 
 root_paths = [
     'dumps/',
-    'text_dumps/'
+    'text_dumps/',
+    'dumps3'
 ]
 
 xx = []
@@ -36,5 +37,11 @@ print(yy[:3])
 print(xx[-3:])
 print(yy[-3:])
 assert(len(xx) == len(yy))
+zero_cnt = 0
+for y in yy:
+    if y == "":
+        zero_cnt += 1
+
+print(len(xx), zero_cnt)
 js_dp(xx, 'xx.json')
 js_dp(yy, 'yy.json')
