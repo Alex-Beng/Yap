@@ -83,7 +83,7 @@ while cnt <= args.end:
     text2 = image_to_string(img, lang='chi_sim')
     text2 = text2.strip()
     text = idx2label[cnt]
-    print(f"=a;={text}==\n=z/={text2}==")
+    print(f"=a;={text}=={text==text2}\n=z/={text2}==")
     
     cv2.imshow("le", img)
     # print(img.shape)
