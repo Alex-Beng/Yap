@@ -98,7 +98,8 @@ while cnt <= args.end:
         y = y[:-1]
         print(y[-10:])
         print(len(set(y)))
-        cnt = x[-1] if len(x) else args.start-1
+        print(x[-1])
+        cnt = int(x[-1].split('\\')[-1].split('_')[0]) if len(x) else args.start-1
     elif k == ord('q'):
         js_dp(x, x_path)
         js_dp(y, y_path)
