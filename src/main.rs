@@ -68,16 +68,29 @@ fn main() {
             .takes_value(true)
             .default_value("100")
             .help("一次检测推理拾取的间隔，单位ms"))
+        .arg(Arg::with_name("template-threshold")
+            .long("template-threshold")
+            .short("t")
+            .required(false)
+            .takes_value(true)
+            .default_value("0.2")
+            .help("模板匹配的阈值，约小越严格"))
         .get_matches();
     
     let dump: bool = matches.is_present("dump");
     let dump_path = matches.value_of("dump").unwrap_or("./dumps/");
     let cnt:u32 = matches.value_of("dump_idx").unwrap_or("0").parse::<u32>().unwrap();
     let infer_gap: u32 = matches.value_of("infer_gap").unwrap_or("100").parse::<u32>().unwrap();
+    let template_threshold: f32 = matches.value_of("template-threshold").unwrap_or("0.2").parse::<f32>().unwrap();
     
     // 检查dump_path是否存在，不存在则创建
     if dump && !Path::new(dump_path).exists() {
         fs::create_dir_all(dump_path).unwrap();
+    }
+    
+    // 检查template threshold是否合法
+    if template_threshold < 0.0  {
+        common::error_and_quit("template threshold必须大于零");
     }
 
 
@@ -108,7 +121,7 @@ fn main() {
     // Pickup 主逻辑
     let mut pickupper = PickupScanner::new(info, String::from("./black_lists.json"));
 
-    pickupper.start(dump, dump_path.to_string(), cnt, infer_gap);
+    pickupper.start(dump, dump_path.to_string(), cnt, infer_gap, template_threshold);
 
 
 }

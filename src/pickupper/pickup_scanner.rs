@@ -107,7 +107,7 @@ impl PickupScanner {
 
     
 
-    pub fn start(&mut self, dump: bool, dump_path: String, cnt: u32, infer_gap: u32) {
+    pub fn start(&mut self, dump: bool, dump_path: String, cnt: u32, infer_gap: u32, temp_thre: f32) {
         let mut cnt = cnt;
         loop {
             sleep(infer_gap);
@@ -115,7 +115,7 @@ impl PickupScanner {
             let f_area_cap_gray = grayscale(&f_area_cap);
             // f_area_cap_gray.save("farea.jpg").unwrap();
             // self.f_template.save("f_template.jpg").unwrap();
-            let (rel_x, rel_y) = run_match_template(&f_area_cap_gray, &self.f_template, 0.2);
+            let (rel_x, rel_y) = run_match_template(&f_area_cap_gray, &self.f_template, temp_thre);
             
             if rel_x < 0 {
                 continue;
