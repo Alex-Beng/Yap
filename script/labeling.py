@@ -1,48 +1,71 @@
 import os
 import cv2
+import numpy as np
+from PIL import Image
 from pytesseract import image_to_string
-import pickle
+import json
 import argparse
 
-def exist_or_create_pk(path):
+def js_dp(obj, path):
+    json.dump(obj, open(path, 'w', encoding='utf-8'), ensure_ascii=False)
+
+def js_ld(path):
+    return json.load(open(path, 'r', encoding='utf-8'))
+
+def exist_or_create_json(path):
     if not os.path.exists(path):
-        pickle.dump([], open(path, 'wb'))
-    
+        js_dp([], path)
+
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--start', type=int, default=0)
-parser.add_argument('--end', type=int, default=0)
+parser.add_argument('-f', type=str, required=True, help="需要标注的文件夹", default='')
+parser.add_argument('--start', type=int, required=False, help="开始的序号", default=0)
+parser.add_argument('--end', type=int, required=False, help="结束的序号", default=0)
 
 args = parser.parse_args()
-print(args.start, args.end)
+print(args.f, args.start, args.end)
 
 
-root_path = 'text_dumps/'
-exist_or_create_pk(f'{root_path}x.pk')
-exist_or_create_pk(f'{root_path}y.pk')
-x = pickle.load(open(f'{root_path}x.pk', 'rb'))
-y = pickle.load(open(f'{root_path}y.pk', 'rb'))
+root_path = args.f
+x_path = os.path.join(root_path, 'x.json')
+y_path = os.path.join(root_path, 'y.json')
+exist_or_create_json(x_path)
+exist_or_create_json(y_path)
+x = js_ld(x_path)
+y = js_ld(y_path)
+
 assert(len(x) == len(y))
 
 
 print('labeled:', len(y))
-# print(y[-10:])
 print(len(set(y)))
+
 cnt = args.start
 
+idx2name = {}
+idx2label = {}
+for file_name in os.listdir(root_path):
+    if file_name.endswith('_raw.jpg'):
+        idx = int(file_name.split('_')[0])
+        lb = file_name.split('_')[1]
+        idx2name[idx] = file_name
+        idx2label[idx] = lb
+# print(list(idx2label.items())[:10])
 # 记录时间
 import time
 beg_cnt = cnt
 start = time.time()
 
 while cnt <= args.end:
-    if not os.path.exists(f'{root_path}{cnt}_raw.jpg'):
+    if cnt not in idx2name:
         cnt += 1
         continue
 
-    path = f'{root_path}{cnt}_raw.jpg'
+    path = os.path.join(root_path, idx2name[cnt])
     print(f'labeling, {path}')
-    img = cv2.imread(path)
+    img = Image.open(path)
+    # img = cv2.imread(path)
+    img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
     # img = cv2.resize(img, (145, 32))
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
@@ -57,9 +80,10 @@ while cnt <= args.end:
 
     img = cv2.threshold(img, 127, 255, cv2.THRESH_OTSU)[1]
     # img = cv2.copyMakeBorder(img, 0,0,0,384-145, cv2.BORDER_CONSTANT, value=0)
-    text = image_to_string(img, lang='chi_sim')
-    text = text.strip()
-    print(f"=={text}==")
+    text2 = image_to_string(img, lang='chi_sim')
+    text2 = text2.strip()
+    text = idx2label[cnt]
+    print(f"=a;={text}==\n=z/={text2}==")
     
     cv2.imshow("le", img)
     # print(img.shape)
@@ -69,30 +93,35 @@ while cnt <= args.end:
     k = cv2.waitKey(0)
     # 我测这个键位左手太累了，本来打字就很多左手了
     # 左右手镜像键位
-    if k == ord('i') or k == ord('w'):
+    if k == ord('o') or k == ord('w'):
         x = x[:-1]
         y = y[:-1]
         print(y[-10:])
         print(len(set(y)))
         cnt = x[-1] if len(x) else args.start-1
     elif k == ord('q'):
-        pickle.dump(x, open(f'{root_path}x.pk', 'wb'))
-        pickle.dump(y, open(f'{root_path}y.pk', 'wb'))
+        js_dp(x, x_path)
+        js_dp(y, y_path)
         break
     elif k == ord(';') or k == ord('a'):
-        x.append(cnt)
+        x.append(path)
         y.append(text)
+        print(y[-10:])
+        print(len(set(y)))
+    elif k == ord('z') or k == ord('/'):
+        x.append(path)
+        y.append(text2)
         print(y[-10:])
         print(len(set(y)))
     elif k == ord('l') or k == ord('s'):
         text = input("Input the text: ")
-        x.append(cnt)
+        x.append(path)
         y.append(text)
         print(y[-10:])
         print(len(set(y)))
     elif k == ord('k') or k == ord('d'):
         text = ''
-        x.append(cnt)
+        x.append(path)
         y.append(text)
         print(y[-10:])
         print(len(set(y)))
@@ -102,14 +131,15 @@ while cnt <= args.end:
         while ti >= -len(y) and y[ti] == '':
             ti -= 1
         text = y[ti]
-        x.append(cnt)
+        x.append(path)
         y.append(text)
         print(y[-10:])
         print(len(set(y)))
     cnt += 1
 
-pickle.dump(x, open(f'{root_path}x.pk', 'wb'))
-pickle.dump(y, open(f'{root_path}y.pk', 'wb'))
+js_dp(x, x_path)
+js_dp(y, y_path)
+
 '''
 16:24 3498
 16:34 4001

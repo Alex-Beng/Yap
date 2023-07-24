@@ -1,9 +1,16 @@
 import os
-import pickle
+import json
 
-def exist_or_create_pk(path):
+def js_dp(obj, path):
+    json.dump(obj, open(path, 'w', encoding='utf-8'), ensure_ascii=False)
+
+def js_ld(path):
+    return json.load(open(path, 'r', encoding='utf-8'))
+
+
+def exist_or_create_json(path):
     if not os.path.exists(path):
-        pickle.dump([], open(path, 'wb'))
+        js_dp([], path)
 
 root_paths = [
     'dumps/',
@@ -14,18 +21,20 @@ xx = []
 yy = []
 
 for rp in root_paths:
-    x = pickle.load(open(f'{rp}x.pk', 'rb'))
-    y = pickle.load(open(f'{rp}y.pk', 'rb'))
+    x_path = os.path.join(rp, 'x.json')
+    y_path = os.path.join(rp, 'y.json')
+
+    x = js_ld(x_path)
+    y = js_ld(y_path)
     assert(len(x) == len(y))
 
-    for c in x:
-        xx.append(f'{rp}{c}_raw.jpg')
+    xx += x
     yy += y
 
-print(xx[:10])
-print(yy[:10])
-print(xx[-10:])
-print(yy[-10:])
+print(xx[:3])
+print(yy[:3])
+print(xx[-3:])
+print(yy[-3:])
 assert(len(xx) == len(yy))
-pickle.dump(xx, open("xx.pk", 'wb'))
-pickle.dump(yy, open("yy.pk", 'wb'))
+js_dp(xx, 'xx.json')
+js_dp(yy, 'yy.json')
