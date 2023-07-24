@@ -19,7 +19,7 @@ _Named from [Yas](https://github.com/wormtql/yas)_
 
 # 原理
 
-与[Yas](https://github.com/wormtql/yas)一眼，使用SVTR网络对文字进行识别。
+与[Yas](https://github.com/wormtql/yas)一样，使用SVTR网络对文字进行识别。
 
 对于F键的定位，使用基于灰度通道的模板匹配。
 
