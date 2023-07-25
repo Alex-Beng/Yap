@@ -13,7 +13,7 @@ _Named from [Yas](https://github.com/wormtql/yas)_
 
 借鉴了[Yas](https://github.com/wormtql/yas)代码实现的自动拾取器。
 
-一个跑的飞快、占用资源低、可配置黑名单的自动拾取器，解放玩家的F键。
+一个开箱即用、跑的飞快、占用资源低、可配置黑名单的自动拾取器，解放F键。
 
 视频演示：[锄地-Bilibili](https://www.bilibili.com/video/BV1zk4y1G72J) [捡狗粮-Bilibili](https://www.bilibili.com/video/BV1ix4y197nv)
 
