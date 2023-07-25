@@ -43,6 +43,8 @@ cargo build --release
 
 ## 2. 配置黑名单
 
+如果是下载使用，解压即有`black_lists.json`。仅需添加拉黑名称。
+
 需要复制项目中的`black_lists.json`（见下图）至可执行文件同目录下。
 
 
