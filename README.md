@@ -21,6 +21,8 @@ _Named from [Yas](https://github.com/wormtql/yas)_
 
 视频演示：[锄地-Bilibili](https://www.bilibili.com/video/BV1zk4y1G72J) [捡狗粮-Bilibili](https://www.bilibili.com/video/BV1ix4y197nv)
 
+模型训练：[yap-train](https://github.com/Alex-Beng/yap-train)
+
 # 原理
 
 与[Yas](https://github.com/wormtql/yas)一样，使用SVTR网络对文字进行识别。
