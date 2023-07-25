@@ -109,6 +109,8 @@ impl PickupScanner {
 
     pub fn start(&mut self, dump: bool, dump_path: String, cnt: u32, infer_gap: u32, temp_thre: f32) {
         let mut cnt = cnt;
+        let mut pk_str = String::from("");
+        let mut pk_cnt = 0;
         loop {
             sleep(infer_gap);
             let f_area_cap = self.capture_f_area().unwrap();
@@ -152,6 +154,31 @@ impl PickupScanner {
             if inference_result.is_empty() {
                 continue;
             }
+
+            // 累计三次相同向上翻
+            if pk_cnt == 2 {
+                self.enigo.mouse_scroll_y(1);
+                sleep(20);
+                self.enigo.mouse_scroll_y(1);
+                sleep(20);
+                self.enigo.mouse_scroll_y(1);
+                // sleep(20);
+                pk_cnt = 0;
+                pk_str = String::from("");
+                continue;
+            }
+            else if  pk_cnt == 1 && pk_str == inference_result {
+                pk_cnt += 1;
+            }
+            else if pk_cnt == 0 && pk_str == inference_result {
+                pk_cnt += 1;
+            }
+            else {
+                pk_str = inference_result.clone();
+                pk_cnt = 0;
+            }
+                
+
             if dump {
                 f_text_cap.save(format!("{}/{}_{}_raw.jpg", dump_path, cnt, inference_result)).unwrap();
                 f_text_cap_bin.save(format!("{}/{}_{}_bin.jpg", dump_path, cnt, inference_result)).unwrap();
