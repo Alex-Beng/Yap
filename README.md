@@ -68,7 +68,7 @@ cargo build --release
 
 2. 修改`black_lists.json`，如上。
 
-2. 确保`black_lists.json`在执行文件的同级目录下，如下所示。
+3. 确保`black_lists.json`在执行文件的同级目录下，如下所示。
 
 
 ```bash
@@ -77,7 +77,7 @@ yap> cargo run --release # 项目根目录有black_lists.json, work
 当然你把黑名单加进环境变量也行，但不推荐。
 
 
-3. 管理员运行/管理员身份打开终端运行
+4. 管理员运行/管理员身份打开终端运行
 
 ```bash
 yap> ./target/release/yap.exe 
@@ -88,7 +88,7 @@ yap> cargo run --release
 ```
 
 
-4. 如果需要进行debug调试，可参考命令行参数：
+5. 如果需要进行debug调试，可参考命令行参数：
 ```
 /yap --help
 YAP - 原神自动拾取器 0.1.1
