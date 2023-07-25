@@ -86,10 +86,9 @@ FLAGS:
 OPTIONS:
         --dump <dump>                                输出模型预测结果、原始图像、二值图像至指定的文件夹，debug专用
     -i, --dump-idx <dump_idx>                        执行dump时，输出结果起始的index [default: 0]
-    -g, --infer-gap <infer_gap>                      一次检测推理拾取的间隔，单位ms [default: 100]
-    -t, --template-threshold <template-threshold>    模板匹配的阈值，约小越严格 [default: 0.2]
+    -g, --infer-gap <infer_gap>                      一次检测推理拾取的间隔，单位ms [default: 40]
+    -t, --template-threshold <template-threshold>    模板匹配的阈值，约小越严格 [default: 0.2]```
 ```
-
 
 Just enjoy it!
 
