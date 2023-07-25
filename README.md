@@ -15,7 +15,7 @@ _Named from [Yas](https://github.com/wormtql/yas)_
 
 一个开箱即用、跑的飞快、占用资源极低（见下图）、可配置黑名单的自动拾取器，解放F键。
 
-![cpu](./models/cpu.PNG)
+![cpu](./imgs/cpu.PNG)
 
 
 
@@ -36,23 +36,15 @@ _Named from [Yas](https://github.com/wormtql/yas)_
 
 # 使用
 
-## 1. 获取可执行文件
+目前仅支持windows。
 
-下载 or 编译得到可执行文件
+## 从release获取
 
-编译
-```
-cargo build --release
-```
+1. 点击[此处](https://github.com/Alex-Beng/Yap/releases)下载最新版本的release压缩包，解压。有两个文件：`yap.exe`和`black_lists.json`。
 
-## 2. 配置黑名单
-
-如果是下载使用，解压即有`black_lists.json`。仅需添加拉黑名称。
-
-需要复制项目中的`black_lists.json`（见下图）至可执行文件同目录下。
+2. 使用记事本/VSCode等编辑器打开`black_lists.json`，添加需要拉黑的拾取物品名称，注意需要使用英文符号，如：
 
 
-将需要拉黑的拾取物品名称添加至`black_lists.json`中，如下所示。
 ```json
 [
     "史莱姆凝液",
@@ -63,21 +55,40 @@ cargo build --release
 ]
 ```
 
-## 3. 运行
+3. 右键`yap.exe`选择以管理员身份运行
 
-### 命令行运行
+
+
+## 自行编译
+
+1. 编译
+```
+cargo build --release
+```
+
+2. 修改`black_lists.json`，如上。
+
+2. 确保`black_lists.json`在执行文件的同级目录下，如下所示。
+
+
 ```bash
-cargo run --release
+yap> cargo run --release # 项目根目录有black_lists.json, work
+```
+当然你把黑名单加进环境变量也行，但不推荐。
+
+
+3. 管理员运行/管理员身份打开终端运行
+
+```bash
+yap> ./target/release/yap.exe 
 ```
 or 
 ```bash
-./target/release/yap.exe 
+yap> cargo run --release
 ```
 
-或者直接双击可执行文件运行。
 
-
-如果需要进行debug调试，可参考命令行参数：
+4. 如果需要进行debug调试，可参考命令行参数：
 ```
 /yap --help
 YAP - 原神自动拾取器 0.1.1
@@ -101,7 +112,7 @@ OPTIONS:
 Just enjoy it!
 
 
-# 优劣
+# 总结
 
 ## 优点
 1. 跑的快，单次推理速度低于10ms
