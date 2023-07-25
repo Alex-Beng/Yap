@@ -65,9 +65,17 @@ cargo build --release
 
 ## 3. 运行
 
+### 命令行运行
 ```bash
-cargo run
+cargo run --release
 ```
+or 
+```bash
+./target/release/yap.exe 
+```
+
+或者直接双击可执行文件运行。
+
 
 如果需要进行debug调试，可参考命令行参数：
 ```
