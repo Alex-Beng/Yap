@@ -18,6 +18,8 @@ pub struct PickupInfo {
     pub height: u32,
     pub left: i32,
     pub top: i32,
+    pub f_template_w: u32,
+    pub f_template_h: u32,
 }
 
 impl PickupInfo {

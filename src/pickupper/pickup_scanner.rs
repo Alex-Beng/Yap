@@ -60,6 +60,9 @@ impl PickupScanner {
 
         let template = image::load_from_memory(include_bytes!("../../models/FFF.bmp")).unwrap();
         let template = grayscale(&template);
+        // 需要对template进行缩放
+        let template = imageops::resize(&template, info.f_template_w, info.f_template_h, imageops::FilterType::Gaussian);
+
 
         PickupScanner {
             model: CRNNModel::new(String::from("model_training.onnx"), String::from("index_2_word.json")),
@@ -114,6 +117,8 @@ impl PickupScanner {
         loop {
             sleep(infer_gap);
             let f_area_cap = self.capture_f_area().unwrap();
+            // info!("f_area_cap: w: {}, h: {}", f_area_cap.width(), f_area_cap.height());
+            // info!("f_template: w: {}, h: {}", self.f_template.width(), self.f_template.height());
             let f_area_cap_gray = grayscale(&f_area_cap);
             // f_area_cap_gray.save("farea.jpg").unwrap();
             // self.f_template.save("f_template.jpg").unwrap();
@@ -150,6 +155,13 @@ impl PickupScanner {
             // println!("h: {}, w: {}", raw_img.h, raw_img.w);
             
             let inference_result = self.model.inference_string(&raw_img);
+
+            if dump {
+                f_text_cap.save(format!("{}/{}_{}_raw.jpg", dump_path, cnt, inference_result)).unwrap();
+                f_text_cap_bin.save(format!("{}/{}_{}_bin.jpg", dump_path, cnt, inference_result)).unwrap();
+                cnt += 1;
+            }
+
             // 模型推断为空
             if inference_result.is_empty() {
                 continue;
@@ -176,13 +188,6 @@ impl PickupScanner {
             else {
                 pk_str = inference_result.clone();
                 pk_cnt = 0;
-            }
-                
-
-            if dump {
-                f_text_cap.save(format!("{}/{}_{}_raw.jpg", dump_path, cnt, inference_result)).unwrap();
-                f_text_cap_bin.save(format!("{}/{}_{}_bin.jpg", dump_path, cnt, inference_result)).unwrap();
-                cnt += 1;
             }
 
 
