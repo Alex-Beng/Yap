@@ -93,7 +93,7 @@ yap> cargo run --release
 5. 如果需要进行debug调试，可参考命令行参数：
 ```
 /yap --help
-YAP - 原神自动拾取器 0.1.1
+YAP - 原神自动拾取器 0.1.2
 Alex-Beng <pc98@qq.com>
 Genshin Impact Pickup Helper
 
