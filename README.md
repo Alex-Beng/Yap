@@ -21,7 +21,7 @@ _Named from [Yas](https://github.com/wormtql/yas)_
 
 
 
-视频演示：[锄地-Bilibili](https://www.bilibili.com/video/BV1zk4y1G72J) [捡狗粮-Bilibili](https://www.bilibili.com/video/BV1ix4y197nv) 
+视频演示：[v0.1.0锄地](https://www.bilibili.com/video/BV1zk4y1G72J) [v0.1.1捡狗粮](https://www.bilibili.com/video/BV1ix4y197nv) 
 
 模型训练：[yap-train](https://github.com/Alex-Beng/yap-train)
 
