@@ -19,9 +19,11 @@ _Named from [Yas](https://github.com/wormtql/yas)_
 
 
 
-视频演示：[锄地-Bilibili](https://www.bilibili.com/video/BV1zk4y1G72J) [捡狗粮-Bilibili](https://www.bilibili.com/video/BV1ix4y197nv)
+视频演示：[锄地-Bilibili](https://www.bilibili.com/video/BV1zk4y1G72J) [捡狗粮-Bilibili](https://www.bilibili.com/video/BV1ix4y197nv) 
 
 模型训练：[yap-train](https://github.com/Alex-Beng/yap-train)
+
+PS：旧版本模型精度（生成数据的问题，已解决）、推理间隔（100ms，现在是40ms）、滚动逻辑（目前是会上下翻的状态机）等问题，显得比较慢。
 
 # 原理
 
