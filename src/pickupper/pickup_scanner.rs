@@ -4,13 +4,13 @@ use std::io::Read;
 use std::time::SystemTime;
 
 use crate::common::sleep;
-use crate::inference::img_process::{run_match_template, pre_process};
+use crate::inference::img_process::run_match_template;
 use crate::{info::PickupInfo, common};
 use crate::inference::inference::CRNNModel;
 use crate::capture::{RawCaptureImage, self, PixelRect, RawImage};
 
-use image::imageops::{grayscale, self};
-use image::{GrayImage, ImageBuffer, Luma, ColorType, GenericImage};
+use image::imageops::{grayscale, self, crop};
+use image::{GrayImage, ImageBuffer, Luma, ColorType, GenericImage, DynamicImage};
 use imageproc::definitions::Image;
 use tract_onnx::prelude::*;
 use serde_json;
@@ -114,9 +114,27 @@ impl PickupScanner {
         let mut cnt = cnt;
         let mut pk_str = String::from("");
         let mut pk_cnt = 0;
+
+        let game_win_rect = PixelRect {
+            left: self.info.left,
+            top: self.info.top,
+            width: self.info.width as i32,
+            height: self.info.height as i32,
+        };
+
         loop {
             sleep(infer_gap);
-            let f_area_cap = self.capture_f_area().unwrap();
+            // 截一张全屏
+            let mut game_window_cap = capture::capture_absolute_image(&game_win_rect).unwrap();
+            // game_window_cap.save("game_window.jpg").unwrap();
+
+            // 改为从window_cap中crop
+            let f_area_cap = crop(&mut game_window_cap, 
+                    self.info.f_area_position.left as u32,
+                    self.info.f_area_position.top as u32,
+                    self.info.f_area_position.right as u32 - self.info.f_area_position.left as u32,
+                    self.info.f_area_position.bottom as u32 - self.info.f_area_position.top as u32);
+            let f_area_cap = DynamicImage::ImageRgb8(f_area_cap.to_image());
             // info!("f_area_cap: w: {}, h: {}", f_area_cap.width(), f_area_cap.height());
             // info!("f_template: w: {}, h: {}", self.f_template.width(), self.f_template.height());
             let f_area_cap_gray = grayscale(&f_area_cap);
@@ -129,7 +147,13 @@ impl PickupScanner {
             } 
 
             // otsu阈值分割获取f对应的文字
-            let f_text_cap = self.capture_f_text(rel_y).unwrap();
+            let f_text_cap = crop(&mut game_window_cap,
+                    self.info.pickup_x_beg as u32,
+                    self.info.f_area_position.top as u32 + rel_y as u32,
+                    self.info.pickup_x_end as u32 - self.info.pickup_x_beg as u32,
+                    self.f_template.height() as u32,
+                );
+            let f_text_cap = DynamicImage::ImageRgb8(f_text_cap.to_image());
             let f_text_cap_gray = grayscale(&f_text_cap);
             
             let otsu_thr = imageproc::contrast::otsu_level(&f_text_cap_gray);
