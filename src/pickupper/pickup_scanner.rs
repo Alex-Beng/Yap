@@ -166,6 +166,17 @@ impl PickupScanner {
             if inference_result.is_empty() {
                 continue;
             }
+            
+            // 仿鼠标宏快速拾取狗粮
+            if inference_result == "调查" {
+                // 上翻一个比是
+                self.enigo.mouse_scroll_y(1);
+                sleep(20);
+                self.enigo.key_down(enigo::Key::Layout('f'));
+                sleep(12);
+                self.enigo.key_up(enigo::Key::Layout('f'));
+                continue;
+            }
 
             // 累计三次相同向上翻
             if pk_cnt == 2 {
