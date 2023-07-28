@@ -2,7 +2,7 @@ use image::imageops::colorops::grayscale;
 use image::{RgbImage, GrayImage, ImageBuffer};
 use image::imageops::resize;
 use imageproc::template_matching::{match_template, MatchTemplateMethod, find_extremes};
-use log::info;
+use log::{info, trace};
 
 use crate::capture::RawImage;
 
@@ -204,10 +204,50 @@ pub fn run_match_template(
     let res_x = res_mm.min_value_location.0 as i32;
     let res_y = res_mm.min_value_location.1 as i32;
     let res_val = res_mm.min_value;
+    trace!("res_x = {}, res_y = {}, res_val = {}", res_x, res_y, res_val);
     // info!("res_x = {}, res_y = {}, res_val = {}", res_x, res_y, res_val);
     if res_val < threshold {
         (res_x, res_y)
     } else {
         (-1, -1)
     }
+}
+
+
+// u8 sRGB to L channel
+pub fn rgb_to_l(image: &RgbImage) -> GrayImage {
+    let f = |t: f32| -> f32 {
+        let thre: f32 = (6.*6.*6. /29./29./29.);
+        let a: f32 = 1.0 / 3.0 * 29.0 * 29.0 / 6.0 / 6.0;
+        let b: f32 = 16.0 / 116.0;
+        
+        if t > thre {
+            t.powf(1.0/3.0)
+        }
+        else {
+            a * t + b
+        }
+    };
+
+
+    let width = image.width();
+    let height = image.height();
+
+    let mut ans = GrayImage::new(width, height);
+
+    for i in 0..width {
+        for j in 0..height {
+            let pixel = image.get_pixel(i, j);
+            let r = pixel[0] as f32 / 255.;
+            let g = pixel[1] as f32 / 255.;
+            let b = pixel[2] as f32 / 255.;
+
+            // 因为白点Yn = 1, Y/Yn = Y 
+            let y: f32 = 1.0 * r + 4.5906 * g + 0.0601 * b;
+            let l = 116.0 * f(y) - 16.0;
+
+            ans.put_pixel(i, j, image::Luma([l as u8]));
+        }
+    }
+    ans
 }

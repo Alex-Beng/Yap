@@ -9,6 +9,7 @@ use std::path::PathBuf;
 
 use yap::capture;
 use yap::common;
+use yap::inference::img_process::rgb_to_l;
 use yap::info;
 use yap::pickupper::pickup_scanner::PickupScanner;
 
@@ -33,8 +34,6 @@ use log::{info, LevelFilter, warn};
 
 
 fn main() {
-    Builder::new().filter_level(LevelFilter::Info).init();
-
 
     if !common::is_admin() {
         common::error_and_quit("请以管理员身份运行该程序");
@@ -75,6 +74,19 @@ fn main() {
             .takes_value(true)
             .default_value("0.1")
             .help("模板匹配的阈值，约小越严格，灰度通道中匹配值在0.01-0.09左右"))
+        .arg(Arg::with_name("channal")
+            .long("channal")
+            .short("c")
+            .required(false)
+            .takes_value(true)
+            .default_value("L*")
+            .help("模板匹配时使用的通道，默认使用L*通道，推荐匹配阈值固定为0.01，另一个可选值为gray"))
+        .arg(Arg::with_name("log")
+            .long("log")
+            .required(false)
+            .takes_value(true)
+            .default_value("info")
+            .help("日志等级，可选值为trace, debug, info, warn, error"))
         .get_matches();
     
     let dump: bool = matches.is_present("dump");
@@ -82,6 +94,15 @@ fn main() {
     let cnt:u32 = matches.value_of("dump_idx").unwrap_or("0").parse::<u32>().unwrap();
     let infer_gap: u32 = matches.value_of("infer_gap").unwrap_or("40").parse::<u32>().unwrap();
     let template_threshold: f32 = matches.value_of("template-threshold").unwrap_or("0.1").parse::<f32>().unwrap();
+    let mut channal = matches.value_of("channal").unwrap_or("L*");
+    let log_level = matches.value_of("log").unwrap_or("info");
+
+    // 首先更改日志等级
+    let mut builder = Builder::from_env(Env::default().default_filter_or(log_level));
+    builder.target(Target::Stdout);
+    builder.init();
+
+
     
     // 检查dump_path是否存在，不存在则创建
     if dump && !Path::new(dump_path).exists() {
@@ -91,6 +112,19 @@ fn main() {
     // 检查template threshold是否合法
     if template_threshold < 0.0  {
         common::error_and_quit("template threshold必须大于零");
+    }
+    
+    if channal != "L*" && channal != "gray" {
+        // common::error_and_quit("channal参数必须为L*或gray");
+        warn!("channal参数必须为L*或gray，使用默认值L*");
+        channal = "L*";
+    }
+
+    let mut use_l = false;
+    if channal == "L*" {
+        use_l = true;
+        info!("使用L*通道进行模板匹配");
+        // template_threshold = 0.01;
     }
 
 
@@ -119,9 +153,9 @@ fn main() {
     }
 
     // Pickup 主逻辑
-    let mut pickupper = PickupScanner::new(info, String::from("./black_lists.json"));
+    let mut pickupper = PickupScanner::new(info, String::from("./black_lists.json"), use_l);
 
-    pickupper.start(dump, dump_path.to_string(), cnt, infer_gap, template_threshold);
+    pickupper.start(dump, dump_path.to_string(), cnt, infer_gap,  template_threshold);
 
 
 }

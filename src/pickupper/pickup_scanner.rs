@@ -4,7 +4,8 @@ use std::io::Read;
 use std::time::SystemTime;
 
 use crate::common::sleep;
-use crate::inference::img_process::run_match_template;
+use crate::inference;
+use crate::inference::img_process::{run_match_template, rgb_to_l};
 use crate::{info::PickupInfo, common};
 use crate::inference::inference::CRNNModel;
 use crate::capture::{RawCaptureImage, self, PixelRect, RawImage};
@@ -28,11 +29,14 @@ pub struct PickupScanner {
     // 黑名单
     black_list: HashSet<String>,
     // 所有物品
-    all_list: HashSet<String>
+    all_list: HashSet<String>,
+
+    // 是否使用L*通道
+    use_l: bool
 }
 
 impl PickupScanner {
-    pub fn new(info: PickupInfo, black_list_path: String) -> PickupScanner {
+    pub fn new(info: PickupInfo, black_list_path: String, use_l: bool) -> PickupScanner {
         let mut bk_list: HashSet<String> = HashSet::new();
         // println!("black list path: {}", black_list_path);
         // 从black_list_path读取json中每一个String，加入到bk_list中
@@ -58,12 +62,18 @@ impl PickupScanner {
             all_list.insert(item.as_str().unwrap().to_string());
         }
 
-        let template = image::load_from_memory(include_bytes!("../../models/FFF.bmp")).unwrap();
-        let template = grayscale(&template);
+        let template_raw = image::load_from_memory(include_bytes!("../../models/FFF.bmp")).unwrap();
+        let template: GrayImage;
+        if use_l {
+            template = rgb_to_l(&template_raw.to_rgb8());
+        }
+        else {
+            template = grayscale(&template_raw);
+        }
         // 需要对template进行缩放
         let template = imageops::resize(&template, info.f_template_w, info.f_template_h, imageops::FilterType::Gaussian);
 
-
+        
         PickupScanner {
             model: CRNNModel::new(String::from("model_training.onnx"), String::from("index_2_word.json")),
             enigo: Enigo::new(),
@@ -74,6 +84,8 @@ impl PickupScanner {
 
             black_list: bk_list,
             all_list: all_list,
+
+            use_l: use_l,
         }
     }
 
@@ -137,7 +149,16 @@ impl PickupScanner {
             let f_area_cap = DynamicImage::ImageRgb8(f_area_cap.to_image());
             // info!("f_area_cap: w: {}, h: {}", f_area_cap.width(), f_area_cap.height());
             // info!("f_template: w: {}, h: {}", self.f_template.width(), self.f_template.height());
-            let f_area_cap_gray = grayscale(&f_area_cap);
+            
+            let f_area_cap_gray: GrayImage;
+            if self.use_l {
+                f_area_cap_gray = rgb_to_l(&f_area_cap.to_rgb8());
+            }
+            else {
+                f_area_cap_gray = grayscale(&f_area_cap);
+            }
+
+
             // f_area_cap_gray.save("farea.jpg").unwrap();
             // self.f_template.save("f_template.jpg").unwrap();
             let (rel_x, rel_y) = run_match_template(&f_area_cap_gray, &self.f_template, temp_thre);
@@ -154,7 +175,14 @@ impl PickupScanner {
                     self.f_template.height() as u32,
                 );
             let f_text_cap = DynamicImage::ImageRgb8(f_text_cap.to_image());
-            let f_text_cap_gray = grayscale(&f_text_cap);
+            
+            let f_text_cap_gray: GrayImage;
+            if self.use_l {
+                f_text_cap_gray = rgb_to_l(&f_text_cap.to_rgb8());
+            }
+            else {
+                f_text_cap_gray = grayscale(&f_text_cap);
+            }
             
             let otsu_thr = imageproc::contrast::otsu_level(&f_text_cap_gray);
             let f_text_cap_bin: ImageBuffer<Luma<u8>, Vec<u8>> = imageproc::contrast::threshold(&f_text_cap_gray, otsu_thr);
