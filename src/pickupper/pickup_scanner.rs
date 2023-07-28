@@ -205,16 +205,26 @@ impl PickupScanner {
                 continue;
             }
 
+            if pk_cnt == 3 {
+                // 第四次相同，说明只有一个，持续跳过
+                if pk_str == inference_result {
+                    continue;
+                }
+                // 回到状态0
+                else {
+                    pk_str = inference_result.clone();
+                    pk_cnt = 0;
+                }
+            }
             // 累计三次相同向上翻
-            if pk_cnt == 2 {
+            else if pk_cnt == 2 {
                 self.enigo.mouse_scroll_y(1);
                 sleep(20);
                 self.enigo.mouse_scroll_y(1);
                 sleep(20);
                 self.enigo.mouse_scroll_y(1);
                 // sleep(20);
-                pk_cnt = 0;
-                pk_str = String::from("");
+                pk_cnt = 3;
                 continue;
             }
             else if  pk_cnt == 1 && pk_str == inference_result {
