@@ -88,3 +88,13 @@ using CrossCorrelationNormalized
 7 use: 7.1115ms
 ```
 avg: 6.188ms
+
+# L 通道转换用时
+
+设置：
+1. naive的方法实现转换u8 RGB到L通道。
+2. 1920x1080 截屏
+3. image crate的graystyle转灰度作为对比
+4. 转换100次，
+
+L通道耗时31ms。gray通道耗时8ms。
