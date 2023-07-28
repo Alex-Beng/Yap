@@ -193,6 +193,9 @@ impl PickupScanner {
             
             // 仿鼠标宏快速拾取狗粮
             if inference_result == "调查" {
+                self.enigo.key_down(enigo::Key::Layout('f'));
+                sleep(12);
+                self.enigo.key_up(enigo::Key::Layout('f'));
                 // 上翻一个比是
                 self.enigo.mouse_scroll_y(1);
                 sleep(20);
