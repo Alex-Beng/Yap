@@ -111,7 +111,7 @@ fn main() {
     capture::capture_absolute_image(&rect).unwrap().save("test.png").unwrap();
 
 
-    let mut info: info::PickupInfo;
+    let info: info::PickupInfo;
     if rect.height * 16 == rect.width * 9 {
         info = info::PickupInfo::from_16_9(rect.width as u32, rect.height as u32, rect.left, rect.top);
     } else {
