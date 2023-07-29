@@ -132,6 +132,7 @@ Just enjoy it!
 6. ~~搜索F键与推理使用的可能为（至少间隔16ms的）不同帧的画面，infer-gap太低会不同步~~（改为同一张了，但极限gap下可能还会不同步）
 7. clean up code
 8. ~~总是检测到启动器而不是本体的窗口~~（stolen from yas，检测窗口class）
+9. 云原神支持
 
 # 总结
 
