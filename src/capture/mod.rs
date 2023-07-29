@@ -226,8 +226,9 @@ pub fn encode_wide(s: String) -> Vec<u16> {
 
 pub fn find_window(title: &str) -> Result<HWND, String> {
     let wide = encode_wide(String::from(title));
+    let class = encode_wide(String::from("UnityWndClass"));
     let result: HWND = unsafe {
-        FindWindowW(null_mut(), wide.as_ptr())
+        FindWindowW(class.as_ptr(), wide.as_ptr())
     };
     if result.is_null() {
         Err(String::from("cannot find window"))
