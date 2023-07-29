@@ -225,7 +225,7 @@ impl PickupScanner {
                 continue;
             }
 
-            // 如果 rel_y 与上一次一样且在黑名单里，说明只有一个项目，直接跳过
+            // 如果 rel_y 与上一次一样且在黑名单里，说明大概率text均未改变，直接跳过
             if rel_y == pre_pk_y  && self.black_list.contains(&inference_result) {
                 continue;
             }
