@@ -133,6 +133,7 @@ Just enjoy it!
 7. clean up code
 8. ~~总是检测到启动器而不是本体的窗口~~（stolen from yas，检测窗口class）
 9. 云原神支持
+10. 重写状态机
 
 # 总结
 
