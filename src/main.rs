@@ -79,8 +79,8 @@ fn main() {
             .short("c")
             .required(false)
             .takes_value(true)
-            .default_value("L*")
-            .help("模板匹配时使用的通道，默认使用L*通道，推荐匹配阈值固定为0.01，另一个可选值为gray"))
+            .default_value("gray")
+            .help("模板匹配时使用的通道，默认使用gray通道，另一个可选值为L*，推荐匹配阈值固定为0.01"))
         .arg(Arg::with_name("log")
             .long("log")
             .required(false)
@@ -94,7 +94,7 @@ fn main() {
     let cnt:u32 = matches.value_of("dump_idx").unwrap_or("0").parse::<u32>().unwrap();
     let infer_gap: u32 = matches.value_of("infer_gap").unwrap_or("40").parse::<u32>().unwrap();
     let template_threshold: f32 = matches.value_of("template-threshold").unwrap_or("0.1").parse::<f32>().unwrap();
-    let mut channal = matches.value_of("channal").unwrap_or("L*");
+    let mut channal = matches.value_of("channal").unwrap_or("gray");
     let log_level = matches.value_of("log").unwrap_or("info");
 
     // 首先更改日志等级
@@ -116,8 +116,8 @@ fn main() {
     
     if channal != "L*" && channal != "gray" {
         // common::error_and_quit("channal参数必须为L*或gray");
-        warn!("channal参数必须为L*或gray，使用默认值L*");
-        channal = "L*";
+        warn!("channal参数必须为L*或gray，使用默认值gray");
+        channal = "gray";
     }
 
     let mut use_l = false;
