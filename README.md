@@ -36,6 +36,8 @@ PS：旧版本模型精度（生成数据的问题，已解决）、推理间隔
 
 与[Yas](https://github.com/wormtql/yas)一样，使用SVTR网络对文字进行识别。
 
+知乎：[【原神】基于文字识别的超快自动拾取](https://zhuanlan.zhihu.com/p/645909098)
+
 
 
 # 使用
