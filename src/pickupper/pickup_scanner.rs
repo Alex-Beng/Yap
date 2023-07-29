@@ -16,7 +16,7 @@ use imageproc::definitions::Image;
 use tract_onnx::prelude::*;
 use serde_json;
 use enigo::*;
-use log::{info, warn};
+use log::{info, warn, trace};
 
 pub struct PickupScanner {
     model: CRNNModel,
@@ -133,9 +133,13 @@ impl PickupScanner {
             width: self.info.width as i32,
             height: self.info.height as i32,
         };
-
+        let mut start_time = SystemTime::now();
         loop {
             sleep(infer_gap);
+            // 输出一次loop时间
+            trace!("loop time: {}ms", start_time.elapsed().unwrap().as_millis());
+            start_time = SystemTime::now();
+
             // 截一张全屏
             let mut game_window_cap = capture::capture_absolute_image(&game_win_rect).unwrap();
             // game_window_cap.save("game_window.jpg").unwrap();
