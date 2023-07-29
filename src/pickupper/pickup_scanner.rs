@@ -235,7 +235,7 @@ impl PickupScanner {
 
             if pk_cnt == 3 {
                 // 第四次相同，说明只有一个，持续跳过
-                if pk_str == inference_result {
+                if pk_str == inference_result && self.black_list.contains(&inference_result) {
                     continue;
                 }
                 // 回到状态0
