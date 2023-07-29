@@ -126,6 +126,7 @@ impl PickupScanner {
         let mut cnt = cnt;
         let mut pk_str = String::from("");
         let mut pk_cnt = 0;
+        let mut pre_pk_y = -2333; 
 
         let game_win_rect = PixelRect {
             left: self.info.left,
@@ -133,6 +134,7 @@ impl PickupScanner {
             width: self.info.width as i32,
             height: self.info.height as i32,
         };
+
         let mut start_time = SystemTime::now();
         loop {
             sleep(infer_gap);
@@ -221,6 +223,14 @@ impl PickupScanner {
             // 模型推断为空
             if inference_result.is_empty() {
                 continue;
+            }
+
+            // 如果 rel_y 与上一次一样且在黑名单里，说明只有一个项目，直接跳过
+            if rel_y == pre_pk_y  && self.black_list.contains(&inference_result) {
+                continue;
+            }
+            else {
+                pre_pk_y = rel_y;
             }
             
             // 仿鼠标宏快速拾取狗粮
