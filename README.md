@@ -97,7 +97,7 @@ yap> cargo run --release
 5. 如果需要进行debug调试，可参考命令行参数：
 ```
 /yap --help
-YAP - 原神自动拾取器 0.1.4
+YAP - 原神自动拾取器 0.1.5
 Alex-Beng <pc98@qq.com>
 Genshin Impact Pickup Helper
 
@@ -110,7 +110,7 @@ FLAGS:
 
 OPTIONS:
     -c, --channal <channal>
-            模板匹配时使用的通道，默认使用L*通道，推荐匹配阈值固定为0.01，另一个可选值为gray [default: L*]
+            模板匹配时使用的通道，默认使用gray通道，另一个可选值为L*，推荐匹配阈值固定为0.01 [default: gray]
 
         --dump <dump>                                输出模型预测结果、原始图像、二值图像至指定的文件夹，debug专用
     -i, --dump-idx <dump_idx>                        执行dump时，输出结果起始的index [default: 0]
