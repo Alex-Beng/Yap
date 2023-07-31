@@ -27,14 +27,23 @@ _Named from [Yas](https://github.com/wormtql/yas)_
 
 模型训练：[yap-train](https://github.com/Alex-Beng/yap-train)
 
-PS：旧版本模型精度（生成数据的问题，已解决）、推理间隔（100ms，现在是40ms）、滚动逻辑（目前是会上下翻的状态机）等问题，显得比较慢。
+
+PS：旧版本（≤v0.1.5）为单区域策略，导致性能受制于推理间隔`infer-gap`及模板匹配+推理的时间，
+在v0.1.6中改为多区域策略，性能不再受制于`infer-gap`。
+
+PS：旧版本模型精度（生成数据的问题，已解决）、推理间隔（100ms，现在是0ms）、滚动逻辑（目前是会上下翻的状态机）等问题，显得比较慢。
 
 # 原理
 
 
 使用基于L*/灰度通道的模板匹配进行F键的定位，使用固定位置截取拾取物的文字。
+目前的策略是截取包含F键上下两个可能存在的拾取物文字，共五个区域。
 
-与[Yas](https://github.com/wormtql/yas)一样，使用SVTR网络对文字进行识别。
+之后，与[Yas](https://github.com/wormtql/yas)一样，使用SVTR网络对预处理后的区域图片进行识别。
+
+通过一组硬编码的逻辑，生成动作序列`ops`，在进行执行。
+
+
 
 知乎：[【原神】基于文字识别的超快自动拾取](https://zhuanlan.zhihu.com/p/645909098)
 
@@ -69,9 +78,9 @@ PS：旧版本模型精度（生成数据的问题，已解决）、推理间隔
 
 可以通过修改`infer-gap`参数来调整推理间隔，单位ms。
 
-默认值为40ms。
+默认值为0ms。
 
-对于60FPS游戏，一帧为16ms，最低设置为16ms。再低可能导致不同步。
+对于60FPS游戏，一帧为16ms，如果出现不同步，可调高为至少16ms。
 
 ```bash
 ./yap.exe --infer-gap 16 # 推理间隔为16ms
@@ -111,16 +120,17 @@ yap> cargo run --release
 5. 如果需要进行debug调试，可参考命令行参数：
 ```
 /yap --help
-YAP - 原神自动拾取器 0.1.5
+YAP - 原神自动拾取器 0.1.6
 Alex-Beng <pc98@qq.com>
 Genshin Impact Pickup Helper
 
 USAGE:
-    yap.exe [OPTIONS]
+    yap.exe [FLAGS] [OPTIONS]
 
 FLAGS:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
+    -h, --help         Prints help information
+        --no-pickup    不执行拾取，仅info拾取动作，debug专用
+    -V, --version      Prints version information
 
 OPTIONS:
     -c, --channal <channal>
@@ -128,11 +138,10 @@ OPTIONS:
 
         --dump <dump>                                输出模型预测结果、原始图像、二值图像至指定的文件夹，debug专用
     -i, --dump-idx <dump_idx>                        执行dump时，输出结果起始的index [default: 0]
-    -g, --infer-gap <infer_gap>                      一次检测推理拾取的间隔，单位ms [default: 40]
-        --log <log>                                  日志等级，可选值为trace, debug, info, warn, error [default: info]
+    -g, --infer-gap <infer_gap>                      一次检测推理拾取的间隔，单位ms [default: 0]
+        --log <log>                                  日志等级，可选值为trace, debug, info, warn, error [default: warn]
     -t, --template-threshold <template-threshold>
             模板匹配的阈值，约小越严格，灰度通道中匹配值在0.01-0.09左右 [default: 0.1]
-
 ```
 
 Just enjoy it!
@@ -149,8 +158,9 @@ Just enjoy it!
 7. clean up code
 8. ~~总是检测到启动器而不是本体的窗口~~（stolen from yas，检测窗口class）
 9. 云原神支持
-10. 重写状态机
-11. 一次感知所有text
+10. ~~重写状态机~~（v0.1.6）
+11. ~~一次感知所有text~~（v0.1.6）
+12. 模板匹配耗时太长，~50ms。推理也才~30ms。改用网络？
 
 # 总结
 
