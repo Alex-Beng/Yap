@@ -217,7 +217,7 @@ pub fn run_match_template(
 // u8 sRGB to L channel
 pub fn rgb_to_l(image: &RgbImage) -> GrayImage {
     let f = |t: f32| -> f32 {
-        let thre: f32 = (6.*6.*6. /29./29./29.);
+        let thre: f32 = 6.*6.*6. /29./29./29.;
         let a: f32 = 1.0 / 3.0 * 29.0 * 29.0 / 6.0 / 6.0;
         let b: f32 = 16.0 / 116.0;
         
