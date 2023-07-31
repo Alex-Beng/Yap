@@ -7,12 +7,18 @@ pub struct WindowInfo {
     pub width: f64,
     pub height: f64,
 
+    // F键区域
     pub f_area_pos: Rect,
+    // 模板宽高
     pub f_template_w: f64,
     pub f_template_h: f64,
     
+    // 拾取框的x坐标范围
     pub pickup_x_beg: f64,
     pub pickup_x_end: f64,
+
+    // 拾取物间隔
+    pub pickup_y_gap: f64,
 }
 
 impl WindowInfo {
@@ -41,15 +47,19 @@ impl WindowInfo {
             y / self.height * h
         };
         PickupInfo { 
+            left: left,
+            top: top,
+            width: w as u32,
+            height: h as u32,
+
             f_area_position: convert_rect(&self.f_area_pos), 
             f_template_w: convert_x(self.f_template_w) as u32,
             f_template_h: convert_y(self.f_template_h) as u32,
+
             pickup_x_beg: convert_x(self.pickup_x_beg) as u32,
             pickup_x_end: convert_x(self.pickup_x_end) as u32,
-            width: w as u32,
-            height: h as u32,
-            left,
-            top,
+
+            pickup_y_gap: convert_y(self.pickup_y_gap) as u32,
         }
     }
 }
@@ -62,4 +72,7 @@ pub const WINDOW_16_9: WindowInfo = WindowInfo {
     f_template_h: 38.0,
     pickup_x_beg: 1218.0,
     pickup_x_end: 1426.0,
+
+    pickup_y_gap: 72.0,
 };
+//475, 547
