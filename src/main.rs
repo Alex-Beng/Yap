@@ -65,7 +65,7 @@ fn main() {
             .short("g")
             .required(false)
             .takes_value(true)
-            .default_value("40")
+            .default_value("0")
             .help("一次检测推理拾取的间隔，单位ms"))
         .arg(Arg::with_name("template-threshold")
             .long("template-threshold")
@@ -87,15 +87,21 @@ fn main() {
             .takes_value(true)
             .default_value("warn")
             .help("日志等级，可选值为trace, debug, info, warn, error"))
+        .arg(Arg::with_name("no_pickup")
+            .long("no-pickup")
+            .required(false)
+            .takes_value(false)
+            .help("不执行拾取，仅info拾取动作，debug专用"))
         .get_matches();
     
     let dump: bool = matches.is_present("dump");
     let dump_path = matches.value_of("dump").unwrap_or("./dumps/");
     let cnt:u32 = matches.value_of("dump_idx").unwrap_or("0").parse::<u32>().unwrap();
-    let infer_gap: u32 = matches.value_of("infer_gap").unwrap_or("40").parse::<u32>().unwrap();
+    let infer_gap: u32 = matches.value_of("infer_gap").unwrap_or("0").parse::<u32>().unwrap();
     let template_threshold: f32 = matches.value_of("template-threshold").unwrap_or("0.1").parse::<f32>().unwrap();
     let mut channal = matches.value_of("channal").unwrap_or("gray");
     let log_level = matches.value_of("log").unwrap_or("warn");
+    let no_pickup = matches.is_present("no_pickup");
 
     // 首先更改日志等级
     let mut builder = Builder::from_env(Env::default().default_filter_or(log_level));
@@ -155,7 +161,7 @@ fn main() {
     // Pickup 主逻辑
     let mut pickupper = Pickupper::new(info, String::from("./black_lists.json"), use_l);
 
-    pickupper.start(dump, dump_path.to_string(), cnt, infer_gap,  template_threshold);
+    pickupper.start(dump, dump_path.to_string(), cnt, infer_gap,  template_threshold, !no_pickup);
 
 
 }
