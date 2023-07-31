@@ -95,7 +95,7 @@ fn main() {
     let infer_gap: u32 = matches.value_of("infer_gap").unwrap_or("40").parse::<u32>().unwrap();
     let template_threshold: f32 = matches.value_of("template-threshold").unwrap_or("0.1").parse::<f32>().unwrap();
     let mut channal = matches.value_of("channal").unwrap_or("gray");
-    let log_level = matches.value_of("log").unwrap_or("info");
+    let log_level = matches.value_of("log").unwrap_or("warn");
 
     // 首先更改日志等级
     let mut builder = Builder::from_env(Env::default().default_filter_or(log_level));
