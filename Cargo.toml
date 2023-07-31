@@ -27,3 +27,5 @@ winapi = { version = "0.3", features = ["winuser", "winbase", "wingdi", "winnt",
 lto = true
 panic = "abort"
 strip = true
+opt-level = 3
+codegen-units = 8
