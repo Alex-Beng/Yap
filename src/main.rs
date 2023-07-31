@@ -85,7 +85,7 @@ fn main() {
             .long("log")
             .required(false)
             .takes_value(true)
-            .default_value("info")
+            .default_value("warn")
             .help("日志等级，可选值为trace, debug, info, warn, error"))
         .get_matches();
     
