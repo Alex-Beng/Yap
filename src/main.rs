@@ -11,7 +11,7 @@ use yap::capture;
 use yap::common;
 use yap::inference::img_process::rgb_to_l;
 use yap::info;
-use yap::pickupper::pickup_scanner::PickupScanner;
+use yap::pickupper::pickupper::Pickupper;
 
 use image::imageops::grayscale;
 use image::{DynamicImage, ImageBuffer, Pixel};
@@ -153,7 +153,7 @@ fn main() {
     }
 
     // Pickup 主逻辑
-    let mut pickupper = PickupScanner::new(info, String::from("./black_lists.json"), use_l);
+    let mut pickupper = Pickupper::new(info, String::from("./black_lists.json"), use_l);
 
     pickupper.start(dump, dump_path.to_string(), cnt, infer_gap,  template_threshold);
 

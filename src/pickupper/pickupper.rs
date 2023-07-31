@@ -18,7 +18,7 @@ use serde_json;
 use enigo::*;
 use log::{info, warn, trace};
 
-pub struct PickupScanner {
+pub struct Pickupper {
     model: CRNNModel,
     enigo: Enigo,
 
@@ -35,8 +35,8 @@ pub struct PickupScanner {
     use_l: bool
 }
 
-impl PickupScanner {
-    pub fn new(info: PickupInfo, black_list_path: String, use_l: bool) -> PickupScanner {
+impl Pickupper {
+    pub fn new(info: PickupInfo, black_list_path: String, use_l: bool) -> Pickupper {
         let mut bk_list: HashSet<String> = HashSet::new();
         // println!("black list path: {}", black_list_path);
         // 从black_list_path读取json中每一个String，加入到bk_list中
@@ -74,7 +74,7 @@ impl PickupScanner {
         let template = imageops::resize(&template, info.f_template_w, info.f_template_h, imageops::FilterType::Gaussian);
 
         
-        PickupScanner {
+        Pickupper {
             model: CRNNModel::new(String::from("model_training.onnx"), String::from("index_2_word.json")),
             enigo: Enigo::new(),
 
@@ -139,7 +139,7 @@ impl PickupScanner {
         loop {
             sleep(infer_gap);
             // 输出一次loop时间
-            trace!("loop time: {}ms", start_time.elapsed().unwrap().as_millis());
+            info!("loop time: {}ms", start_time.elapsed().unwrap().as_millis());
             start_time = SystemTime::now();
 
             // 截一张全屏
@@ -180,6 +180,13 @@ impl PickupScanner {
                     self.info.pickup_x_end as u32 - self.info.pickup_x_beg as u32,
                     self.f_template.height() as u32,
                 );
+            // let f_text_cap2 = crop(&mut game_window_cap,
+            //         self.info.pickup_x_beg as u32,
+            //         self.info.f_area_position.top as u32 + rel_y as u32,
+            //         self.info.pickup_x_end as u32 - self.info.pickup_x_beg as u32,
+            //         self.f_template.height() as u32,
+            //     );
+            // 745 -> 548
             let f_text_cap = DynamicImage::ImageRgb8(f_text_cap.to_image());
             
             let f_text_cap_gray: GrayImage;
