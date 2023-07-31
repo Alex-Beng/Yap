@@ -122,7 +122,7 @@ impl Pickupper {
 
     
 
-    pub fn start(&mut self, dump: bool, dump_path: String, cnt: u32, infer_gap: u32, temp_thre: f32) {
+    pub fn start(&mut self, dump: bool, dump_path: String, cnt: u32, infer_gap: u32, temp_thre: f32, do_pickup: bool) {
         let mut cnt = cnt;
         let mut pk_str = String::from("");
         let mut pk_cnt = 0;
@@ -142,6 +142,7 @@ impl Pickupper {
             info!("loop time: {}ms", start_time.elapsed().unwrap().as_millis());
             start_time = SystemTime::now();
 
+            let temp_match_time = SystemTime::now();
             // 截一张全屏
             let mut game_window_cap = capture::capture_absolute_image(&game_win_rect).unwrap();
             // game_window_cap.save("game_window.jpg").unwrap();
@@ -163,142 +164,184 @@ impl Pickupper {
             else {
                 f_area_cap_gray = grayscale(&f_area_cap);
             }
-
-
             // f_area_cap_gray.save("farea.jpg").unwrap();
             // self.f_template.save("f_template.jpg").unwrap();
             let (rel_x, rel_y) = run_match_template(&f_area_cap_gray, &self.f_template, temp_thre);
-            
+
+            info!("temp match time: {}ms", temp_match_time.elapsed().unwrap().as_millis());
             if rel_x < 0 {
                 continue;
-            } 
-
-            // otsu阈值分割获取f对应的文字
-            let f_text_cap = crop(&mut game_window_cap,
-                    self.info.pickup_x_beg as u32,
-                    self.info.f_area_position.top as u32 + rel_y as u32,
-                    self.info.pickup_x_end as u32 - self.info.pickup_x_beg as u32,
-                    self.f_template.height() as u32,
-                );
-            // let f_text_cap2 = crop(&mut game_window_cap,
-            //         self.info.pickup_x_beg as u32,
-            //         self.info.f_area_position.top as u32 + rel_y as u32,
-            //         self.info.pickup_x_end as u32 - self.info.pickup_x_beg as u32,
-            //         self.f_template.height() as u32,
-            //     );
-            // 745 -> 548
-            let f_text_cap = DynamicImage::ImageRgb8(f_text_cap.to_image());
-            
-            let f_text_cap_gray: GrayImage;
-            if self.use_l {
-                f_text_cap_gray = rgb_to_l(&f_text_cap.to_rgb8());
-            }
-            else {
-                f_text_cap_gray = grayscale(&f_text_cap);
             }
             
-            let otsu_thr = imageproc::contrast::otsu_level(&f_text_cap_gray);
-            let f_text_cap_bin: ImageBuffer<Luma<u8>, Vec<u8>> = imageproc::contrast::threshold(&f_text_cap_gray, otsu_thr);
+            let infer_time = SystemTime::now();
+
+            let mut res_strings:[String; 5] = [
+                String::from(""),
+                String::from(""),
+                String::from(""),
+                String::from(""),
+                String::from(""),
+            ];
             
-            // f_text_cap_bin.save("f_text_bin.jpg").unwrap();
-            
-            let bin_resized = imageops::resize(&f_text_cap_bin, 145, 32, imageops::FilterType::Gaussian);
+            for yi in 0..5 {
+                let y_offset = (yi - 2) * self.info.pickup_y_gap as i32 + rel_y as i32;
 
-            let mut padded_image = ImageBuffer::new(384, 32);
-            padded_image.copy_from(&bin_resized, 0, 0).unwrap();
+                let f_text_cap = crop(&mut game_window_cap,
+                        self.info.pickup_x_beg as u32,
+                        (self.info.f_area_position.top as i32 + y_offset) as u32,
+                        self.info.pickup_x_end as u32 - self.info.pickup_x_beg as u32,
+                        self.f_template.height() as u32,
+                    );
+                let f_text_cap = DynamicImage::ImageRgb8(f_text_cap.to_image());
+                let f_text_cap_gray: GrayImage;
+                if self.use_l {
+                    f_text_cap_gray = rgb_to_l(&f_text_cap.to_rgb8());
+                }
+                else {
+                    f_text_cap_gray = grayscale(&f_text_cap);
+                }
+                
+                let otsu_thr = imageproc::contrast::otsu_level(&f_text_cap_gray);
+                let f_text_cap_bin: ImageBuffer<Luma<u8>, Vec<u8>> = imageproc::contrast::threshold(&f_text_cap_gray, otsu_thr);
+                // f_text_cap.save(format!("f_text_{}.jpg", yi)).unwrap();
+                
+                let bin_resized = imageops::resize(&f_text_cap_bin, 145, 32, imageops::FilterType::Gaussian);
 
-            let vec: Vec<f32> = padded_image.pixels().map(|p| p[0] as f32 / 255.0).collect();
-            let raw_img = RawImage {
-                data: vec,
-                h: padded_image.height(),
-                w: padded_image.width(),
-            };
-            // raw_img.to_gray_image().save("cao.jpg");
-            // processed_img.to_gray_image().save("processed.jpg");
+                let mut padded_image = ImageBuffer::new(384, 32);
+                padded_image.copy_from(&bin_resized, 0, 0).unwrap();
 
-            // 还需要缩放到 32, x
-            // println!("h: {}, w: {}", raw_img.h, raw_img.w);
-            
-            let inference_result = self.model.inference_string(&raw_img);
+                let vec: Vec<f32> = padded_image.pixels().map(|p| p[0] as f32 / 255.0).collect();
+                let raw_img = RawImage {
+                    data: vec,
+                    h: padded_image.height(),
+                    w: padded_image.width(),
+                };
+                // raw_img.to_gray_image().save("cao.jpg");
+                // processed_img.to_gray_image().save("processed.jpg");
 
-            if dump {
-                f_text_cap.save(format!("{}/{}_{}_raw.jpg", dump_path, cnt, inference_result)).unwrap();
-                f_text_cap_bin.save(format!("{}/{}_{}_bin.jpg", dump_path, cnt, inference_result)).unwrap();
-                cnt += 1;
+                // 还需要缩放到 32, x
+                // println!("h: {}, w: {}", raw_img.h, raw_img.w);
+                
+
+                // let t1 = SystemTime::now();
+                let inference_result = self.model.inference_string(&raw_img);
+                // info!("inference 1 time: {}ms", t1.elapsed().unwrap().as_millis());
+
+                if dump {
+                    f_text_cap.save(format!("{}/{}_{}_{}_raw.jpg", dump_path, cnt, yi, inference_result)).unwrap();
+                    f_text_cap_bin.save(format!("{}/{}_{}_{}_bin.jpg", dump_path, cnt, yi, inference_result)).unwrap();
+                    cnt += 1;
+                }
+
+                res_strings[yi as usize] = inference_result;
             }
 
-            // 模型推断为空
-            if inference_result.is_empty() {
-                continue;
-            }
+            info!("infer time: {}ms", infer_time.elapsed().unwrap().as_millis());
 
-            // 如果 rel_y 与上一次一样且在黑名单里，说明大概率text均未改变，直接跳过
-            if rel_y == pre_pk_y  && self.black_list.contains(&inference_result) {
-                continue;
+            // 输出所有推理结果
+            info!("推理结果: ");
+            for i in 0..5 {
+                info!("{}: {}", i, res_strings[i as usize]);
             }
-            else {
-                pre_pk_y = rel_y;
-            }
-            
-            // 仿鼠标宏快速拾取狗粮
-            if inference_result == "调查" {
-                self.enigo.key_down(enigo::Key::Layout('f'));
-                sleep(12);
-                self.enigo.key_up(enigo::Key::Layout('f'));
-                // 上翻一个比是
-                self.enigo.mouse_scroll_y(1);
-                sleep(20);
-                self.enigo.key_down(enigo::Key::Layout('f'));
-                sleep(12);
-                self.enigo.key_up(enigo::Key::Layout('f'));
-                continue;
-            }
-
-
-            // 累计三次相同向上翻
-            if pk_cnt == 2 {
-                self.enigo.mouse_scroll_y(1);
-                sleep(20);
-                self.enigo.mouse_scroll_y(1);
-                sleep(20);
-                self.enigo.mouse_scroll_y(1);
-                // sleep(20);
-                pk_cnt = 0;
-                pk_str = String::from("");
-                continue;
-            }
-            else if  pk_cnt == 1 && pk_str == inference_result {
-                pk_cnt += 1;
-            }
-            else if pk_cnt == 0 && pk_str == inference_result {
-                pk_cnt += 1;
-            }
-            else {
-                pk_str = inference_result.clone();
-                pk_cnt = 0;
-            }
-
-
-            if ! self.all_list.contains(&inference_result) {
-                warn!("不在大名单: {}", inference_result);
-                self.enigo.mouse_scroll_y(-1);
-                continue;
-            }
-            if self.black_list.contains(&inference_result) {
-                warn!("黑名单: {}", inference_result);
-                self.enigo.mouse_scroll_y(-1);
-                continue;
-            }
-            info!("拾起: {}", inference_result);
-
-            self.enigo.key_down(enigo::Key::Layout('f'));
-            sleep(12);
-            self.enigo.key_up(enigo::Key::Layout('f'));
-
-            self.enigo.mouse_scroll_y(-1);
-            // common::error_and_quit("test");
-
+            self.do_pickups(&res_strings, do_pickup);
+        
         }
     }
+    pub fn do_pickups(&mut self, infer_res: &[String; 5], do_pk: bool) {
+        // 规划的最终动作
+        // 0: do F
+        // -1: scroll down -1
+        // 1: scroll up 1
+        let mut ops: Vec<i32> = Vec::new();
+
+        let mut is_pks = vec![0, 0, 0, 0, 0];
+        let mut need_pks = vec![0, 0, 0, 0, 0];
+        for i in 0..5 {
+            let s = &infer_res[i as usize];
+            if s != "" {
+                is_pks[i as usize] = 1;
+            }
+            if self.all_list.contains(s) && !self.black_list.contains(s) {
+                need_pks[i as usize] = 1;
+            }
+        }
+        let up2sum = is_pks[0] + is_pks[1];
+        let dn2sum = is_pks[3] + is_pks[4];
+        let is_pks_sum: i32 = is_pks.iter().sum();
+        let mut need_pks_sum: i32 = need_pks.iter().sum();
+        
+        if need_pks_sum == 0 {
+            if up2sum <= dn2sum && dn2sum > 0 {
+                ops.push(-1);
+                ops.push(-1);
+            }
+            else {
+                // 11100 01100 
+                if up2sum == 2 && dn2sum == 0 || up2sum == 1 && dn2sum == 0 {
+                }
+                // not 00100
+                else if up2sum != 0 {
+                    ops.push(1);
+                }
+            }
+        }
+
+        let mut t_curr_f = 2;
+        while need_pks_sum > 0 {
+            if need_pks[t_curr_f] == 1 {
+                ops.push(0);
+                need_pks_sum -= 1;
+                need_pks.remove(t_curr_f);
+            }
+            else {
+                for i in 0..need_pks.len() {
+                    if need_pks[i] == 1 {
+                        if i < t_curr_f {
+                            if t_curr_f - i == 1 {
+                                ops.push(1);
+                                t_curr_f -= 1;
+                            }
+                            else {
+                                ops.push(1);
+                                ops.push(1);
+                                t_curr_f -= 2;
+                            }
+                        }
+                        else {
+                            if i - t_curr_f == 1 {
+                                ops.push(-1);
+                                t_curr_f += 1;
+                            }
+                            else {
+                                ops.push(-1);
+                                ops.push(-1);
+                                t_curr_f += 2;
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        info!("拾起动作: {:?}", ops);
+        if !do_pk {
+            return;
+        }
+
+        for op in ops {
+            if op == 0 {
+                self.enigo.key_down(enigo::Key::Layout('f'));
+                sleep(12);
+                self.enigo.key_up(enigo::Key::Layout('f'));
+            }
+            else {
+                self.enigo.mouse_scroll_y(op);
+                sleep(20);
+            }
+        }
+
+    }
+    
 }
 
