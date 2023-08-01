@@ -296,8 +296,9 @@ impl Pickupper {
                 ops.push(0);
                 need_pks_sum -= 1;
                 need_pks.remove(t_curr_f);
-                if dn2sum == 0 {
+                if dn2sum == 0 && t_curr_f != 0  {
                     t_curr_f -= 1;
+                    
                 }
             }
             else {
