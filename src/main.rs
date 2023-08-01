@@ -65,7 +65,7 @@ fn main() {
             .short("g")
             .required(false)
             .takes_value(true)
-            .default_value("0")
+            .default_value("20")
             .help("一次检测推理拾取的间隔，单位ms"))
         .arg(Arg::with_name("template-threshold")
             .long("template-threshold")
@@ -97,7 +97,7 @@ fn main() {
     let dump: bool = matches.is_present("dump");
     let dump_path = matches.value_of("dump").unwrap_or("./dumps/");
     let cnt:u32 = matches.value_of("dump_idx").unwrap_or("0").parse::<u32>().unwrap();
-    let infer_gap: u32 = matches.value_of("infer_gap").unwrap_or("0").parse::<u32>().unwrap();
+    let infer_gap: u32 = matches.value_of("infer_gap").unwrap_or("20").parse::<u32>().unwrap();
     let template_threshold: f32 = matches.value_of("template-threshold").unwrap_or("0.1").parse::<f32>().unwrap();
     let mut channal = matches.value_of("channal").unwrap_or("gray");
     let log_level = matches.value_of("log").unwrap_or("warn");
