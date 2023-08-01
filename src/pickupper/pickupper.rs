@@ -339,12 +339,13 @@ impl Pickupper {
         for op in ops {
             if op == 0 {
                 self.enigo.key_down(enigo::Key::Layout('f'));
-                sleep(50);
+                sleep(25);
                 self.enigo.key_up(enigo::Key::Layout('f'));
+                sleep(90);
             }
             else {
                 self.enigo.mouse_scroll_y(op);
-                sleep(50);
+                sleep(25);
             }
         }
 
