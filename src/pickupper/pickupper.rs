@@ -340,7 +340,7 @@ impl Pickupper {
         for op in ops {
             if op == 0 {
                 self.enigo.key_down(enigo::Key::Layout('f'));
-                sleep(25);
+                sleep(50);
                 self.enigo.key_up(enigo::Key::Layout('f'));
                 sleep(90);
             }
