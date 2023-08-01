@@ -252,6 +252,10 @@ impl Pickupper {
         // 0: do F
         // -1: scroll down -1
         // 1: scroll up 1
+        if infer_res[2] == "" {
+            info!("中间为空，不拾取");
+            return;
+        }
         let mut ops: Vec<i32> = Vec::new();
 
         let mut is_pks = vec![0, 0, 0, 0, 0];
