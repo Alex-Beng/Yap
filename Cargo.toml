@@ -28,4 +28,4 @@ lto = true
 panic = "abort"
 strip = true
 opt-level = 3
-codegen-units = 8
+codegen-units = 1
