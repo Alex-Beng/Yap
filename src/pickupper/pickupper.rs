@@ -295,11 +295,11 @@ impl Pickupper {
             if need_pks[t_curr_f] == 1 {
                 ops.push(0);
                 need_pks_sum -= 1;
-                need_pks.remove(t_curr_f);
-                if dn2sum == 0 && t_curr_f != 0  {
+                if t_curr_f == need_pks.len()-1 {
                     t_curr_f -= 1;
-                    
                 }
+                need_pks.remove(t_curr_f);
+
             }
             else {
                 for i in 0..need_pks.len() {
