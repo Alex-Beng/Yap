@@ -346,7 +346,7 @@ impl Pickupper {
             }
             else {
                 self.enigo.mouse_scroll_y(op);
-                sleep(25);
+                sleep(40);
             }
         }
 
