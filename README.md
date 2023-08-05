@@ -13,7 +13,7 @@ _Named from [Yas](https://github.com/wormtql/yas)_
 
 借鉴了[Yas](https://github.com/wormtql/yas)代码实现的自动拾取器。
 
-一个开箱即用、跑的飞快、占用资源极低、可配置黑名单的自动拾取器，解放F键。
+一个开箱即用、跑的飞快、占用资源极低、可配置黑名单的自动拾取器，解放滚轮和F键。
 
 
 ![pickup demo](./imgs/pk.gif)
