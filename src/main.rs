@@ -35,13 +35,6 @@ use log::{info, LevelFilter, warn};
 
 fn main() {
 
-    if !common::is_admin() {
-        common::error_and_quit("请以管理员身份运行该程序");
-    }
-
-    if let Some(v) = common::check_update() {
-        warn!("检测到新版本，请手动更新：{}", v);
-    }
     let version = common::get_version();
 
     let matches = App::new("YAP - 原神自动拾取器")
@@ -108,6 +101,14 @@ fn main() {
     builder.target(Target::Stdout);
     builder.init();
 
+    // 移动管理员权限检查、版本更新至logger初始化之后
+    if !common::is_admin() {
+        common::error_and_quit("请以管理员身份运行该程序");
+    }
+
+    if let Some(v) = common::check_update() {
+        warn!("检测到新版本，请手动更新：{}", v);
+    }
 
     
     // 检查dump_path是否存在，不存在则创建
