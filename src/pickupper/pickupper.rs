@@ -30,6 +30,8 @@ pub struct Pickupper {
     black_list: HashSet<String>,
     // 所有物品
     all_list: HashSet<String>,
+    // 白名单
+    white_list: HashSet<String>,
 
     // 是否使用L*通道
     use_l: bool
@@ -38,6 +40,8 @@ pub struct Pickupper {
 impl Pickupper {
     pub fn new(info: PickupInfo, black_list_path: String, use_l: bool) -> Pickupper {
         let mut bk_list: HashSet<String> = HashSet::new();
+        let mut wt_list: HashSet<String> = HashSet::new();
+
         // println!("black list path: {}", black_list_path);
         // 从black_list_path读取json中每一个String，加入到bk_list中
         // 老子也硬编码得了
@@ -51,6 +55,19 @@ impl Pickupper {
         for item in bk_items {
             bk_list.insert(item.as_str().unwrap().to_string());
             info!("添加到黑名单: {}", item.as_str().unwrap().to_string());
+            
+        }
+            
+        let white_list_path = "./white_lists.json";
+        let mut file = File::open(white_list_path).expect("Failed to open white list file");
+        let mut content = String::new();
+        file.read_to_string(&mut content).expect("Failed to read white list file");
+
+        let json: serde_json::Value = serde_json::from_str(content.as_str()).unwrap();
+        let white_items = json.as_array().unwrap();
+        for item in white_items {
+            wt_list.insert(item.as_str().unwrap().to_string());
+            info!("添加到白名单: {}", item.as_str().unwrap().to_string());
             
         }
 
@@ -84,6 +101,7 @@ impl Pickupper {
 
             black_list: bk_list,
             all_list: all_list,
+            white_list: wt_list,
 
             use_l: use_l,
         }
@@ -265,7 +283,7 @@ impl Pickupper {
             if s != "" {
                 is_pks[i as usize] = 1;
             }
-            if self.all_list.contains(s) && !self.black_list.contains(s) {
+            if self.white_list.contains(s) || self.all_list.contains(s) && !self.black_list.contains(s) {
                 need_pks[i as usize] = 1;
             }
         }
