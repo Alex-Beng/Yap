@@ -224,11 +224,24 @@ pub fn encode_wide(s: String) -> Vec<u16> {
     wide
 }
 
-pub fn find_window(title: &str) -> Result<HWND, String> {
-    let wide = encode_wide(String::from(title));
+pub fn find_window_local() -> Result<HWND, String> {
+    let wide = encode_wide(String::from("原神"));
     let class = encode_wide(String::from("UnityWndClass"));
     let result: HWND = unsafe {
         FindWindowW(class.as_ptr(), wide.as_ptr())
+    };
+    if result.is_null() {
+        Err(String::from("cannot find window"))
+    } else {
+        Ok(result)
+    }
+}
+
+pub fn find_window_cloud() -> Result<HWND, String> {
+    let wide = encode_wide(String::from("云·原神"));
+    // TODO: 云·原神
+    let result: HWND = unsafe {
+        FindWindowW(null_mut(), wide.as_ptr())
     };
     if result.is_null() {
         Err(String::from("cannot find window"))

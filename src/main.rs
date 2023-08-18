@@ -135,7 +135,7 @@ fn main() {
     }
 
 
-    let hwnd = match capture::find_window("原神") {
+    let hwnd = match capture::find_window_local() {
         Err(s) => {
             common::error_and_quit("未找到原神窗口，请确认原神已经开启");
         },
