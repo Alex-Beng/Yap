@@ -1,3 +1,5 @@
+# 4.0 进度 6436
+
 import os
 import cv2
 import numpy as np
@@ -19,8 +21,8 @@ def exist_or_create_json(path):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-f', type=str, required=True, help="需要标注的文件夹", default='')
-parser.add_argument('--start', type=int, required=False, help="开始的序号", default=0)
-parser.add_argument('--end', type=int, required=False, help="结束的序号", default=0)
+parser.add_argument('--start', type=int, required=False, help="开始的idx", default=0)
+parser.add_argument('--end', type=int, required=False, help="结束的idx", default=0)
 
 args = parser.parse_args()
 print(args.f, args.start, args.end)
@@ -40,49 +42,61 @@ assert(len(x) == len(y))
 print('labeled:', len(y))
 print(len(set(y)))
 
-cnt = args.start
+idx = args.start
 
-idx2name = {}
-idx2label = {}
+nn2name = {}
+nn2label = {}
 for file_name in os.listdir(root_path):
+
     if file_name.endswith('_raw.jpg'):
-        idx = int(file_name.split('_')[0])
-        lb = file_name.split('_')[1]
-        idx2name[idx] = file_name
-        idx2label[idx] = lb
+        t_wds = file_name.split('_')
+        # 因为多区域策略，一个idx有多张图
+        # print(f'nn: {int(t_wds[0])} {int(t_wds[1])}')
+        nn = int(t_wds[0])*10 + int(t_wds[1])
+        lb = t_wds[2]
+        nn2name[nn] = file_name
+        nn2label[nn] = lb
+
+nns = sorted(list(nn2name.keys()))
+nns2idx = {} # 用于回退上一张图片
+
+for i in range(len(nns)):
+    nns2idx[nns[i]] = i
+# print(nn2name, nn2label, nns2idx)
+
+
+print('total:', len(nns))
 # print(list(idx2label.items())[:10])
 # 记录时间
 import time
-beg_cnt = cnt
+beg_idx = idx
 start = time.time()
 
-while cnt <= args.end:
-    if cnt not in idx2name:
-        cnt += 1
-        continue
-
-    path = os.path.join(root_path, idx2name[cnt])
-    print(f'labeling, {path}')
+print(f'cccc{idx}, {len(nns)}')
+while idx <= args.end and idx <= len(nns):
+    nn = nns[idx]
+    path = os.path.join(root_path, nn2name[nn])
+    print(f'labeling, {idx}, {path}')
     img = Image.open(path)
     # img = cv2.imread(path)
     img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
     # img = cv2.resize(img, (145, 32))
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    if (beg_cnt - cnt - 1)%100 == 0:
+    if (beg_idx - idx - 1)%100 == 0:
         print()
         print()
         print()
-        print(f'tpm = {(cnt - beg_cnt) / (time.time() - start)}')
+        print(f'tpm = {(idx - beg_idx) / (time.time() - start)}')
         print()
 
     cv2.imshow("raw", img)
 
-    img = cv2.threshold(img, 127, 255, cv2.THRESH_OTSU)[1]
+    img = cv2.threshold(img, 0, 255, cv2.THRESH_OTSU)[1]
     # img = cv2.copyMakeBorder(img, 0,0,0,384-145, cv2.BORDER_CONSTANT, value=0)
     text2 = image_to_string(img, lang='chi_sim')
     text2 = text2.strip()
-    text = idx2label[cnt]
+    text = nn2label[nn]
     print(f"=a;={text}=={text==text2}\n=z/={text2}==")
     
     cv2.imshow("le", img)
@@ -93,13 +107,24 @@ while cnt <= args.end:
     k = cv2.waitKey(0)
     # 我测这个键位左手太累了，本来打字就很多左手了
     # 左右手镜像键位
+    # O/W 删除上一个
+    # Q 保存退出
+    # ;/A 添加第一个作为标签
+    # Z// 添加第二个作为标签
+    # L/S 添加输入的标签
+    # K/D 设为空标签
+    # J/F 添加上一个一样的标签
     if k == ord('o') or k == ord('w'):
         x = x[:-1]
         y = y[:-1]
         print(y[-10:])
         print(len(set(y)))
-        print(x[-1])
-        cnt = int(x[-1].split('\\')[-1].split('_')[0]) if len(x) else args.start-1
+        print(x[-10:])
+        idx = nns2idx[
+            int(x[-1].split('\\')[-1].split('_')[0])*10 + 
+            int(x[-1].split('\\')[-1].split('_')[1])
+            ]
+        # cnt = int(x[-1].split('\\')[-1].split('_')[0]) if len(x) else args.start-1
     elif k == ord('q'):
         js_dp(x, x_path)
         js_dp(y, y_path)
@@ -136,7 +161,7 @@ while cnt <= args.end:
         y.append(text)
         print(y[-10:])
         print(len(set(y)))
-    cnt += 1
+    idx += 1
 
 js_dp(x, x_path)
 js_dp(y, y_path)
