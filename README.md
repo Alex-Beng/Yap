@@ -55,7 +55,7 @@ PS：旧版本模型精度（生成数据的问题，已解决）、推理间隔
 
 ## 从release获取
 
-1. 点击[此处](https://github.com/Alex-Beng/Yap/releases)下载最新版本的release压缩包，解压。有两个文件：`yap.exe`和`black_lists.json`。
+1. 点击[此处](https://github.com/Alex-Beng/Yap/releases)下载最新版本的release压缩包，解压。有三个文件：`yap.exe`、`black_lists.json`和`white_lists.json`。
 
 2. 使用记事本/VSCode等编辑器打开`black_lists.json`，添加需要拉黑的拾取物品名称，注意需要使用英文符号，如：
 
@@ -70,10 +70,12 @@ PS：旧版本模型精度（生成数据的问题，已解决）、推理间隔
 ]
 ```
 
-3. 右键`yap.exe`选择以管理员身份运行
+3. 白名单`white_lists.json`设置同黑名单，不再赘述
+
+4. 右键`yap.exe`选择以管理员身份运行
 
 
-4. 性能调优（如果你会使用命令行设置参数的话）
+5. 性能调优（如果你会使用命令行设置参数的话）
 
 
 可以通过修改`infer-gap`参数来调整推理间隔，单位ms。
@@ -95,15 +97,15 @@ PS：旧版本模型精度（生成数据的问题，已解决）、推理间隔
 cargo build --release
 ```
 
-2. 修改`black_lists.json`，如上。
+2. 修改`black_lists.json`及`white_lists.json`，如上。
 
-3. 确保`black_lists.json`在执行文件的同级目录下，如下所示。
+3. 确保`black_lists.json`及`white_lists.json`在执行文件的同级目录下，如下所示。
 
 
 ```bash
-yap> cargo run --release # 项目根目录有black_lists.json, work
+yap> cargo run --release # 项目根目录有black_lists.json&white_lists.json, work
 ```
-当然你把黑名单加进环境变量也行，但不推荐。
+当然你把黑/白名单加进环境变量也行，但不推荐。
 
 
 4. 管理员运行/管理员身份打开终端运行
