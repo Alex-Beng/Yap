@@ -245,7 +245,7 @@ impl Pickupper {
                 let inference_result = self.model.inference_string(&raw_img);
                 // info!("inference 1 time: {}ms", t1.elapsed().unwrap().as_millis());
 
-                if dump {
+                if dump && inference_result != "" {
                     f_text_cap.save(format!("{}/{}_{}_{}_raw.jpg", dump_path, cnt, yi, inference_result)).unwrap();
                     f_text_cap_bin.save(format!("{}/{}_{}_{}_bin.jpg", dump_path, cnt, yi, inference_result)).unwrap();
                     cnt += 1;
