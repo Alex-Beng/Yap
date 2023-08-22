@@ -1,4 +1,5 @@
 # 4.0 进度 6436
+# 4.0_tx 进度 2068完结!
 
 import os
 import cv2
@@ -35,6 +36,7 @@ exist_or_create_json(x_path)
 exist_or_create_json(y_path)
 x = js_ld(x_path)
 y = js_ld(y_path)
+sety = set(y)
 
 assert(len(x) == len(y))
 
@@ -73,7 +75,8 @@ beg_idx = idx
 start = time.time()
 
 print(f'cccc{idx}, {len(nns)}')
-while idx <= args.end and idx <= len(nns):
+while idx < args.end and idx < len(nns):
+    print(f'labeling, {idx}/{len(nns)}')
     nn = nns[idx]
     path = os.path.join(root_path, nn2name[nn])
     print(f'labeling, {idx}, {path}')
@@ -97,7 +100,8 @@ while idx <= args.end and idx <= len(nns):
     text2 = image_to_string(img, lang='chi_sim')
     text2 = text2.strip()
     text = nn2label[nn]
-    print(f"=a;={text}=={text==text2}\n=z/={text2}==")
+    print(f"=a;={text}=={text in sety}|{text==text2}\n=z/={text2}=={text2 in sety}\n")
+    
     
     cv2.imshow("le", img)
     # print(img.shape)
@@ -107,6 +111,9 @@ while idx <= args.end and idx <= len(nns):
     k = cv2.waitKey(0)
     # 我测这个键位左手太累了，本来打字就很多左手了
     # 左右手镜像键位
+    
+    # 默认(k==-1)操作添加第一个作为标签
+
     # O/W 删除上一个
     # Q 保存退出
     # ;/A 添加第一个作为标签
@@ -129,7 +136,7 @@ while idx <= args.end and idx <= len(nns):
         js_dp(x, x_path)
         js_dp(y, y_path)
         break
-    elif k == ord(';') or k == ord('a'):
+    elif k == ord(';') or k == ord('a') or k == -1:
         x.append(path)
         y.append(text)
         print(y[-10:])
@@ -161,6 +168,7 @@ while idx <= args.end and idx <= len(nns):
         y.append(text)
         print(y[-10:])
         print(len(set(y)))
+    sety = set(y)
     idx += 1
 
 js_dp(x, x_path)
