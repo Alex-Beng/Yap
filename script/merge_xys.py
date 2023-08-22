@@ -15,7 +15,10 @@ def exist_or_create_json(path):
 root_paths = [
     'dumps/',
     'text_dumps/',
-    'dumps3'
+    'dumps3',
+    'dumps4.0',
+    'dumps4.0_tx',
+    'dumps4.0_tx2',
 ]
 
 xx = []
