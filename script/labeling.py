@@ -54,8 +54,15 @@ for file_name in os.listdir(root_path):
         t_wds = file_name.split('_')
         # 因为多区域策略，一个idx有多张图
         # print(f'nn: {int(t_wds[0])} {int(t_wds[1])}')
-        nn = int(t_wds[0])*10 + int(t_wds[1])
-        lb = t_wds[2]
+        
+        # 上古的形如 324_raw.jpg 的文件名
+        if len(t_wds) == 2:
+            nn = int(t_wds[0])
+            lb = ""
+        else:
+            nn = int(t_wds[0])*10 + int(t_wds[1])
+            lb = t_wds[2]
+            
         nn2name[nn] = file_name
         nn2label[nn] = lb
 
