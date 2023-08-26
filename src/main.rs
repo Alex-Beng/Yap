@@ -24,7 +24,9 @@ use imageproc::map::map_colors;
 use imageproc::rect::Rect;
 use imageproc::template_matching::{find_extremes, match_template, MatchTemplateMethod};
 
-use winapi::um::winuser::{SetForegroundWindow, GetDpiForSystem, SetThreadDpiAwarenessContext, ShowWindow, SW_SHOW, SW_RESTORE, GetSystemMetrics, SetProcessDPIAware};
+use winapi::um::winuser::{SetForegroundWindow, GetDpiForSystem, SetThreadDpiAwarenessContext, ShowWindow, SW_SHOW, SW_RESTORE, GetSystemMetrics, SetProcessDPIAware, GetDpiForWindow, SM_CXSCREEN, SM_CYSCREEN};
+use winapi::um::shellscalingapi::SetProcessDpiAwareness;
+
 
 use clap::{Arg, App};
 
@@ -106,6 +108,13 @@ fn main() {
         common::error_and_quit("请以管理员身份运行该程序");
     }
 
+    // 设置 DPI 感知级别
+    // 用于适配高DPI屏幕
+    let dpi_awareness = unsafe { SetProcessDpiAwareness(2) };
+    if dpi_awareness != 0 {
+        warn!("SetProcessDpiAwareness failed，高DPI可能导致程序无法正常运行");
+    }
+
     if let Some(v) = common::check_update() {
         warn!("检测到新版本，请手动更新：{}", v);
     }
@@ -141,6 +150,16 @@ fn main() {
         },
         Ok(h) => h,
     };
+    
+    // let sys_dpi = unsafe { GetDpiForSystem() };
+    // let win_dpi = unsafe { GetDpiForWindow(hwnd) };
+
+    // // let h = unsafe { GetSystemMetrics(SM_CXSCREEN) };
+    // // let w = unsafe { GetSystemMetrics(SM_CYSCREEN) };
+
+    // // info!("系统DPI = {}, 窗口DPI = {}, h = {}, w = {}", sys_dpi, win_dpi, h, w);
+    // info!("系统DPI = {}, 窗口DPI = {}", sys_dpi, win_dpi);
+    
     unsafe { ShowWindow(hwnd, SW_RESTORE); }
     unsafe { SetForegroundWindow(hwnd); }
     common::sleep(1000);

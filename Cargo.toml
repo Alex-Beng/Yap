@@ -21,7 +21,7 @@ semver = "1.0.7"
 
 
 [target.'cfg(windows)'.dependencies]
-winapi = { version = "0.3", features = ["winuser", "winbase", "wingdi", "winnt", "securitybaseapi", "libloaderapi"] }
+winapi = { version = "0.3", features = ["winuser", "winbase", "wingdi", "winnt", "securitybaseapi", "libloaderapi", "shellscalingapi"] }
 
 [profile.release]
 lto = true
