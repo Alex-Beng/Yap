@@ -5,3 +5,10 @@
 /text_dumps
 *.pk
 test.png
+*.zip
+*.jpg
+xx.json
+yy.json
+*.exe
+*.png
+*.log
