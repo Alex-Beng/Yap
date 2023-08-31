@@ -19,6 +19,13 @@ root_paths = [
     'dumps4.0',
     'dumps4.0_tx',
     'dumps4.0_tx2',
+    'dumps4.0_tx3',
+    'dumps4.0_tx4',
+    'dumps4.0_tx5',
+    'dumps4.0_tx6',
+    'dumps4.0_tx7',
+    'dumps4.0_pph',
+    'dumps4.0_syfs'
 ]
 
 xx = []
