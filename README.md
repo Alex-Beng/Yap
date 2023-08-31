@@ -53,6 +53,9 @@ PS：旧版本模型精度（生成数据的问题，已解决）、推理间隔
 
 目前仅支持windows，常规PC客户端（未支持云原神），16:9分辨率。
 
+
+全局快捷键：`Alt + F` 切换是否拾取。
+
 ## 从release获取
 
 1. 点击[此处](https://github.com/Alex-Beng/Yap/releases)下载最新版本的release压缩包，解压。有三个文件：`yap.exe`、`black_lists.json`和`white_lists.json`。
