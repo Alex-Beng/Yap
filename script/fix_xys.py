@@ -24,6 +24,13 @@ root_paths = [
     'dumps4.0',
     'dumps4.0_tx',
     'dumps4.0_tx2',
+    'dumps4.0_tx3',
+    'dumps4.0_tx4',
+    'dumps4.0_tx5',
+    'dumps4.0_tx6',
+    'dumps4.0_tx7',
+    'dumps4.0_pph',
+    'dumps4.0_syfs'
 ]
 
 error_paths = set([
@@ -122,6 +129,31 @@ error_paths = set([
     # "dumps/15198_raw.jpg",
     # "dumps4.0/1477_2_异海凝_raw.jpg",
     # "dumps4.0_tx/87_2_浊水的一_raw.jpg",
+
+    # "dumps/3277_raw.jpg",
+    # "dumps/3676_raw.jpg",
+    # "dumps/9280_raw.jpg",
+    # "dumps/13528_raw.jpg",
+    # "dumps/14751_raw.jpg",
+    # "dumps/15050_raw.jpg",
+    # "dumps/15165_raw.jpg",
+    # "dumps/16160_raw.jpg",
+    # "dumps/18382_raw.jpg",
+    # "dumps/18384_raw.jpg",
+    # "dumps/18401_raw.jpg",
+    # "dumps/18429_raw.jpg",
+    # "dumps/19283_raw.jpg",
+    # "dumps/19328_raw.jpg",
+    # "text_dumps/21096_raw.jpg",
+    # "text_dumps/23793_raw.jpg",
+    # "text_dumps/24135_raw.jpg",
+    # "dumps3/115_沉重号角_raw.jpg",
+    # "dumps3/1765_祥箭_raw.jpg",
+    # "dumps4.0_tx/54_3_浊水的_raw.jpg",
+    # "dumps4.0_tx/56_2_浊水的一_raw.jpg",
+    # "dumps4.0_tx/66_1_出生的浊水_raw.jpg",
+
+    # "dumps4.0_tx4/498_2_「正义」的教_raw.jpg",
 ])
 
 
@@ -138,14 +170,18 @@ for rp in root_paths:
             x[i] = x[i][1:]
         if x[i][:2] == './':
             x[i] = x[i][2:]
-        # if '.' in x[i]:
-        # print(x[i])
+        
+        if '.' in x[i]:
+            print(x[i])
     
-
+    syfs = set("地脉的枯叶旧枝新芽")
     # yap-train clean_up.py -> error_paths
     for i, pt in enumerate(x):
         # print(pt)
-        if pt in error_paths:
+        # if pt in error_paths:
+        # 为子集
+        # if set(y[i]).issubset(syfs) and len(y[i]) > 1:
+        if "地脉的xx" == y[i]:
             print(pt)
             with Image.open(pt) as img:
                 
