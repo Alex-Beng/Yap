@@ -2,6 +2,8 @@ use std::collections::HashSet;
 use std::fs::File;
 use std::io::Read;
 use std::time::SystemTime;
+use std::sync::{Arc, Mutex};
+
 
 use crate::common::sleep;
 use crate::inference;
@@ -18,11 +20,22 @@ use serde_json;
 use enigo::*;
 use log::{info, warn, trace};
 
+
+pub struct PickupCofig {
+    pub info: PickupInfo,
+    pub bw_path: String,
+    pub use_l: bool,
+    pub dump: bool,
+    pub dump_path: String,
+    pub dump_cnt: u32,
+    pub infer_gap: u32,
+    pub temp_thre: f32,
+    pub do_pickup: Arc<Mutex<bool>>,
+}
+
 pub struct Pickupper {
     model: CRNNModel,
     enigo: Enigo,
-
-    info: PickupInfo,
 
     f_template: GrayImage,
     
@@ -33,19 +46,20 @@ pub struct Pickupper {
     // 白名单
     white_list: HashSet<String>,
 
-    // 是否使用L*通道
-    use_l: bool
+    // 配置
+    config: PickupCofig,
 }
 
 impl Pickupper {
-    pub fn new(info: PickupInfo, black_list_path: String, use_l: bool) -> Pickupper {
+    pub fn new(config: PickupCofig) -> Pickupper {
+        let info = &config.info;
         let mut bk_list: HashSet<String> = HashSet::new();
         let mut wt_list: HashSet<String> = HashSet::new();
 
-        // println!("black list path: {}", black_list_path);
-        // 从black_list_path读取json中每一个String，加入到bk_list中
-        // 老子也硬编码得了
-        let black_list_path = "./black_lists.json";
+        
+        // let black_list_path = "./black_lists.json";
+        let black_list_path = format!("{}/{}", config.bw_path, "black_lists.json");
+
         let mut file = File::open(black_list_path).expect("Failed to open black list file");
         let mut content = String::new();
         file.read_to_string(&mut content).expect("Failed to read black list file");
@@ -58,7 +72,8 @@ impl Pickupper {
             
         }
             
-        let white_list_path = "./white_lists.json";
+        // let white_list_path = "./white_lists.json";
+        let white_list_path = format!("{}/{}", config.bw_path, "white_lists.json");
         let mut file = File::open(white_list_path).expect("Failed to open white list file");
         let mut content = String::new();
         file.read_to_string(&mut content).expect("Failed to read white list file");
@@ -81,7 +96,7 @@ impl Pickupper {
 
         let template_raw = image::load_from_memory(include_bytes!("../../models/FFF.bmp")).unwrap();
         let template: GrayImage;
-        if use_l {
+        if config.use_l {
             template = rgb_to_l(&template_raw.to_rgb8());
         }
         else {
@@ -95,62 +110,36 @@ impl Pickupper {
             model: CRNNModel::new(String::from("model_training.onnx"), String::from("index_2_word.json")),
             enigo: Enigo::new(),
 
-            info,
-
             f_template: template,
 
             black_list: bk_list,
             all_list: all_list,
             white_list: wt_list,
 
-            use_l: use_l,
+            config: config
         }
     }
-
-    fn capture_f_area(&mut self) -> Result<image::RgbImage, String> {
-        let now = SystemTime::now();
-        let w = self.info.f_area_position.right - self.info.f_area_position.left;
-        let h = self.info.f_area_position.bottom - self.info.f_area_position.top;
-        let rect: PixelRect = PixelRect {
-            left: self.info.left as i32 + self.info.f_area_position.left,
-            top: self.info.top as i32 + self.info.f_area_position.top,
-            width: w,
-            height: h,
-        };
-
-        let img = capture::capture_absolute_image(&rect)?;
-        // info!("capture time: {}ms", now.elapsed().unwrap().as_millis());
-        
-        Ok(img)
-    }
-
-    fn capture_f_text(&mut self, rel_y: i32) -> Result<image::RgbImage, String> {
-        let w = self.info.pickup_x_end - self.info.pickup_x_beg;
-        let h = self.f_template.height();
-        let rect: PixelRect = PixelRect {
-            left: self.info.left as i32 + self.info.pickup_x_beg as i32, 
-            top: self.info.top as i32 + self.info.f_area_position.top + rel_y,
-            width: w as i32,
-            height: h as i32,
-        };
-        let img = capture::capture_absolute_image(&rect)?;
-        // info!("capture time: {}ms", now.elapsed().unwrap().as_millis());
-        Ok(img)
-    }
-
     
 
-    pub fn start(&mut self, dump: bool, dump_path: String, cnt: u32, infer_gap: u32, temp_thre: f32, do_pickup: bool) {
+    pub fn start(&mut self) {
+        let dump = self.config.dump;
+        let dump_path = self.config.dump_path.clone();
+        let cnt = self.config.dump_cnt;
+        let infer_gap = self.config.infer_gap;
+        let temp_thre = self.config.temp_thre;
+        // let do_pickup = self.config.do_pickup.clone();
+        let use_l = self.config.use_l;
+
         let mut cnt = cnt;
         let mut pk_str = String::from("");
         let mut pk_cnt = 0;
         let mut pre_pk_y = -2333; 
 
         let game_win_rect = PixelRect {
-            left: self.info.left,
-            top: self.info.top,
-            width: self.info.width as i32,
-            height: self.info.height as i32,
+            left: self.config.info.left,
+            top: self.config.info.top,
+            width: self.config.info.width as i32,
+            height: self.config.info.height as i32,
         };
 
         let mut start_time = SystemTime::now();
@@ -167,16 +156,16 @@ impl Pickupper {
 
             // 改为从window_cap中crop
             let f_area_cap = crop(&mut game_window_cap, 
-                    self.info.f_area_position.left as u32,
-                    self.info.f_area_position.top as u32,
-                    self.info.f_area_position.right as u32 - self.info.f_area_position.left as u32,
-                    self.info.f_area_position.bottom as u32 - self.info.f_area_position.top as u32);
+                self.config.info.f_area_position.left as u32,
+                self.config.info.f_area_position.top as u32,
+                self.config.info.f_area_position.right as u32 - self.config.info.f_area_position.left as u32,
+                self.config.info.f_area_position.bottom as u32 - self.config.info.f_area_position.top as u32);
             let f_area_cap = DynamicImage::ImageRgb8(f_area_cap.to_image());
             // info!("f_area_cap: w: {}, h: {}", f_area_cap.width(), f_area_cap.height());
             // info!("f_template: w: {}, h: {}", self.f_template.width(), self.f_template.height());
             
             let f_area_cap_gray: GrayImage;
-            if self.use_l {
+            if use_l {
                 f_area_cap_gray = rgb_to_l(&f_area_cap.to_rgb8());
             }
             else {
@@ -202,17 +191,17 @@ impl Pickupper {
             ];
             
             for yi in 0..5 {
-                let y_offset = (yi - 2) * self.info.pickup_y_gap as i32 + rel_y as i32;
+                let y_offset = (yi - 2) * self.config.info.pickup_y_gap as i32 + rel_y as i32;
 
                 let f_text_cap = crop(&mut game_window_cap,
-                        self.info.pickup_x_beg as u32,
-                        (self.info.f_area_position.top as i32 + y_offset) as u32,
-                        self.info.pickup_x_end as u32 - self.info.pickup_x_beg as u32,
+                    self.config.info.pickup_x_beg as u32,
+                        (self.config.info.f_area_position.top as i32 + y_offset) as u32,
+                        self.config.info.pickup_x_end as u32 - self.config.info.pickup_x_beg as u32,
                         self.f_template.height() as u32,
                     );
                 let f_text_cap = DynamicImage::ImageRgb8(f_text_cap.to_image());
                 let f_text_cap_gray: GrayImage;
-                if self.use_l {
+                if use_l {
                     f_text_cap_gray = rgb_to_l(&f_text_cap.to_rgb8());
                 }
                 else {
@@ -261,11 +250,12 @@ impl Pickupper {
             for i in 0..5 {
                 info!("{}: {}", i, res_strings[i as usize]);
             }
-            self.do_pickups(&res_strings, do_pickup);
+            self.do_pickups(&res_strings);
         
         }
     }
-    pub fn do_pickups(&mut self, infer_res: &[String; 5], do_pk: bool) {
+    pub fn do_pickups(&mut self, infer_res: &[String; 5]) {
+        let do_pk = self.config.do_pickup.lock().unwrap();
         // 规划的最终动作
         // 0: do F
         // -1: scroll down -1
@@ -351,7 +341,7 @@ impl Pickupper {
         }
 
         info!("拾起动作: {:?}", ops);
-        if !do_pk {
+        if !*do_pk {
             return;
         }
 
