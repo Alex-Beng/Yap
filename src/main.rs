@@ -5,13 +5,15 @@ use std::env;
 use std::f32;
 use std::fs;
 use std::path::PathBuf;
-
+use std::sync::{Arc, Mutex};
 
 use yap::capture;
 use yap::common;
 use yap::inference::img_process::rgb_to_l;
 use yap::info;
-use yap::pickupper::pickupper::Pickupper;
+use yap::pickupper::pickupper::{Pickupper, PickupCofig};
+
+use hotkey;
 
 use image::imageops::grayscale;
 use image::{DynamicImage, ImageBuffer, Pixel};
@@ -143,6 +145,8 @@ fn main() {
         // template_threshold = 0.01;
     }
 
+    let do_pickup_signal = Arc::new(Mutex::new(!no_pickup));
+
 
     let hwnd = match capture::find_window_local() {
         Err(s) => {
@@ -178,10 +182,40 @@ fn main() {
         common::error_and_quit("不支持的分辨率");
     }
 
-    // Pickup 主逻辑
-    let mut pickupper = Pickupper::new(info, String::from("./black_lists.json"), use_l);
+    // 添加监听的hotkey
+    let do_pickup_signal_clone = do_pickup_signal.clone();
+    let listen_handle = std::thread::spawn(move || {
+        let mut hk = hotkey::Listener::new();
+        let signal = do_pickup_signal_clone;
+        // ALT + F 
+        hk.register_hotkey(
+            hotkey::modifiers::ALT,
+            'F' as u32, 
+            move || {
+                let mut signal = signal.lock().unwrap();
+                *signal = !*signal;
+                warn!("ALT + F 切换 pickup 模式为 {}", *signal);
+            }
+        ).unwrap();
 
-    pickupper.start(dump, dump_path.to_string(), cnt, infer_gap,  template_threshold, !no_pickup);
+        hk.listen();
+    });
 
+    let pk_config = PickupCofig {
+        info,
+        bw_path: String::from("."),
+        use_l,
+        dump,
+        dump_path: dump_path.to_string(),
+        dump_cnt: cnt,
+        infer_gap,
+        temp_thre: template_threshold,
+        do_pickup: do_pickup_signal
+    };
+    let mut pickupper = Pickupper::new(pk_config);
+
+    pickupper.start();
+
+    listen_handle.join().unwrap();
 
 }
