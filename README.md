@@ -43,7 +43,23 @@ PS：旧版本模型精度（生成数据的问题，已解决）、推理间隔
 
 通过一组硬编码的自上而下拾取逻辑，生成动作序列`ops`，再进行执行。
 
+整体流程的时序是：
+```
+... -> sleep infer_gap ms -> find F key -> infer image -> do pickup -> ...
+or // 如果找不到F键
+... -> sleep infer_gap ms -> find F key -> ...
+```
+其中可配置的`infer_gap`参数为推理间隔，单位ms。
 
+
+拾取动作序列的时序是：
+```
+... F down ->  sleep f_internal ms -> F_up -> sleep f_gap ms -> ...
+... scroll -> sleep scroll_gap ms -> ...
+```
+其中F键和滚轮的三个参数均可配置，分别为`f_internal`、`f_gap`、`scroll_gap`。
+
+使用一个子线程监听全局快捷键，以配置参数。
 
 知乎：[【原神】基于文字识别的超快自动拾取](https://zhuanlan.zhihu.com/p/645909098)
 
@@ -54,7 +70,21 @@ PS：旧版本模型精度（生成数据的问题，已解决）、推理间隔
 目前仅支持windows，常规PC客户端（未支持云原神），16:9分辨率。
 
 
-全局快捷键：`Alt + F` 切换是否拾取。
+全局快捷键见下表：
+
+| 快捷键 | 功能 |
+| --- | --- |
+| `Alt + F` | 暂停。切换是否拾取 |
+| `Alt + J` | 增加`infer_gap` 1ms |
+| `Alt + K` | 减少`infer_gap` 1ms |
+| `Alt + U` | 增加`f_internal` 1ms |
+| `Alt + I` | 减少`f_internal` 1ms |
+| `Alt + L` | 增加`f_gap` 1ms |
+| `Alt + H` | 减少`f_gap` 1ms |
+| `Alt + O` | 增加`scroll_gap` 1ms |
+| `Alt + P` | 减少`scroll_gap` 1ms |
+
+PS：一般情况下只需要使用`Alt + F`，默认参数基本稳定。
 
 ## 从release获取
 
