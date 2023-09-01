@@ -5,7 +5,7 @@ use std::env;
 use std::f32;
 use std::fs;
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 
 use yap::capture;
 use yap::common;
@@ -146,6 +146,10 @@ fn main() {
     }
 
     let do_pickup_signal = Arc::new(Mutex::new(!no_pickup));
+    let infer_gap_signal = Arc::new(RwLock::new(infer_gap));
+    let f_inter_signal = Arc::new(RwLock::new(50 as u32));
+    let f_gap_signal = Arc::new(RwLock::new(90 as u32));
+    let scroll_gap_signal = Arc::new(RwLock::new(40 as u32));
 
 
     let hwnd = match capture::find_window_local() {
@@ -155,15 +159,7 @@ fn main() {
         Ok(h) => h,
     };
     
-    // let sys_dpi = unsafe { GetDpiForSystem() };
-    // let win_dpi = unsafe { GetDpiForWindow(hwnd) };
 
-    // // let h = unsafe { GetSystemMetrics(SM_CXSCREEN) };
-    // // let w = unsafe { GetSystemMetrics(SM_CYSCREEN) };
-
-    // // info!("系统DPI = {}, 窗口DPI = {}, h = {}, w = {}", sys_dpi, win_dpi, h, w);
-    // info!("系统DPI = {}, 窗口DPI = {}", sys_dpi, win_dpi);
-    
     unsafe { ShowWindow(hwnd, SW_RESTORE); }
     unsafe { SetForegroundWindow(hwnd); }
     common::sleep(1000);
@@ -184,17 +180,152 @@ fn main() {
 
     // 添加监听的hotkey
     let do_pickup_signal_clone = do_pickup_signal.clone();
+
+    let f_inter_signal_clone = f_inter_signal.clone();
+    let f_inter_signal_clone_d = f_inter_signal.clone();
+    
+    let f_gap_signal_clone = f_gap_signal.clone();
+    let f_gap_signal_clone_d = f_gap_signal.clone();
+    
+    let infer_gap_signal_clone = infer_gap_signal.clone();
+    let infer_gap_signal_clone_d = infer_gap_signal.clone();
+
+    let scroll_gap_signal_clone = scroll_gap_signal.clone();
+    let scroll_gap_signal_clone_d = scroll_gap_signal.clone();
     let listen_handle = std::thread::spawn(move || {
         let mut hk = hotkey::Listener::new();
-        let signal = do_pickup_signal_clone;
+        let do_pk_signal: Arc<Mutex<bool>> = do_pickup_signal_clone;
         // ALT + F 
         hk.register_hotkey(
             hotkey::modifiers::ALT,
             'F' as u32, 
             move || {
-                let mut signal = signal.lock().unwrap();
+                let mut signal = do_pk_signal.lock().unwrap();
                 *signal = !*signal;
                 warn!("ALT + F 切换 pickup 模式为 {}", *signal);
+                
+            }
+        ).unwrap();
+        
+        let infer_gap_signal= infer_gap_signal_clone;
+        let infer_gap_signal_d = infer_gap_signal_clone_d;
+        // ALT + J 
+        hk.register_hotkey(
+            hotkey::modifiers::ALT,
+            'J' as u32, 
+            move || {
+                let mut signal = infer_gap_signal.write().unwrap();
+                warn!("ALT + J with {}", *signal);
+                // let mut signal = infer_gap_signal.write().unwrap();
+                *signal = *signal + 1;
+                warn!("ALT + J 增加 infer gap 至 {} ms", *signal);
+                
+                
+            }
+        ).unwrap();
+        // ALT + K
+        hk.register_hotkey(
+            hotkey::modifiers::ALT,
+            'K' as u32, 
+            move || {
+                let mut signal = infer_gap_signal_d.write().unwrap();
+                warn!("ALT + K with {}", *signal);
+                if *signal == 0 {
+                    return;
+                }
+                *signal -= 1;
+                warn!("ALT + K 减小 infer gap 至 {} ms", *signal);
+                
+            }
+        ).unwrap();
+
+        let f_inter_signal = f_inter_signal_clone;
+        let f_inter_signal_d = f_inter_signal_clone_d;
+        // ALT + U
+        hk.register_hotkey(
+            hotkey::modifiers::ALT,
+            'U' as u32, 
+            move || {
+                let mut signal = f_inter_signal.write().unwrap();
+                warn!("ALT + U with {}", *signal);
+                *signal += 1;
+                warn!("ALT + U 增加 f_inter 至 {} ms", *signal);
+                
+            }
+        ).unwrap();
+        // ALT + I
+        hk.register_hotkey(
+            hotkey::modifiers::ALT,
+            'I' as u32, 
+            move || {
+                let mut signal = f_inter_signal_d.write().unwrap();
+                warn!("ALT + I with {}", *signal);
+                if *signal == 0 {
+                    return;
+                }
+                *signal -= 1;
+                warn!("ALT + I 减小 f_inter 至 {} ms", *signal);
+                
+            }
+        ).unwrap();
+
+        let f_gap_signal = f_gap_signal_clone;
+        let f_gap_signal_d = f_gap_signal_clone_d;
+        // ALT + L
+        hk.register_hotkey(
+            hotkey::modifiers::ALT,
+            'L' as u32, 
+            move || {
+                let mut signal = f_gap_signal.write().unwrap();
+                warn!("ALT + L with {}", *signal);
+                *signal += 1;
+                warn!("ALT + L 增加 f_gap 至 {} ms", *signal);
+                
+            }
+        ).unwrap();
+        // ALT + H
+        hk.register_hotkey(
+            hotkey::modifiers::ALT,
+            'H' as u32, 
+            move || {
+                let mut signal = f_gap_signal_d.write().unwrap();
+                warn!("ALT + H with {}", *signal);
+                if *signal == 0 {
+                    return;
+                }
+                *signal -= 1;
+                warn!("ALT + H 减小 f_gap 至 {} ms", *signal);
+                
+            }
+        ).unwrap();
+
+        let scroll_gap_signal = scroll_gap_signal_clone;
+        let scroll_gap_signal_d = scroll_gap_signal_clone_d;
+        // ALT + O
+        hk.register_hotkey(
+            hotkey::modifiers::ALT,
+            'O' as u32, 
+            move || {
+                let mut signal = scroll_gap_signal.write().unwrap();
+                warn!("ALT + O with {}", *signal);
+                *signal += 1;
+                warn!("ALT + O 增加 scroll_gap 至 {} ms", *signal);
+                
+            }
+        ).unwrap();
+        // ALT + P
+        hk.register_hotkey(
+            hotkey::modifiers::ALT,
+            'P' as u32, 
+            move || {
+                let mut signal = scroll_gap_signal_d.write().unwrap();
+                warn!("ALT + P with {}", *signal);
+                if *signal == 0 {
+                    return;
+                }
+                *signal -= 1;
+                warn!("ALT + P 减小 scroll_gap 至 {} ms", *signal);
+                
             }
         ).unwrap();
 
@@ -208,9 +339,12 @@ fn main() {
         dump,
         dump_path: dump_path.to_string(),
         dump_cnt: cnt,
-        infer_gap,
         temp_thre: template_threshold,
-        do_pickup: do_pickup_signal
+        do_pickup: do_pickup_signal,
+        infer_gap: infer_gap_signal,
+        f_inter: f_inter_signal,
+        f_gap: f_gap_signal,
+        scroll_gap: scroll_gap_signal,
     };
     let mut pickupper = Pickupper::new(pk_config);
 

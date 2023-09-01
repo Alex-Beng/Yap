@@ -1,8 +1,9 @@
+use std::borrow::BorrowMut;
 use std::collections::HashSet;
 use std::fs::File;
 use std::io::Read;
 use std::time::SystemTime;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 
 
 use crate::common::sleep;
@@ -28,9 +29,12 @@ pub struct PickupCofig {
     pub dump: bool,
     pub dump_path: String,
     pub dump_cnt: u32,
-    pub infer_gap: u32,
     pub temp_thre: f32,
     pub do_pickup: Arc<Mutex<bool>>,
+    pub infer_gap: Arc<RwLock<u32>>,
+    pub f_inter: Arc<RwLock<u32>>,
+    pub f_gap: Arc<RwLock<u32>>,
+    pub scroll_gap: Arc<RwLock<u32>>,
 }
 
 pub struct Pickupper {
@@ -125,15 +129,12 @@ impl Pickupper {
         let dump = self.config.dump;
         let dump_path = self.config.dump_path.clone();
         let cnt = self.config.dump_cnt;
-        let infer_gap = self.config.infer_gap;
+        
         let temp_thre = self.config.temp_thre;
         // let do_pickup = self.config.do_pickup.clone();
         let use_l = self.config.use_l;
 
         let mut cnt = cnt;
-        let mut pk_str = String::from("");
-        let mut pk_cnt = 0;
-        let mut pre_pk_y = -2333; 
 
         let game_win_rect = PixelRect {
             left: self.config.info.left,
@@ -143,8 +144,12 @@ impl Pickupper {
         };
 
         let mut start_time = SystemTime::now();
+        // let infer_gap_lock = self.config.infer_gap;
         loop {
-            sleep(infer_gap);
+            { 
+                let infer_gap = self.config.infer_gap.read().unwrap();
+                sleep(*infer_gap);
+            }
             // 输出一次loop时间
             info!("loop time: {}ms", start_time.elapsed().unwrap().as_millis());
             start_time = SystemTime::now();
@@ -250,12 +255,16 @@ impl Pickupper {
             for i in 0..5 {
                 info!("{}: {}", i, res_strings[i as usize]);
             }
-            self.do_pickups(&res_strings);
+            self.do_pickups(res_strings);
         
         }
     }
-    pub fn do_pickups(&mut self, infer_res: &[String; 5]) {
+    pub fn do_pickups(&mut self, infer_res: [String; 5]) {
         let do_pk = self.config.do_pickup.lock().unwrap();
+        let f_inter = self.config.f_inter.read().unwrap();
+        let f_gap = self.config.f_gap.read().unwrap();
+        let scroll_gap = self.config.scroll_gap.read().unwrap();
+
         // 规划的最终动作
         // 0: do F
         // -1: scroll down -1
@@ -279,7 +288,6 @@ impl Pickupper {
         }
         let up2sum = is_pks[0] + is_pks[1];
         let dn2sum = is_pks[3] + is_pks[4];
-        let is_pks_sum: i32 = is_pks.iter().sum();
         let mut need_pks_sum: i32 = need_pks.iter().sum();
         
         if need_pks_sum == 0 {
@@ -348,13 +356,16 @@ impl Pickupper {
         for op in ops {
             if op == 0 {
                 self.enigo.key_down(enigo::Key::Layout('f'));
-                sleep(50);
+                // sleep(50);
+                sleep(*f_inter);
                 self.enigo.key_up(enigo::Key::Layout('f'));
-                sleep(90);
+                // sleep(90);
+                sleep(*f_gap);
             }
             else {
                 self.enigo.mouse_scroll_y(op);
-                sleep(40);
+                // sleep(40);
+                sleep(*scroll_gap);
             }
         }
 
