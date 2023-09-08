@@ -62,7 +62,7 @@ fn main() {
             .short("g")
             .required(false)
             .takes_value(true)
-            .default_value("60")
+            .default_value("45")
             .help("一次检测推理拾取的间隔，单位ms"))
         .arg(Arg::with_name("template-threshold")
             .long("template-threshold")
@@ -94,7 +94,7 @@ fn main() {
     let dump: bool = matches.is_present("dump");
     let dump_path = matches.value_of("dump").unwrap_or("./dumps/");
     let cnt:u32 = matches.value_of("dump_idx").unwrap_or("0").parse::<u32>().unwrap();
-    let infer_gap: u32 = matches.value_of("infer_gap").unwrap_or("60").parse::<u32>().unwrap();
+    let infer_gap: u32 = matches.value_of("infer_gap").unwrap_or("45").parse::<u32>().unwrap();
     let template_threshold: f32 = matches.value_of("template-threshold").unwrap_or("0.1").parse::<f32>().unwrap();
     let mut channal = matches.value_of("channal").unwrap_or("gray");
     let log_level = matches.value_of("log").unwrap_or("warn");
@@ -147,9 +147,9 @@ fn main() {
 
     let do_pickup_signal = Arc::new(Mutex::new(!no_pickup));
     let infer_gap_signal = Arc::new(RwLock::new(infer_gap));
-    let f_inter_signal = Arc::new(RwLock::new(50 as u32));
-    let f_gap_signal = Arc::new(RwLock::new(90 as u32));
-    let scroll_gap_signal = Arc::new(RwLock::new(40 as u32));
+    let f_inter_signal = Arc::new(RwLock::new(0 as u32));
+    let f_gap_signal = Arc::new(RwLock::new(50 as u32));
+    let scroll_gap_signal = Arc::new(RwLock::new(25 as u32));
 
 
     let hwnd = match capture::find_window_local() {
