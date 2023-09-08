@@ -17,7 +17,7 @@ pub struct WindowInfo {
     pub pickup_x_beg: f64,
     pub pickup_x_end: f64,
 
-    // 拾取物间隔
+    // 拾取物y方向上的间隔
     pub pickup_y_gap: f64,
 }
 
