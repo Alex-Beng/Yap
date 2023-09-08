@@ -15,7 +15,7 @@ reqwest = { version = "0.11", features = ["blocking", "json"] }
 log = "0.4.14"
 tract-onnx = "0.15.4"
 env_logger = "0.10.0"
-enigo = "0.0.13"
+enigo = "0.1.2"
 clap = "2.33.3"
 semver = "1.0.7"
 hotkey = "0.3.1"
