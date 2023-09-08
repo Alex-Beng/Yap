@@ -19,6 +19,18 @@ pub struct WindowInfo {
 
     // 拾取物y方向上的间隔
     pub pickup_y_gap: f64,
+
+    // 快速强化圣遗物所需的点位
+    // 固定动作，无需感知
+    // pub in -> upgrade -> switch right to skip animation
+    pub artifact_put_in_x: f64,
+    pub artifact_put_in_y: f64,
+    pub artifact_upgrade_x: f64,
+    pub artifact_upgrade_y: f64,
+    pub artifact_skip_x: f64,
+    pub artifact_skip1_y: f64,
+    pub artifact_skip2_y: f64,
+    
 }
 
 impl WindowInfo {
@@ -60,6 +72,14 @@ impl WindowInfo {
             pickup_x_end: convert_x(self.pickup_x_end) as u32,
 
             pickup_y_gap: convert_y(self.pickup_y_gap) as u32,
+
+            artifact_put_in_x: convert_x(self.artifact_put_in_x) as u32,
+            artifact_put_in_y: convert_y(self.artifact_put_in_y) as u32,
+            artifact_upgrade_x: convert_x(self.artifact_upgrade_x) as u32,
+            artifact_upgrade_y: convert_y(self.artifact_upgrade_y) as u32,
+            artifact_skip_x: convert_x(self.artifact_skip_x) as u32,
+            artifact_skip1_y: convert_y(self.artifact_skip1_y) as u32,
+            artifact_skip2_y: convert_y(self.artifact_skip2_y) as u32,
         }
     }
 }
@@ -67,12 +87,21 @@ impl WindowInfo {
 pub const WINDOW_16_9: WindowInfo = WindowInfo {
     width: 1920.0,
     height: 1080.0,
+
     f_area_pos: Rect(340.0, 1157.0, 720.0, 1090.0),
     f_template_w: 56.0,
     f_template_h: 38.0,
+    
     pickup_x_beg: 1218.0,
     pickup_x_end: 1426.0,
-
     pickup_y_gap: 72.0,
+
+    artifact_put_in_x: 1750.0,
+    artifact_put_in_y: 770.0,
+    artifact_upgrade_x: 1750.0,
+    artifact_upgrade_y: 1020.0,
+    artifact_skip_x: 128.0,
+    artifact_skip1_y: 150.0,
+    artifact_skip2_y: 220.0,
 };
 //475, 547

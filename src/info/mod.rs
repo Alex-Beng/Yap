@@ -9,6 +9,7 @@ use crate::info::window_info::WINDOW_16_9;
 pub struct PickupInfo {
     pub left: i32,
     pub top: i32,
+    
     pub width: u32,
     pub height: u32,
 
@@ -20,6 +21,15 @@ pub struct PickupInfo {
     pub pickup_x_end: u32,
 
     pub pickup_y_gap: u32,
+
+    pub artifact_put_in_x: u32,
+    pub artifact_put_in_y: u32,
+    pub artifact_upgrade_x: u32,
+    pub artifact_upgrade_y: u32,
+    pub artifact_skip_x: u32,
+    pub artifact_skip1_y: u32,
+    pub artifact_skip2_y: u32,
+
 }
 
 impl PickupInfo {

@@ -7,8 +7,9 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex, RwLock};
 
+use enigo::MouseControllable;
 use yap::capture;
-use yap::common;
+use yap::common::{self, sleep};
 use yap::inference::img_process::rgb_to_l;
 use yap::info;
 use yap::pickupper::pickupper::{Pickupper, PickupCofig};
@@ -192,6 +193,8 @@ fn main() {
 
     let scroll_gap_signal_clone = scroll_gap_signal.clone();
     let scroll_gap_signal_clone_d = scroll_gap_signal.clone();
+
+    let info_for_artifacts = info.clone();
     let listen_handle = std::thread::spawn(move || {
         let mut hk = hotkey::Listener::new();
         let do_pk_signal: Arc<Mutex<bool>> = do_pickup_signal_clone;
@@ -326,6 +329,54 @@ fn main() {
                 *signal -= 1;
                 warn!("ALT + P 减小 scroll_gap 至 {} ms", *signal);
                 
+            }
+        ).unwrap();
+
+        // ALT + Z
+        // 快速强化圣遗物
+        
+        hk.register_hotkey(
+            hotkey::modifiers::ALT,
+            'Z' as u32, 
+            move || {
+                warn!("ALT + Z 固定动作强化圣遗物");
+
+                let mut enigo = enigo::Enigo::new();
+
+                // do once
+                enigo.mouse_move_to(  
+                    info_for_artifacts.artifact_put_in_x as i32 + info_for_artifacts.top as i32, 
+                    info_for_artifacts.artifact_put_in_y as i32 + info_for_artifacts.left as i32
+                );
+                enigo.mouse_click(enigo::MouseButton::Left);
+                sleep(100);
+                // warn!("click {}, {}", info_for_artifacts.artifact_put_in_x, info_for_artifacts.artifact_put_in_y);
+
+                enigo.mouse_move_to(
+                    info_for_artifacts.artifact_upgrade_x as i32 + info_for_artifacts.top as i32,
+                    info_for_artifacts.artifact_upgrade_y as i32 + info_for_artifacts.left as i32
+                );
+                enigo.mouse_click(enigo::MouseButton::Left);
+                sleep(100);
+
+                enigo.mouse_move_to(
+                    info_for_artifacts.artifact_skip_x as i32 + info_for_artifacts.top as i32,
+                    info_for_artifacts.artifact_skip1_y as i32 + info_for_artifacts.left as i32
+                );
+                enigo.mouse_click(enigo::MouseButton::Left);
+                sleep(100);
+
+                enigo.mouse_move_to(
+                    info_for_artifacts.artifact_skip_x as i32 + info_for_artifacts.top as i32,
+                    info_for_artifacts.artifact_skip2_y as i32 + info_for_artifacts.left as i32
+                );
+                enigo.mouse_click(enigo::MouseButton::Left);
+                sleep(100);
+
+                enigo.mouse_move_to(  
+                    info_for_artifacts.artifact_put_in_x as i32 + info_for_artifacts.top as i32, 
+                    info_for_artifacts.artifact_put_in_y as i32 + info_for_artifacts.left as i32
+                );
             }
         ).unwrap();
 
