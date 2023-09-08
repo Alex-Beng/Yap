@@ -86,6 +86,8 @@ or // 如果找不到F键
 
 PS：一般情况下只需要使用`Alt + F`，默认参数基本稳定。
 
+隐藏功能见：[other_funcs.md](./other_funcs.md)
+
 ## 从release获取
 
 1. 点击[此处](https://github.com/Alex-Beng/Yap/releases)下载最新版本的release压缩包，解压。有三个文件：`yap.exe`、`black_lists.json`和`white_lists.json`。
