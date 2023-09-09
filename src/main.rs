@@ -154,8 +154,14 @@ fn main() {
 
 
     let hwnd = match capture::find_window_local() {
-        Err(s) => {
-            common::error_and_quit("未找到原神窗口，请确认原神已经开启");
+        Err(_) => {
+            warn!("未找到原神窗口，尝试寻找云·原神");
+            match capture::find_window_cloud() {
+                Ok(h) => h,
+                Err(_) => {
+                    common::error_and_quit("未找到原神窗口，请确认原神已经开启");
+                }
+            }
         },
         Ok(h) => h,
     };
