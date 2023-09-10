@@ -12,3 +12,4 @@ yy.json
 *.exe
 *.png
 *.log
+__pycache__
