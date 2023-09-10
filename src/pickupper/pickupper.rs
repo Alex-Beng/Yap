@@ -217,7 +217,8 @@ impl Pickupper {
                 let f_text_cap_bin: ImageBuffer<Luma<u8>, Vec<u8>> = imageproc::contrast::threshold(&f_text_cap_gray, otsu_thr);
                 // f_text_cap.save(format!("f_text_{}.jpg", yi)).unwrap();
                 
-                let bin_resized = imageops::resize(&f_text_cap_bin, 145, 32, imageops::FilterType::Gaussian);
+                // 小绷，这个缩放至145x32是按最老的dump硬编码
+                let bin_resized = imageops::resize(&f_text_cap_bin, 221, 32, imageops::FilterType::Gaussian);
 
                 let mut padded_image = ImageBuffer::new(384, 32);
                 padded_image.copy_from(&bin_resized, 0, 0).unwrap();
