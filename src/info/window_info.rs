@@ -93,7 +93,7 @@ pub const WINDOW_16_9: WindowInfo = WindowInfo {
     f_template_h: 38.0,
     
     pickup_x_beg: 1218.0,
-    pickup_x_end: 1480.0,
+    pickup_x_end: 1495.0,
     pickup_y_gap: 72.0,
 
     artifact_put_in_x: 1750.0,
