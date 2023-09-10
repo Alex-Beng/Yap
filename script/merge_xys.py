@@ -12,21 +12,7 @@ def exist_or_create_json(path):
     if not os.path.exists(path):
         js_dp([], path)
 
-root_paths = [
-    'dumps/',
-    'text_dumps/',
-    'dumps3',
-    'dumps4.0',
-    'dumps4.0_tx',
-    'dumps4.0_tx2',
-    'dumps4.0_tx3',
-    'dumps4.0_tx4',
-    'dumps4.0_tx5',
-    'dumps4.0_tx6',
-    'dumps4.0_tx7',
-    'dumps4.0_pph',
-    'dumps4.0_syfs'
-]
+from common import js_dp, js_ld, exist_or_create_json, root_paths
 
 xx = []
 yy = []
