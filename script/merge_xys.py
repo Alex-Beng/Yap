@@ -1,18 +1,7 @@
 import os
 import json
 
-def js_dp(obj, path):
-    json.dump(obj, open(path, 'w', encoding='utf-8'), ensure_ascii=False)
-
-def js_ld(path):
-    return json.load(open(path, 'r', encoding='utf-8'))
-
-
-def exist_or_create_json(path):
-    if not os.path.exists(path):
-        js_dp([], path)
-
-from common import js_dp, js_ld, exist_or_create_json, root_paths
+from common import js_dp, js_ld,  root_paths
 
 xx = []
 yy = []

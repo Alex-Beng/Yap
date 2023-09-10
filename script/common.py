@@ -1,3 +1,6 @@
+import os
+import json
+
 def js_dp(obj, path):
     json.dump(obj, open(path, 'w', encoding='utf-8'), ensure_ascii=False)
 
@@ -8,7 +11,7 @@ def js_ld(path):
 def exist_or_create_json(path):
     if not os.path.exists(path):
         js_dp([], path)
-        
+
 
 root_paths = [
     'dumps/',
@@ -150,9 +153,9 @@ error_paths = set([
     # "dumps4.0_tx/66_1_出生的浊水_raw.jpg",
 
     # "dumps4.0_tx4/498_2_「正义」的教_raw.jpg",
-    "dumps/15031_raw.jpg",
-    "dumps/15049_raw.jpg",
-    "text_dumps/1397_raw.jpg",
-    "dumps4.0_xs/107_2_蕈兽孢子_raw.jpg",
+    # "dumps/15031_raw.jpg",
+    # "dumps/15049_raw.jpg",
+    # "text_dumps/1397_raw.jpg",
+    # "dumps4.0_xs/107_2_蕈兽孢子_raw.jpg",
 
 ])
