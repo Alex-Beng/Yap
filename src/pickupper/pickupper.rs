@@ -151,7 +151,7 @@ impl Pickupper {
                 sleep(*infer_gap);
             }
             // 输出一次loop时间
-            info!("loop time: {}ms", start_time.elapsed().unwrap().as_millis());
+            // info!("loop time: {}ms", start_time.elapsed().unwrap().as_millis());
             start_time = SystemTime::now();
 
             let temp_match_time = SystemTime::now();
@@ -180,7 +180,7 @@ impl Pickupper {
             // self.f_template.save("f_template.jpg").unwrap();
             let (rel_x, rel_y) = run_match_template(&f_area_cap_gray, &self.f_template, temp_thre);
 
-            info!("temp match time: {}ms", temp_match_time.elapsed().unwrap().as_millis());
+            // info!("temp match time: {}ms", temp_match_time.elapsed().unwrap().as_millis());
             if rel_x < 0 {
                 continue;
             }
@@ -249,7 +249,7 @@ impl Pickupper {
                 res_strings[yi as usize] = inference_result;
             }
 
-            info!("infer time: {}ms", infer_time.elapsed().unwrap().as_millis());
+            // info!("infer time: {}ms", infer_time.elapsed().unwrap().as_millis());
 
             // 输出所有推理结果
             info!("推理结果: ");

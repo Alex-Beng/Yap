@@ -205,7 +205,7 @@ pub fn run_match_template(
     let res_y = res_mm.min_value_location.1 as i32;
     let res_val = res_mm.min_value;
     // trace!("res_x = {}, res_y = {}, res_val = {}", res_x, res_y, res_val);
-    info!("res_x = {}, res_y = {}, res_val = {}", res_x, res_y, res_val);
+    // info!("res_x = {}, res_y = {}, res_val = {}", res_x, res_y, res_val);
     if res_val < threshold {
         (res_x, res_y)
     } else {
