@@ -6,7 +6,7 @@ import cv2
 from PIL import Image
 import numpy as np
 
-from common import js_dp, js_ld, exist_or_create_json, root_paths, error_paths
+from common import js_dp, js_ld, exist_or_create_json, root_paths, error_paths, drop_paths
 
 for rp in root_paths:
     x_path = os.path.join(rp, 'x.json')
@@ -22,8 +22,8 @@ for rp in root_paths:
         if x[i][:2] == './':
             x[i] = x[i][2:]
         
-        if '.' in x[i]:
-            print(x[i])
+        # if '.' in x[i]:
+        #     print(x[i])
     
     syfs = set("地脉的枯叶旧枝新芽")
     # yap-train clean_up.py -> error_paths
@@ -33,15 +33,19 @@ for rp in root_paths:
         # 为子集
         # if set(y[i]).issubset(syfs) and len(y[i]) > 1:
         # if "地脉的xx" == y[i]:
-            print(pt)
+            # print(pt)
             with Image.open(pt) as img:
                 
                 img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
                 # cv2.imshow('img1', img)
                 # cv2.imwrite('cmdd17_raw.jpg', img)
-                img = cv2.resize(img, (145, 32))
+                # img = cv2.resize(img, (145, 32))
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                 img = cv2.threshold(img, 0, 255, cv2.THRESH_OTSU)[1]
+                r, c = img.shape[:2]
+                new_c = int(c/r*32 + 0.5)
+                img = cv2.resize(img, (new_c, 32))
+
                 img = cv2.copyMakeBorder(img, 0,0,0,384-145, cv2.BORDER_CONSTANT, value=255)
                 ya = Image.fromarray(img)
                 ya.show()
@@ -50,7 +54,13 @@ for rp in root_paths:
 
                 y[i] = lb
                 ya.close()
-                
+    drop = [0]*len(x)
+    for i, pt in enumerate(x):
+        if pt in drop_paths:
+            print(pt)
+            drop[i] = 1
+    x = [x[i] for i in range(len(x)) if drop[i] == 0]
+    y = [y[i] for i in range(len(y)) if drop[i] == 0]
 
     for i, lb in enumerate(y):
         if "政击力" == lb:
