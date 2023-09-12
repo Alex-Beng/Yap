@@ -187,13 +187,7 @@ impl Pickupper {
             
             let infer_time = SystemTime::now();
 
-            let mut res_strings:[String; 5] = [
-                String::from(""),
-                String::from(""),
-                String::from(""),
-                String::from(""),
-                String::from(""),
-            ];
+            let mut res_strings: Vec<String> = vec![String::new(); 5];
             
             for yi in 0..5 {
                 let y_offset = (yi - 2) * self.config.info.pickup_y_gap as i32 + rel_y as i32;
@@ -260,7 +254,8 @@ impl Pickupper {
         
         }
     }
-    pub fn do_pickups(&mut self, infer_res: [String; 5]) {
+    pub fn do_pickups(&mut self, infer_res: Vec<String>) {
+        let mut infer_res = infer_res;
         let do_pk = self.config.do_pickup.lock().unwrap();
         let f_inter = self.config.f_inter.read().unwrap();
         let f_gap = self.config.f_gap.read().unwrap();
@@ -312,10 +307,12 @@ impl Pickupper {
             if need_pks[t_curr_f] == 1 {
                 ops.push(0);
                 need_pks_sum -= 1;
-                if t_curr_f == need_pks.len()-1 && t_curr_f != 0 {
+                if t_curr_f == need_pks.len()-1 && t_curr_f != 0 
+                || t_curr_f+1 < infer_res.len() && infer_res[t_curr_f+1] == "" {
                     t_curr_f -= 1;
                 }
                 need_pks.remove(t_curr_f);
+                infer_res.remove(t_curr_f);
 
             }
             else {
