@@ -70,7 +70,7 @@ fn main() {
             .short("t")
             .required(false)
             .takes_value(true)
-            .default_value("0.1")
+            .default_value("0.08")
             .help("模板匹配的阈值，约小越严格，灰度通道中匹配值在0.01-0.09左右"))
         .arg(Arg::with_name("channal")
             .long("channal")
@@ -96,7 +96,7 @@ fn main() {
     let dump_path = matches.value_of("dump").unwrap_or("./dumps/");
     let cnt:u32 = matches.value_of("dump_idx").unwrap_or("0").parse::<u32>().unwrap();
     let infer_gap: u32 = matches.value_of("infer_gap").unwrap_or("45").parse::<u32>().unwrap();
-    let template_threshold: f32 = matches.value_of("template-threshold").unwrap_or("0.1").parse::<f32>().unwrap();
+    let template_threshold: f32 = matches.value_of("template-threshold").unwrap_or("0.08").parse::<f32>().unwrap();
     let mut channal = matches.value_of("channal").unwrap_or("gray");
     let log_level = matches.value_of("log").unwrap_or("warn");
     let no_pickup = matches.is_present("no_pickup");
