@@ -152,12 +152,15 @@ fn main() {
     let f_gap_signal = Arc::new(RwLock::new(85 as u32));
     let scroll_gap_signal = Arc::new(RwLock::new(40 as u32));
 
-
+    let mut is_cloud = false;
     let hwnd = match capture::find_window_local() {
         Err(_) => {
             warn!("未找到原神窗口，尝试寻找云·原神");
             match capture::find_window_cloud() {
-                Ok(h) => h,
+                Ok(h) => {
+                    is_cloud = true;
+                    h
+                },
                 Err(_) => {
                     common::error_and_quit("未找到原神窗口，请确认原神已经开启");
                 }
@@ -201,6 +204,7 @@ fn main() {
     let scroll_gap_signal_clone_d = scroll_gap_signal.clone();
 
     let info_for_artifacts = info.clone();
+    // 监听快捷键
     let listen_handle = std::thread::spawn(move || {
         let mut hk = hotkey::Listener::new();
         let do_pk_signal: Arc<Mutex<bool>> = do_pickup_signal_clone;
@@ -387,6 +391,27 @@ fn main() {
         ).unwrap();
 
         hk.listen();
+    });
+    // 监视原神进程是否结束
+    let monitor_handel = std::thread::spawn(move ||{
+        loop {
+            if is_cloud {
+                let hwnd = match capture::find_window_cloud() {
+                    Ok(h) => h,
+                    Err(_) => {
+                        common::error_and_quit("原神进程已结束");
+                    }
+                };
+            } else {
+                let hwnd = match capture::find_window_local() {
+                    Ok(h) => h,
+                    Err(_) => {
+                        common::error_and_quit("原神进程已结束");
+                    }
+                };
+            }
+            sleep(100000);
+        }
     });
 
     let pk_config = PickupCofig {
