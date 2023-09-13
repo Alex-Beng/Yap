@@ -307,8 +307,8 @@ impl Pickupper {
             if need_pks[t_curr_f] == 1 {
                 ops.push(0);
                 need_pks_sum -= 1;
-                if t_curr_f == need_pks.len()-1 && t_curr_f != 0 
-                || t_curr_f+1 < infer_res.len() && infer_res[t_curr_f+1] == "" {
+                if t_curr_f != 0 && t_curr_f == need_pks.len()-1 
+                || t_curr_f != 0 && t_curr_f+1 < infer_res.len() && infer_res[t_curr_f+1] == "" {
                     t_curr_f -= 1;
                 }
                 need_pks.remove(t_curr_f);
