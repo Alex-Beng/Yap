@@ -6,6 +6,7 @@ use std::os::windows::ffi::OsStrExt;
 use std::ptr::null_mut;
 use std::mem::{size_of, transmute};
 
+use winapi::um::errhandlingapi::GetLastError;
 use winapi::um::winuser::{
     FindWindowW,
     GetDC,
@@ -38,9 +39,12 @@ use winapi::um::winbase::{GlobalAlloc, GHND, GlobalLock};
 use image::{ImageBuffer, GrayImage};
 
 use winapi::shared::windef::DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE;
+use crate::common::sleep;
+use crate::info;
+
 use self::winapi::um::wingdi::{GetDeviceCaps, HORZRES};
 use self::winapi::shared::windef::DPI_AWARENESS_CONTEXT_SYSTEM_AWARE;
-
+use log::{info, warn};
 
 #[derive(Debug)]
 pub struct PixelRect {
@@ -264,7 +268,18 @@ unsafe fn get_client_rect_unsafe(hwnd: HWND) -> Result<PixelRect, String> {
         right: 0,
         bottom: 0,
     };
-    GetClientRect(hwnd, &mut rect);
+    // 尝试多次获取rect
+    let mut sucess = 0;
+    loop {
+        sucess = GetClientRect(hwnd, &mut rect);
+        if sucess != 0 {
+            break;
+        }
+        warn!("GetClientRect failed with {}", GetLastError());
+        warn!("Rect is {:?}", rect);
+        sleep(1000);
+    };
+    
     let width: i32 = rect.right;
     let height: i32 = rect.bottom;
 
@@ -272,7 +287,17 @@ unsafe fn get_client_rect_unsafe(hwnd: HWND) -> Result<PixelRect, String> {
         x: 0,
         y: 0,
     };
-    ClientToScreen(hwnd, &mut point as *mut WinPoint);
+
+    sucess = 0;
+    loop {
+        sucess = ClientToScreen(hwnd, &mut point as *mut WinPoint);
+        if sucess != 0 {
+            break;
+        }
+        warn!("ClientToScreen failed with {}", GetLastError());
+        sleep(1000);
+    };
+
     let left: i32 = point.x;
     let top: i32 = point.y;
 
