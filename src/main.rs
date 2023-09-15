@@ -352,13 +352,13 @@ fn main() {
             }
         ).unwrap();
 
-        // ALT + Z
+        // ALT + B
         // 快速强化圣遗物
         hk.register_hotkey(
             hotkey::modifiers::ALT,
-            'Z' as u32, 
+            'B' as u32, 
             move || {
-                warn!("ALT + Z 固定动作强化圣遗物");
+                warn!("ALT + B 固定动作强化圣遗物");
 
                 let mut enigo = enigo::Enigo::new();
 
