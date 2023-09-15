@@ -75,16 +75,7 @@ or // 如果找不到F键
 | 快捷键 | 功能 |
 | --- | --- |
 | `Alt + F` | 暂停。切换是否拾取 |
-| `Alt + J` | 增加`infer_gap` 1ms |
-| `Alt + K` | 减少`infer_gap` 1ms |
-| `Alt + U` | 增加`f_internal` 1ms |
-| `Alt + I` | 减少`f_internal` 1ms |
-| `Alt + L` | 增加`f_gap` 1ms |
-| `Alt + H` | 减少`f_gap` 1ms |
-| `Alt + O` | 增加`scroll_gap` 1ms |
-| `Alt + P` | 减少`scroll_gap` 1ms |
 
-PS：一般情况下只需要使用`Alt + F`，默认参数基本稳定。
 
 隐藏功能见：[other_funcs.md](./other_funcs.md)
 
