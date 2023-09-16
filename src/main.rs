@@ -113,7 +113,7 @@ fn main() {
 
     // 移动管理员权限检查、版本更新至logger初始化之后
     if !common::is_admin() {
-        common::error_and_quit("请以管理员身份运行该程序");
+        common::error_and_quit_no_input("请以管理员身份运行该程序");
     }
 
     // 设置 DPI 感知级别
@@ -135,7 +135,7 @@ fn main() {
     
     // 检查template threshold是否合法
     if template_threshold < 0.0  {
-        common::error_and_quit("template threshold必须大于零");
+        common::error_and_quit_no_input("template threshold必须大于零");
     }
     
     if channal != "L*" && channal != "gray" {
@@ -167,7 +167,7 @@ fn main() {
                     h
                 },
                 Err(_) => {
-                    common::error_and_quit("未找到原神窗口，请确认原神已经开启");
+                    common::error_and_quit_no_input("未找到原神窗口，请确认原神已经开启");
                 }
             }
         },
@@ -190,7 +190,7 @@ fn main() {
     if rect.height * 16 == rect.width * 9 {
         info = info::PickupInfo::from_16_9(rect.width as u32, rect.height as u32, rect.left, rect.top);
     } else {
-        common::error_and_quit("不支持的分辨率");
+        common::error_and_quit_no_input("不支持的分辨率");
     }
 
     // 添加监听的hotkey
@@ -408,14 +408,14 @@ fn main() {
                 let hwnd = match capture::find_window_cloud() {
                     Ok(h) => h,
                     Err(_) => {
-                        common::error_and_quit("原神进程已结束");
+                        common::error_and_quit_no_input("原神进程已结束");
                     }
                 };
             } else {
                 let hwnd = match capture::find_window_local() {
                     Ok(h) => h,
                     Err(_) => {
-                        common::error_and_quit("原神进程已结束");
+                        common::error_and_quit_no_input("原神进程已结束");
                     }
                 };
             }

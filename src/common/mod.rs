@@ -22,6 +22,12 @@ pub fn error_and_quit(msg: &str) -> ! {
     process::exit(0);
 }
 
+pub fn error_and_quit_no_input(msg: &str) -> ! {
+    error!("{}, 即将退出", msg);
+    sleep(10000);
+    process::exit(0);
+}
+
 
 pub fn sleep(ms: u32) {
     let time = Duration::from_millis(ms as u64);

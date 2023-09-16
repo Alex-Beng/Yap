@@ -166,7 +166,7 @@ impl Pickupper {
                 self.config.info.f_area_position.right as u32 - self.config.info.f_area_position.left as u32,
                 self.config.info.f_area_position.bottom as u32 - self.config.info.f_area_position.top as u32);
             let f_area_cap = DynamicImage::ImageRgb8(f_area_cap.to_image());
-            // info!("f_area_cap: w: {}, h: {}", f_area_cap.width(), f_area_cap.height());
+            warn!("f_area_cap: w: {}, h: {}", f_area_cap.width(), f_area_cap.height());
             // info!("f_template: w: {}, h: {}", self.f_template.width(), self.f_template.height());
             
             let f_area_cap_gray: GrayImage;
