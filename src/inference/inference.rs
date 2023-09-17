@@ -94,7 +94,7 @@ impl CRNNModel {
                 }
             }
             let word = &self.index_2_word[max_index];
-            if *word != last_word && word != "/" {
+            if *word != last_word && word != "|" {
                 ans = ans + word;
             }
 
@@ -139,7 +139,7 @@ impl CRNNModel {
                     }
                 }
                 let word = &self.index_2_word[max_index];
-                if *word != last_word && word != "/" {
+                if *word != last_word && word != "|" {
                     ans = ans + word;
                 }
 
