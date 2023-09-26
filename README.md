@@ -148,12 +148,12 @@ yap> cargo run --release
 5. 如果需要进行debug调试，可参考命令行参数：
 ```
 /yap --help
-YAP - 原神自动拾取器 0.1.6
+YAP - 原神自动拾取器 0.1.15
 Alex-Beng <pc98@qq.com>
 Genshin Impact Pickup Helper
 
 USAGE:
-    yap.exe [FLAGS] [OPTIONS]
+    yap.exe [FLAGS] [OPTIONS] [hotkey]
 
 FLAGS:
     -h, --help         Prints help information
@@ -166,10 +166,14 @@ OPTIONS:
 
         --dump <dump>                                输出模型预测结果、原始图像、二值图像至指定的文件夹，debug专用
     -i, --dump-idx <dump_idx>                        执行dump时，输出结果起始的index [default: 0]
-    -g, --infer-gap <infer_gap>                      一次检测推理拾取的间隔，单位ms [default: 0]
+    -g, --infer-gap <infer_gap>                      一次检测推理拾取的间隔，单位ms [default: 45]
         --log <log>                                  日志等级，可选值为trace, debug, info, warn, error [default: warn]
     -t, --template-threshold <template-threshold>
-            模板匹配的阈值，约小越严格，灰度通道中匹配值在0.01-0.09左右 [default: 0.1]
+            模板匹配的阈值，约小越严格，灰度通道中匹配值在0.01-0.09左右 [default: 0.08]
+
+
+ARGS:
+    <hotkey>    是否注册hotkey用于调整拾取时序，debug专用
 ```
 
 Just enjoy it!
