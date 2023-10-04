@@ -341,14 +341,14 @@ fn main() {
         }
 
         // 仅保留切换和强化
-        // ALT + F 
+        // ALT + 0
         hk.register_hotkey(
             hotkey::modifiers::ALT,
-            'F' as u32, 
+            '0' as u32, 
             move || {
                 let mut signal = do_pk_signal.lock().unwrap();
                 *signal = !*signal;
-                warn!("ALT + F 切换 pickup 模式为 {}", *signal);              
+                warn!("ALT + 0 切换 pickup 模式为 {}", *signal);              
             }
         ).unwrap();
 
