@@ -32,6 +32,7 @@ root_paths = [
     'dumps4.0_longx',
     'dumps4.0_longx2',
     'dumps4.0_longx3',
+    'dumps4.1_longx',
 ]
 
 error_paths = set([

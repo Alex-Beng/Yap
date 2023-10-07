@@ -63,6 +63,8 @@ for rp in root_paths:
     y = [y[i] for i in range(len(y)) if drop[i] == 0]
 
     for i, lb in enumerate(y):
+        if "芙" in lb:
+            print(x[i], '->', lb)
         if "政击力" == lb:
             # img = Image.open(x[i].replace('_raw.jpg', '_bin.jpg'))
             # img.show()
