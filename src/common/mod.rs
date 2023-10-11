@@ -24,7 +24,7 @@ pub fn error_and_quit(msg: &str) -> ! {
 
 pub fn error_and_quit_no_input(msg: &str) -> ! {
     error!("{}, 即将退出", msg);
-    sleep(10000);
+    sleep(1000);
     process::exit(0);
 }
 

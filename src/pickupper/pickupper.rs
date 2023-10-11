@@ -144,6 +144,7 @@ impl Pickupper {
         };
 
         let mut start_time = SystemTime::now();
+        // let mut full_cnt = 0;
         // let infer_gap_lock = self.config.infer_gap;
         loop {
             { 
@@ -182,6 +183,11 @@ impl Pickupper {
 
             // info!("temp match time: {}ms", temp_match_time.elapsed().unwrap().as_millis());
             if rel_x < 0 {
+                // // 说明没有找到，保存全图
+                // if full_cnt % 20 == 0 {
+                //     game_window_cap.save(format!("{}/{}_full.jpg", "./dumps_full", full_cnt)).unwrap();
+                // }
+                // full_cnt += 1;
                 continue;
             }
             
