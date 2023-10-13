@@ -28,10 +28,6 @@ _Named from [Yas](https://github.com/wormtql/yas)_
 模型训练：[yap-train](https://github.com/Alex-Beng/yap-train)
 
 
-PS：旧版本（≤v0.1.5）为单区域策略，导致性能受制于推理间隔`infer-gap`及模板匹配+推理的时间，
-在v0.1.6中改为多区域策略，性能不再受制于`infer-gap`。
-
-PS：旧版本模型精度（生成数据的问题，已解决）、推理间隔（100ms，现在是60ms）、滚动逻辑（目前是会上下翻的状态机）等问题，显得比较慢。
 
 # 原理
 
