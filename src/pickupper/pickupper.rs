@@ -294,8 +294,11 @@ impl Pickupper {
         
         if need_pks_sum == 0 {
             if up2sum <= dn2sum && dn2sum > 0 {
-                ops.push(-1);
-                ops.push(-1);
+                // ops.push(-1);
+                // ops.push(-1);
+                for _ in 0..dn2sum {
+                    ops.push(-1);
+                }
             }
             else {
                 // 11100 01100 
