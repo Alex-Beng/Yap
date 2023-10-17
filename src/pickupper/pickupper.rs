@@ -195,7 +195,10 @@ impl Pickupper {
 
             let mut res_strings: Vec<String> = vec![String::new(); 5];
             
-            for yi in 0..5 {
+            // check yi == 2 first
+            let mut yi = 2;
+            let mut pk_infer_end = false;
+            while ! pk_infer_end {
                 let y_offset = (yi - 2) * self.config.info.pickup_y_gap as i32 + rel_y as i32;
 
                 let f_text_cap = crop(&mut game_window_cap,
@@ -247,6 +250,36 @@ impl Pickupper {
                 }
 
                 res_strings[yi as usize] = inference_result;
+
+                // 更新yi的状态机
+                match yi {
+                    2 => {
+                        yi = 0;
+                        if res_strings[2] == "" {
+                            pk_infer_end = true;
+                            warn!("中间为空，不拾取");
+                        }
+                    }
+                    0 => {
+                        yi = 1;
+                    }
+                    1 => {
+                        yi = 3;
+                    }
+                    3 => {
+                        yi = 4;
+                    }
+                    4 => {
+                        break;
+                    }
+                    _ => {
+                        warn!("yi error: {}", yi);
+                        pk_infer_end = true;
+                    }
+                }
+            }
+            if pk_infer_end {
+                continue;
             }
 
             // info!("infer time: {}ms", infer_time.elapsed().unwrap().as_millis());
@@ -271,10 +304,10 @@ impl Pickupper {
         // 0: do F
         // -1: scroll down -1
         // 1: scroll up 1
-        if infer_res[2] == "" {
-            info!("中间为空，不拾取");
-            return;
-        }
+        // if infer_res[2] == "" {
+        //     info!("中间为空，不拾取");
+        //     return;
+        // }
         let mut ops: Vec<i32> = Vec::new();
 
         let mut is_pks = vec![0, 0, 0, 0, 0];
