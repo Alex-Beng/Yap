@@ -15,6 +15,7 @@ use crate::capture::{RawCaptureImage, self, PixelRect, RawImage};
 
 use image::imageops::{grayscale, self, crop};
 use image::{GrayImage, ImageBuffer, Luma, ColorType, GenericImage, DynamicImage};
+use imageproc::contrast::adaptive_threshold;
 use imageproc::definitions::Image;
 use tract_onnx::prelude::*;
 use serde_json;
@@ -125,7 +126,7 @@ impl Pickupper {
     }
     
 
-    pub fn start(&mut self) {
+    pub fn start(&mut self) -> ! {
         let dump = self.config.dump;
         let dump_path = self.config.dump_path.clone();
         let cnt = self.config.dump_cnt;
@@ -216,8 +217,14 @@ impl Pickupper {
                     f_text_cap_gray = grayscale(&f_text_cap);
                 }
                 
-                let otsu_thr = imageproc::contrast::otsu_level(&f_text_cap_gray);
-                let f_text_cap_bin: ImageBuffer<Luma<u8>, Vec<u8>> = imageproc::contrast::threshold(&f_text_cap_gray, otsu_thr);
+                // let otsu_thr = imageproc::contrast::otsu_level(&f_text_cap_gray);
+                // let f_text_cap_bin: ImageBuffer<Luma<u8>, Vec<u8>> = imageproc::contrast::threshold(&f_text_cap_gray, otsu_thr);
+
+                // transfer to adaptive threshold
+                // let f_text_cap_bin = adaptive_threshold(&f_text_cap_gray, 14);
+
+                let f_text_cap_bin = f_text_cap_gray;
+
                 // f_text_cap.save(format!("f_text_{}.jpg", yi)).unwrap();
                 
                 // 小绷，这个缩放至145x32是按最老的dump硬编码
