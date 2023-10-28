@@ -154,8 +154,8 @@ fn main() {
     let do_pickup_signal = Arc::new(Mutex::new(!no_pickup));
     let infer_gap_signal = Arc::new(RwLock::new(infer_gap));
     let f_inter_signal = Arc::new(RwLock::new(50 as u32));
-    let f_gap_signal = Arc::new(RwLock::new(145 as u32));
-    let scroll_gap_signal = Arc::new(RwLock::new(60 as u32));
+    let f_gap_signal = Arc::new(RwLock::new(165 as u32));
+    let scroll_gap_signal = Arc::new(RwLock::new(75 as u32));
 
     let mut is_cloud = false;
     let hwnd = match capture::find_window_local() {
@@ -368,7 +368,7 @@ fn main() {
                     info_for_artifacts.artifact_put_in_y as i32 + info_for_artifacts.top as i32
                 );
                 enigo.mouse_click(enigo::MouseButton::Left);
-                sleep(100);
+                sleep(200);
                 // warn!("click {}, {}", info_for_artifacts.artifact_put_in_x, info_for_artifacts.artifact_put_in_y);
 
                 enigo.mouse_move_to(
@@ -376,21 +376,21 @@ fn main() {
                     info_for_artifacts.artifact_upgrade_y as i32 + info_for_artifacts.top as i32
                 );
                 enigo.mouse_click(enigo::MouseButton::Left);
-                sleep(100);
+                sleep(200);
 
                 enigo.mouse_move_to(
                     info_for_artifacts.artifact_skip_x as i32 + info_for_artifacts.left as i32,
                     info_for_artifacts.artifact_skip1_y as i32 + info_for_artifacts.top as i32
                 );
                 enigo.mouse_click(enigo::MouseButton::Left);
-                sleep(100);
+                sleep(200);
 
                 enigo.mouse_move_to(
                     info_for_artifacts.artifact_skip_x as i32 + info_for_artifacts.left as i32,
                     info_for_artifacts.artifact_skip2_y as i32 + info_for_artifacts.top as i32
                 );
                 enigo.mouse_click(enigo::MouseButton::Left);
-                sleep(100);
+                sleep(200);
 
                 enigo.mouse_move_to(  
                     info_for_artifacts.artifact_put_in_x as i32 + info_for_artifacts.left as i32, 
