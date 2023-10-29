@@ -2,149 +2,146 @@ use image::imageops::colorops::grayscale;
 use image::{RgbImage, GrayImage, ImageBuffer};
 use image::imageops::resize;
 use imageproc::template_matching::{match_template, MatchTemplateMethod, find_extremes};
+use imageproc::{self, contours};
+use imageproc::contrast::adaptive_threshold;
 use log::{info, trace};
 
-use crate::capture::RawImage;
+use crate::capture::{RawImage, PixelRect};
+use crate::info;
+
+// 图像上的contour特征，用于contour matching
+pub struct ContourFeatures {
+    pub contour: contours::Contour<u32>,
+    pub contour_have_father: bool,
+    pub bbox: PixelRect,
+    pub bbox_wh_ratio: f32,
+    pub area: u32,
+    pub area_ratio: f32,
+    pub bbox_area_avg_pixel: f32,
+    // TODO: 边界点 pixel avg特征
+    // TODO: Hu moments特征
+}
+
+#[inline]
+pub fn contours_bbox(cont: contours::Contour<u32>) -> PixelRect {
+    let mut left = u32::MAX;
+    let mut top = u32::MAX;
+    let mut right = 0;
+    let mut bottom = 0;
+    for point in cont.points {
+        if point.x < left {
+            left = point.x;
+        }
+        if point.x > right {
+            right = point.x;
+        }
+        if point.y < top {
+            top = point.y;
+        }
+        if point.y > bottom {
+            bottom = point.y;
+        }
+    }
+    PixelRect {
+        left: left as i32,
+        top: top as i32,
+        width: (right - left) as i32,
+        height: (bottom - top) as i32,
+    }
+}
+
+impl ContourFeatures {
+    pub fn new_empty() -> ContourFeatures {
+        ContourFeatures {
+            contour: contours::Contour {
+                points: Vec::new(),
+                border_type: contours::BorderType::Hole,
+                parent: None,
+            },
+            contour_have_father: false,
+            bbox: PixelRect {
+                left: 0,
+                top: 0,
+                width: 0,
+                height: 0,
+            },
+            bbox_wh_ratio: 0.0,
+            area: 0,
+            area_ratio: 0.0,
+            bbox_area_avg_pixel: 0.0,
+        }
+    }
+
+    pub fn new(
+        contour: contours::Contour<u32>,
+        contour_have_father: bool,
+        full_image: &GrayImage,
+    ) -> ContourFeatures {
+        // copy contour
+        let contour_clone = contours::Contour {
+            points: contour.points.clone(),
+            border_type: contour.border_type,
+            parent: contour.parent,
+        };
+        let bbox = contours_bbox(contour);
+        let bbox_wh_ratio = bbox.width as f32 / bbox.height as f32;
+        let area = bbox.width * bbox.height;
+        
+        let image_size = full_image.dimensions();
+        let area_ratio = area as f32 / (image_size.0 * image_size.1) as f32;
+        let mut pixel_sum = 0;
+        for i in bbox.left..(bbox.left + bbox.width) {
+            for j in bbox.top..(bbox.top + bbox.height) {
+                pixel_sum += full_image.get_pixel(i as u32, j as u32)[0] as u32;
+            }
+        }
+        let bbox_area_avg_pixel = pixel_sum as f32 / area as f32;
+
+        ContourFeatures {
+            contour: contour_clone,
+            contour_have_father,
+            bbox,
+            bbox_wh_ratio,
+            area: area as u32,
+            area_ratio,
+            bbox_area_avg_pixel,
+        }
+    }
+
+    pub fn can_match(&self, other: &ContourFeatures,
+        tolorance_bbox_wh_ratio: f32,
+        tolorance_area_ratio: f32,
+        tolorance_bbox_area_avg_pixel: f32,
+     ) -> bool {
+        // info!("self.contour_have_father = {}, other.contour_have_father = {}", self.contour_have_father, other.contour_have_father)
+        // info!("self.bbox_wh_ratio = {}, other.bbox_wh_ratio = {}", self.bbox_wh_ratio, other.bbox_wh_ratio);
+        // info!("self.area_ratio = {}, other.area_ratio = {}", self.area_ratio, other.area_ratio);
+        // info!("self.bbox_area_avg_pixel = {}, other.bbox_area_avg_pixel = {}", self.bbox_area_avg_pixel, other.bbox_area_avg_pixel);
+        if self.contour_have_father != other.contour_have_father {
+            return false;
+        }
+        else if (self.bbox_wh_ratio - other.bbox_wh_ratio).abs() > tolorance_bbox_wh_ratio {
+            return false;
+        }
+        else if (self.area_ratio - other.area_ratio).abs() > tolorance_area_ratio {
+            return false;
+        }
+        else if (self.bbox_area_avg_pixel - other.bbox_area_avg_pixel).abs() > tolorance_bbox_area_avg_pixel {
+            return false;
+        }
+        // TODO: Hu moments
+        else {
+            return true;
+        }
+    }
+}
+
 
 #[inline]
 fn get_index(width: u32, x: u32, y: u32) -> usize {
     (y * width + x) as usize
 }
 
-pub fn to_gray(raw: Vec<u8>, width: u32, height: u32) -> RawImage {
-    let mut ans: Vec<f32> = vec![0.0; (width * height) as usize];
-    for i in 0..width {
-        for j in 0..height {
-            let x = i;
-            let y = height - j - 1;
-            let b = raw[((y * width + x) * 4 + 0) as usize];
-            let g = raw[((y * width + x) * 4 + 1) as usize];
-            let r = raw[((y * width + x) * 4 + 2) as usize];
-
-            let r = r as f32 / 255.0;
-            let g = g as f32 / 255.0;
-            let b = b as f32 / 255.0;
-
-            let gray = r as f32 * 0.2989 + g as f32 * 0.5870 + b as f32 * 0.1140;
-            let index = get_index(width, i, j);
-            ans[index] = gray;
-        }
-    }
-
-    RawImage {
-        data: ans,
-        h: height,
-        w: width,
-    }
-}
-
-pub fn normalize(im: &mut RawImage, auto_inverse: bool) {
-    let width = im.w;
-    let height = im.h;
-
-    if width == 0 || height == 0 {
-        return;
-    }
-
-    let data = &mut im.data;
-    // info!("in normalize: width = {}, height = {}", width, height);
-
-    let mut max: f32 = 0.0;
-    let mut min: f32 = 256.0;
-
-    for i in 0..width {
-        for j in 0..height {
-            let index = get_index(width, i, j);
-            // info!("i = {}, j = {}, width = {}, index = {}", i, j, width, index);
-            let p = data[index];
-            if p > max {
-                max = p;
-            }
-            if p < min {
-                min = p;
-            }
-        }
-    }
-
-    let flag_pixel = data[get_index(width, width - 1, height - 1)];
-    let flag_pixel = (flag_pixel - min) / (max - min);
-
-    for i in 0..width {
-        for j in 0..height {
-            let index = get_index(width, i, j);
-            let p = data[index];
-            data[index] = (p - min) / (max - min);
-            if auto_inverse && flag_pixel > 0.5 {
-                // println!("123");
-                data[index] = 1.0 - data[index];
-            }
-            // if data[index] < 0.6 {
-            //     data[index] = 0.0;
-            // }
-        }
-    }
-}
-
-pub fn crop(im: &RawImage) -> RawImage {
-    let width = im.w;
-    let height = im.h;
-
-    let mut min_col = width - 1;
-    let mut max_col = 0;
-    let mut min_row = height - 1;
-    let mut max_row = 0_u32;
-
-    for i in 0..width {
-        for j in 0..height {
-            let index = get_index(width, i, j);
-            let p = im.data[index];
-            if p > 0.7 {
-                if i < min_col {
-                    min_col = i;
-                }
-                if i > max_col {
-                    max_col = i;
-                }
-                break;
-            }
-        }
-    }
-
-    for j in 0..height {
-        for i in 0..width {
-            let index = get_index(width, i, j);
-            let p = im.data[index];
-            if p > 0.7 {
-                if j < min_row {
-                    min_row = j;
-                }
-                if j > max_row {
-                    max_row = j;
-                }
-                break;
-            }
-        }
-    }
-
-    let new_height = max_row - min_row + 1;
-    let new_width = max_col - min_col + 1;
-
-    let mut ans: Vec<f32> = vec![0.0; (new_width * new_height) as usize];
-
-    for i in min_col..=max_col {
-        for j in min_row..=max_row {
-            let index = get_index(width, i, j);
-            let new_index = get_index(new_width, i - min_col, j - min_row);
-            ans[new_index] = im.data[index];
-        }
-    }
-
-    RawImage {
-        data: ans,
-        w: new_width,
-        h: new_height,
-    }
-}
 
 pub fn raw_to_img(im: &RawImage) -> GrayImage {
     let width = im.w;
@@ -212,6 +209,19 @@ pub fn run_match_template(
         (-1, -1)
     }
 }
+
+
+// use contours to speed up template matching
+pub fn run_match_template_contours_speedup(
+    image: &GrayImage,
+    template: &GrayImage,
+    threshold: f32,
+) -> (i32, i32) {
+    
+
+    return (-1, -1)
+}
+
 
 
 // u8 sRGB to L channel

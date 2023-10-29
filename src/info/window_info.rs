@@ -20,6 +20,10 @@ pub struct WindowInfo {
     // 拾取物y方向上的间隔
     pub pickup_y_gap: f64,
 
+    // F和拾取框的上边缘的间隔
+    pub pickup_F_and_box_top_gap: f64,
+
+
     // 快速强化圣遗物所需的点位
     // 固定动作，无需感知
     // pub in -> upgrade -> switch right to skip animation
@@ -72,6 +76,7 @@ impl WindowInfo {
             pickup_x_end: convert_x(self.pickup_x_end) as u32,
 
             pickup_y_gap: convert_y(self.pickup_y_gap) as u32,
+            pickup_F_and_box_top_gap: convert_y(self.pickup_F_and_box_top_gap) as u32,
 
             artifact_put_in_x: convert_x(self.artifact_put_in_x) as u32,
             artifact_put_in_y: convert_y(self.artifact_put_in_y) as u32,
@@ -95,6 +100,7 @@ pub const WINDOW_16_9: WindowInfo = WindowInfo {
     pickup_x_beg: 1218.0,
     pickup_x_end: 1495.0,
     pickup_y_gap: 72.0,
+    pickup_F_and_box_top_gap: 7.0,
 
     artifact_put_in_x: 1750.0,
     artifact_put_in_y: 770.0,
