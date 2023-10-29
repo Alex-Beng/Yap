@@ -368,7 +368,7 @@ fn main() {
                     info_for_artifacts.artifact_put_in_y as i32 + info_for_artifacts.top as i32
                 );
                 enigo.mouse_click(enigo::MouseButton::Left);
-                sleep(200);
+                sleep(100);
                 // warn!("click {}, {}", info_for_artifacts.artifact_put_in_x, info_for_artifacts.artifact_put_in_y);
 
                 enigo.mouse_move_to(
@@ -376,21 +376,21 @@ fn main() {
                     info_for_artifacts.artifact_upgrade_y as i32 + info_for_artifacts.top as i32
                 );
                 enigo.mouse_click(enigo::MouseButton::Left);
-                sleep(200);
+                sleep(100);
 
                 enigo.mouse_move_to(
                     info_for_artifacts.artifact_skip_x as i32 + info_for_artifacts.left as i32,
                     info_for_artifacts.artifact_skip1_y as i32 + info_for_artifacts.top as i32
                 );
                 enigo.mouse_click(enigo::MouseButton::Left);
-                sleep(200);
+                sleep(100);
 
                 enigo.mouse_move_to(
                     info_for_artifacts.artifact_skip_x as i32 + info_for_artifacts.left as i32,
                     info_for_artifacts.artifact_skip2_y as i32 + info_for_artifacts.top as i32
                 );
                 enigo.mouse_click(enigo::MouseButton::Left);
-                sleep(200);
+                sleep(100);
 
                 enigo.mouse_move_to(  
                     info_for_artifacts.artifact_put_in_x as i32 + info_for_artifacts.left as i32, 
