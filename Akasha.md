@@ -259,3 +259,32 @@ gray
 ```
 
 L通道更稳定，耗时较长
+
+
+# template matching versus contours matching
+template
+```
+[2023-10-29T21:02:21Z WARN  yap::pickupper::pickupper] temp match time: 12ms
+[2023-10-29T21:02:21Z WARN  yap::pickupper::pickupper] temp match time: 12ms
+[2023-10-29T21:02:21Z WARN  yap::pickupper::pickupper] temp match time: 9ms
+[2023-10-29T21:02:21Z WARN  yap::pickupper::pickupper] temp match time: 11ms
+[2023-10-29T21:02:21Z WARN  yap::pickupper::pickupper] temp match time: 11ms
+[2023-10-29T21:02:21Z WARN  yap::pickupper::pickupper] temp match time: 13ms
+[2023-10-29T21:02:21Z WARN  yap::pickupper::pickupper] temp match time: 11ms
+[2023-10-29T21:02:22Z WARN  yap::pickupper::pickupper] temp match time: 13ms
+```
+
+contour 
+
+```
+[2023-10-29T20:56:37Z WARN  yap::pickupper::pickupper] temp match time: 0ms
+[2023-10-29T20:56:37Z WARN  yap::pickupper::pickupper] temp match time: 0ms
+[2023-10-29T20:56:37Z WARN  yap::pickupper::pickupper] temp match time: 0ms
+[2023-10-29T20:56:37Z WARN  yap::pickupper::pickupper] temp match time: 0ms
+[2023-10-29T20:56:37Z WARN  yap::pickupper::pickupper] temp match time: 0ms
+[2023-10-29T20:56:37Z WARN  yap::pickupper::pickupper] temp match time: 0ms
+[2023-10-29T20:56:37Z WARN  yap::pickupper::pickupper] temp match time: 0ms
+[2023-10-29T20:56:37Z WARN  yap::pickupper::pickupper] temp match time: 0ms
+```
+
+提升了至少约10ms。
