@@ -154,8 +154,8 @@ fn main() {
     let do_pickup_signal = Arc::new(Mutex::new(!no_pickup));
     let infer_gap_signal = Arc::new(RwLock::new(infer_gap));
     let f_inter_signal = Arc::new(RwLock::new(50 as u32));
-    let f_gap_signal = Arc::new(RwLock::new(165 as u32));
-    let scroll_gap_signal = Arc::new(RwLock::new(75 as u32));
+    let f_gap_signal = Arc::new(RwLock::new(85 as u32));
+    let scroll_gap_signal = Arc::new(RwLock::new(70 as u32));
 
     let mut is_cloud = false;
     let hwnd = match capture::find_window_local() {
