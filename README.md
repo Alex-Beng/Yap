@@ -27,7 +27,7 @@ _Named from [Yas](https://github.com/wormtql/yas)_
 
 模型训练：[yap-train](https://github.com/Alex-Beng/yap-train)
 
-
+友情链接：[BetterGI--更好的原神](https://github.com/babalae/better-genshin-impact)
 
 # 原理
 
