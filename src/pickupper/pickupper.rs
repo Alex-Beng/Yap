@@ -55,6 +55,10 @@ pub struct Pickupper {
 
     // 配置
     config: PickupCofig,
+
+    // for pickup error filte
+    last_pickup_loop_cnt: i32,
+    last_pickup_name: String,
 }
 
 impl Pickupper {
@@ -174,7 +178,10 @@ impl Pickupper {
             all_list: all_list,
             white_list: wt_list,
 
-            config: config
+            config: config,
+
+            last_pickup_loop_cnt: -1,
+            last_pickup_name: String::new(),
         }
     }
     
@@ -200,7 +207,9 @@ impl Pickupper {
         let mut start_time = SystemTime::now();
         // let mut full_cnt = 0;
         // let infer_gap_lock = self.config.infer_gap;
+        let mut loop_cnt = -1;
         loop {
+            loop_cnt += 1;
             { 
                 let infer_gap = self.config.infer_gap.read().unwrap();
                 sleep(*infer_gap);
@@ -387,11 +396,11 @@ impl Pickupper {
             for i in 0..5 {
                 info!("{}: {}", i, res_strings[i as usize]);
             }
-            self.do_pickups(res_strings);
+            self.do_pickups(res_strings, loop_cnt);
         
         }
     }
-    pub fn do_pickups(&mut self, infer_res: Vec<String>) {
+    pub fn do_pickups(&mut self, infer_res: Vec<String>, loop_cnt: i32) {
         let mut infer_res = infer_res;
         let do_pk = self.config.do_pickup.lock().unwrap();
         let f_inter = self.config.f_inter.read().unwrap();
@@ -445,7 +454,19 @@ impl Pickupper {
         let mut t_curr_f = 2;
         while need_pks_sum > 0 {
             if need_pks[t_curr_f] == 1 {
+                info!("{}, {}, {}, {}", self.last_pickup_name, infer_res[t_curr_f], self.last_pickup_loop_cnt, loop_cnt);
+                if self.last_pickup_name == infer_res[t_curr_f] && (loop_cnt - self.last_pickup_loop_cnt < 4 &&
+                loop_cnt != self.last_pickup_loop_cnt) {
+                    warn!("连续两次拾取相同物品，不拾取");
+                    // self.last_pickup_loop_cnt = loop_cnt; // in case more than twice
+                    return;
+                }
+
                 ops.push(0);
+                self.last_pickup_name = infer_res[t_curr_f].clone();
+                self.last_pickup_loop_cnt = loop_cnt;
+            
+
                 need_pks_sum -= 1;
                 if t_curr_f != 0 && t_curr_f == need_pks.len()-1 
                 || t_curr_f != 0 && t_curr_f+1 < infer_res.len() && infer_res[t_curr_f+1] == "" {
