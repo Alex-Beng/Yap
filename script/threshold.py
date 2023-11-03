@@ -5,7 +5,7 @@ import cv2
 from PIL import Image
 import numpy as np
 
-root_path = 'dumps4.0_tx/'
+root_path = 'dumps4.1_longx_yr/'
 
 for file_name in os.listdir(root_path):
     if file_name.endswith('_raw.jpg'):
@@ -14,14 +14,23 @@ for file_name in os.listdir(root_path):
 
         # print(path)
         img = Image.open(raw_path)
-        bin_img = Image.open(bin_path).convert('L')
-        bin_img = np.array(bin_img)
-        
         img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+
+        # Test diff channel
+        img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        img_h = cv2.split(img_hsv)[0]
+        cv2.imshow("h", img_h)
+
+        # bin_img = Image.open(bin_path).convert('L')
+        # bin_img = np.array(bin_img)
+        bin_img = img_h
+        
+        # img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
         # bin_img = cv2.cvtColor(np.array(bin_img), cv2.COLOR_RGB2BGR)
 
-        p_g_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        p_bin_img = cv2.adaptiveThreshold(p_g_img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 111, 1)
+        # p_g_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        p_g_img = img_h
+        p_bin_img = cv2.adaptiveThreshold(p_g_img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 29, 0)
         p_otsu_img = cv2.threshold(p_g_img, 0, 255, cv2.THRESH_OTSU)[1]
         
         # 将原先bin image 与处理过的bin imgs组合为一张图
