@@ -254,10 +254,17 @@ impl Pickupper {
             let mut f_cnt = 0;
             let mut rel_x = -1;
             let mut rel_y = -1;
-            for contour in f_area_contours {
+            // for contour in f_area_contours {
+            for i in 0..f_area_contours.len() {
+                let contour = &f_area_contours[i];
+                let contour_clone = imageproc::contours::Contour {
+                    points: contour.points.clone(),
+                    border_type: contour.border_type,
+                    parent: contour.parent,
+                };
                 let has_parent = contour.parent.is_some();
                 let contour_feat = ContourFeatures::new(
-                    contour,
+                    contour_clone,
                     has_parent,
                     &f_area_cap_gray
                 );
@@ -269,12 +276,20 @@ impl Pickupper {
                     f_cnt += 1;
 
                     // compute the rel x and y
-                    let bbox = &contour_feat.bbox;
-                    // let x_mid = bbox.left + bbox.width / 2;
-                    // let y_mid = bbox.top + bbox.height / 2;
-                    rel_y = bbox.top - self.config.info.pickup_F_and_box_top_gap as i32;
+                    
+                    // 使用父亲轮廓bbox的计算
+                    let father_contour = &f_area_contours[contour.parent.unwrap()];
+                    let father_contour = imageproc::contours::Contour {
+                        points: father_contour.points.clone(),
+                        border_type: father_contour.border_type,
+                        parent: father_contour.parent,
+                    };
+                    let father_contour_bbox = inference::img_process::contours_bbox(father_contour);
+
+                    rel_y = father_contour_bbox.top;
+                    rel_x = father_contour_bbox.left;
                     // rel_y = bbox.top - self.config.info.f_area_position.top;
-                    rel_x = 1;
+                    // rel_x = 1;
                     
                 }
             }

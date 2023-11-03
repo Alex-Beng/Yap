@@ -21,7 +21,6 @@ pub struct PickupInfo {
     pub pickup_x_end: u32,
 
     pub pickup_y_gap: u32,
-    pub pickup_F_and_box_top_gap: u32,
 
     pub artifact_put_in_x: u32,
     pub artifact_put_in_y: u32,
