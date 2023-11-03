@@ -443,6 +443,32 @@ impl Pickupper {
                 need_pks[i as usize] = 1;
             }
         }
+        // 检查是否仅有调查，其余为空
+        let mut only_investigate = infer_res[2] == "调查";
+        for i in 0..5 {
+            if infer_res[i as usize] != ""  && infer_res[i as usize] != "调查" {
+                only_investigate = false;
+                break;
+            }
+        }
+        if only_investigate {
+            warn!("仅有调查，彻底疯狂！， F for 10 times");
+            for _ in 0..10 {
+                // copy from logi macro
+                self.enigo.mouse_scroll_y(-1);
+                sleep(10);
+                self.enigo.key_down(enigo::Key::Layout('f'));
+                sleep(10);
+                self.enigo.key_up(enigo::Key::Layout('f'));
+                sleep(10);
+                self.enigo.mouse_scroll_y(-1);
+                self.enigo.key_down(enigo::Key::Layout('f'));
+                sleep(10);
+                self.enigo.key_up(enigo::Key::Layout('f'));
+            }
+            return;
+        }
+
         let up2sum = is_pks[0] + is_pks[1];
         let dn2sum = is_pks[3] + is_pks[4];
         let mut need_pks_sum: i32 = need_pks.iter().sum();
