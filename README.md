@@ -17,7 +17,6 @@ _Named from [Yas](https://github.com/wormtql/yas)_
 
 
 ![pickup demo](./imgs/pk.gif)
-
 ![cpu](./imgs/cpu.PNG)
 
 
