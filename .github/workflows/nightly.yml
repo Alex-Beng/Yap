@@ -23,7 +23,7 @@ jobs:
       - name: Create zip file
         run : |
           cd target/release
-          zip yap.zip yap.exe ../../black_lists.json ../../white_lists.json
+          Compress-Archive -Path .\yap.exe, ../../black_lists.json, ../../white_lists.json -DestinationPath ./yap.zip
       
       - name: Create release
         uses: softprops/action-gh-release@v1
