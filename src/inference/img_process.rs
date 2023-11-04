@@ -10,6 +10,7 @@ use crate::capture::{RawImage, PixelRect};
 use crate::info;
 
 // 图像上的contour特征，用于contour matching
+#[derive(Debug)]
 pub struct ContourFeatures {
     pub contour: contours::Contour<u32>,
     pub contour_have_father: bool,
@@ -18,7 +19,15 @@ pub struct ContourFeatures {
     pub area: u32,
     pub area_ratio: f32,
     pub bbox_area_avg_pixel: f32,
-    // TODO: 边界点 pixel avg特征
+    pub contour_points_avg_pixel: f32,
+    
+    pub contour_len2_area_ratio: f32, // contour length^2 / area
+    pub father_bbox_wh_ratio: f32,
+    // pub father_contour_len2_area_ratio: f32, // father contour length^2 / area
+
+    // 中心矩，平移不变及缩放不变（不同分辨率）
+    // pub miu_11: f32,
+    
     // TODO: Hu moments特征
 }
 
@@ -69,11 +78,15 @@ impl ContourFeatures {
             area: 0,
             area_ratio: 0.0,
             bbox_area_avg_pixel: 0.0,
+            contour_points_avg_pixel: 0.0,
+            contour_len2_area_ratio: 0.0,
+            father_bbox_wh_ratio: 0.0,
         }
     }
 
     pub fn new(
         contour: contours::Contour<u32>,
+        father_contour: contours::Contour<u32>,
         contour_have_father: bool,
         full_image: &GrayImage,
     ) -> ContourFeatures {
@@ -97,6 +110,18 @@ impl ContourFeatures {
         }
         let bbox_area_avg_pixel = pixel_sum as f32 / area as f32;
 
+        let mut pixel_sum = 0;
+        let _points = &contour_clone.points;
+        let contour_len = _points.len();
+        for point in _points {
+            pixel_sum += full_image.get_pixel(point.x, point.y)[0] as u32;
+        }
+        let contour_points_avg_pixel = pixel_sum as f32 / _points.len() as f32;
+        let contour_len2_area_ratio = contour_len as f32 * contour_len as f32 / area as f32 / 20.;
+
+        let father_bbox = contours_bbox(father_contour);
+        let father_bbox_wh_ratio = father_bbox.width as f32 / father_bbox.height as f32;
+
         ContourFeatures {
             contour: contour_clone,
             contour_have_father,
@@ -105,34 +130,49 @@ impl ContourFeatures {
             area: area as u32,
             area_ratio,
             bbox_area_avg_pixel,
+            contour_points_avg_pixel,
+            contour_len2_area_ratio,
+            father_bbox_wh_ratio,
         }
     }
 
     pub fn can_match(&self, other: &ContourFeatures,
-        tolorance_bbox_wh_ratio: f32,
-        tolorance_area_ratio: f32,
-        tolorance_bbox_area_avg_pixel: f32,
-     ) -> bool {
-        // info!("self.contour_have_father = {}, other.contour_have_father = {}", self.contour_have_father, other.contour_have_father)
-        // info!("self.bbox_wh_ratio = {}, other.bbox_wh_ratio = {}", self.bbox_wh_ratio, other.bbox_wh_ratio);
-        // info!("self.area_ratio = {}, other.area_ratio = {}", self.area_ratio, other.area_ratio);
-        // info!("self.bbox_area_avg_pixel = {}, other.bbox_area_avg_pixel = {}", self.bbox_area_avg_pixel, other.bbox_area_avg_pixel);
-        if self.contour_have_father != other.contour_have_father {
-            return false;
+        cosine_tolorance: f32,
+     ) -> (f32, bool) {
+        let cos_simi = cosine_similarity(&self.to_features_vec(), &other.to_features_vec());
+        // println!("cos_simi = {}", cos_simi);
+        if cos_simi < cosine_tolorance {
+            return (cos_simi, false);
         }
-        else if (self.bbox_wh_ratio - other.bbox_wh_ratio).abs() > tolorance_bbox_wh_ratio {
-            return false;
-        }
-        else if (self.area_ratio - other.area_ratio).abs() > tolorance_area_ratio {
-            return false;
-        }
-        else if (self.bbox_area_avg_pixel - other.bbox_area_avg_pixel).abs() > tolorance_bbox_area_avg_pixel {
-            return false;
-        }
-        // TODO: Hu moments
         else {
-            return true;
+            return (cos_simi, true);
         }
+    }
+
+    pub fn to_features_vec(&self) -> Vec<f32> {
+        let mut ans = Vec::new();
+        // ans.push(self.contour_have_father as u32 as f32);
+        ans.push(self.bbox_wh_ratio);
+        ans.push(self.area_ratio);
+        ans.push(self.bbox_area_avg_pixel / 255.0);
+        ans.push(self.contour_points_avg_pixel / 255.0);
+        ans.push(self.contour_len2_area_ratio / 20.0);
+        ans.push(self.father_bbox_wh_ratio);
+        ans
+    }
+}
+
+
+#[inline]
+fn cosine_similarity(v1: &Vec<f32>, v2: &Vec<f32>) -> f32 {
+    let dot_product = v1.iter().zip(v2.iter()).map(|(a, b)| a * b).sum::<f32>();
+    let v1_norm = v1.iter().map(|x| x * x).sum::<f32>().sqrt();
+    let v2_norm = v2.iter().map(|x| x * x).sum::<f32>().sqrt();
+    let denominator = v1_norm * v2_norm;
+    if denominator > 0.0 {
+        dot_product / denominator
+    } else {
+        0.0
     }
 }
 

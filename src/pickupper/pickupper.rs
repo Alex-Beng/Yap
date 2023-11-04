@@ -121,7 +121,15 @@ impl Pickupper {
         let _img = template.clone();
         let _img_bin = adaptive_threshold(&_img, 14); // block 大小是否需要自适应？
         let _contours:Vec<imageproc::contours::Contour<u32>> = imageproc::contours::find_contours(&_img_bin);
-        for _contour in _contours {
+        for i in 0.._contours.len() {
+        // for _contour in _contours {
+            let _contour = &_contours[i];
+            let _contour = imageproc::contours::Contour {
+                points: _contour.points.clone(),
+                border_type: _contour.border_type,
+                parent: _contour.parent,
+            };
+
             // 这个FFF有爸爸轮廓的只有那个F
             if _contour.parent.is_some() {
                 let _contour_clone = imageproc::contours::Contour {
@@ -129,41 +137,23 @@ impl Pickupper {
                     border_type: _contour.border_type,
                     parent: _contour.parent,
                 };
-                let bbox = inference::img_process::contours_bbox(_contour);
-                let bbox = &bbox;
-
-                f_contour_feat.bbox = PixelRect {
-                    left: bbox.left,
-                    top: bbox.top,
-                    width: bbox.width,
-                    height: bbox.height,
+                let _contour_father = &_contours[_contour.parent.unwrap()];
+                let _contour_father = imageproc::contours::Contour {
+                    points: _contour_father.points.clone(),
+                    border_type: _contour_father.border_type,
+                    parent: _contour_father.parent,
                 };
-                f_contour_feat.contour = _contour_clone;
-                f_contour_feat.contour_have_father = true;
-                f_contour_feat.bbox_wh_ratio = bbox.width as f32 / bbox.height as f32;
-                f_contour_feat.area = bbox.width as u32 * bbox.height as u32;
-                let _f_area_width = info.f_area_position.right - info.f_area_position.left;
-                let _f_area_height = info.f_area_position.bottom - info.f_area_position.top;
-                f_contour_feat.area_ratio = f_contour_feat.area as f32 / (_f_area_height * _f_area_width) as f32;
 
-                let mut _sum: u32 = 0;
-                for x in bbox.left..bbox.left+bbox.width {
-                    for y in bbox.top..bbox.top+bbox.height {
-                        _sum += _img.get_pixel(x as u32, y as u32)[0] as u32;
-                    }
-                }
-                let _avg = _sum as f32 / f_contour_feat.area as f32;
-                f_contour_feat.bbox_area_avg_pixel = _avg;
+                f_contour_feat = ContourFeatures::new(_contour, _contour_father, true, &template);
                 
                 // hard code here for feat
                 // 受不了这个傻逼FFF.bmp了，直接硬编码得了
                 f_contour_feat.bbox_wh_ratio = 0.7;
                 f_contour_feat.area_ratio = 0.010997644;
                 f_contour_feat.bbox_area_avg_pixel = 178.59644;
-
-                // 输出所有特征
-                // println!("bbox: {:?} {}", f_contour_feat.bbox, f_contour_feat.area);
-                // println!("{} {} {}", f_contour_feat.bbox_wh_ratio, f_contour_feat.area_ratio, f_contour_feat.bbox_area_avg_pixel);
+                f_contour_feat.contour_points_avg_pixel = 241.72464;
+                
+                // println!("f_contour_feat: {:?}", f_contour_feat);
             }
         }
         
@@ -230,6 +220,7 @@ impl Pickupper {
                 self.config.info.f_area_position.right as u32 - self.config.info.f_area_position.left as u32,
                 self.config.info.f_area_position.bottom as u32 - self.config.info.f_area_position.top as u32);
             let f_area_cap = DynamicImage::ImageRgb8(f_area_cap.to_image());
+            let mut f_area_cap_le = f_area_cap.clone();
             // warn!("f_area_cap: w: {}, h: {}", f_area_cap.width(), f_area_cap.height());
             // info!("f_template: w: {}, h: {}", self.f_template.width(), self.f_template.height());
             
@@ -254,6 +245,15 @@ impl Pickupper {
             let mut f_cnt = 0;
             let mut rel_x = -1;
             let mut rel_y = -1;
+
+            let mut best_match = 0.;
+            let mut best_father_bbox = PixelRect {
+                left: 0,
+                top: 0,
+                width: 0,
+                height: 0,
+            };
+
             // for contour in f_area_contours {
             for i in 0..f_area_contours.len() {
                 let contour = &f_area_contours[i];
@@ -263,16 +263,24 @@ impl Pickupper {
                     parent: contour.parent,
                 };
                 let has_parent = contour.parent.is_some();
+                if !has_parent { continue; }
+
+                let father_contour = &f_area_contours[contour.parent.unwrap()];
+                let father_contour_clone = imageproc::contours::Contour {
+                    points: father_contour.points.clone(),
+                    border_type: father_contour.border_type,
+                    parent: father_contour.parent,
+                };
+
                 let contour_feat = ContourFeatures::new(
                     contour_clone,
+                    father_contour_clone,
                     has_parent,
                     &f_area_cap_gray
                 );
-                if self.f_contour_feat.can_match(
-                    &contour_feat, 
-                    0.1, 
-                     0.01,
-                    10.0) {
+                
+                let (cos_simi, _valid) = self.f_contour_feat.can_match(&contour_feat, 0.999);
+                if contour_feat.contour_have_father == true && _valid {
                     f_cnt += 1;
 
                     // compute the rel x and y
@@ -290,14 +298,18 @@ impl Pickupper {
                     rel_x = father_contour_bbox.left;
                     // rel_y = bbox.top - self.config.info.f_area_position.top;
                     // rel_x = 1;
-                    
+                    if cos_simi > best_match {
+                        best_match = cos_simi;
+                        best_father_bbox = father_contour_bbox;
+                    }
+
                 }
+                
             }
             // println!(", rel_y2: {}; {}, {}, {}", rel_y, f_cnt, self.config.info.pickup_y_gap, rel_y-rel_y1);
 
             // warn!("temp match time: {}ms", temp_match_time.elapsed().unwrap().as_millis());
-
-
+            // info!("best_match: {}, f_cnt: {}", best_match, f_cnt);
             if rel_x < 0 || f_cnt != 1 {
                 // // 说明没有找到，保存全图
                 // if full_cnt % 20 == 0 {
@@ -305,6 +317,20 @@ impl Pickupper {
                 // }
                 // full_cnt += 1;
                 continue;
+            }
+            
+
+            if true {
+                info!("best_match: {}", best_match);
+                // crop the gray image using best_father_bbox
+                let F_father_cap = crop(&mut f_area_cap_le,
+                    best_father_bbox.left as u32,
+                    best_father_bbox.top as u32,
+                    best_father_bbox.width as u32,
+                    best_father_bbox.height as u32,
+                );
+                // F_father_cap.to_image().save(format!("{}_F_father.jpg", loop_cnt)).unwrap();
+                // f_area_cap_le.save(format!("{}_f_area_cap_le.jpg", loop_cnt)).unwrap();
             }
             
             let infer_time = SystemTime::now();
