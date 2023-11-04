@@ -243,7 +243,6 @@ pub fn find_window_local() -> Result<HWND, String> {
 
 pub fn find_window_cloud() -> Result<HWND, String> {
     let wide = encode_wide(String::from("云·原神"));
-    // TODO: 云·原神
     let result: HWND = unsafe {
         FindWindowW(null_mut(), wide.as_ptr())
     };
