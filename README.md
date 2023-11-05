@@ -76,7 +76,7 @@ or // 如果找不到F键
 
 ## 从release获取
 
-1. 点击[此处](https://github.com/Alex-Beng/Yap/releases)下载最新版本的release压缩包，解压。有三个文件：`yap.exe`、`black_lists.json`和`white_lists.json`。
+1. 点击[此处](https://github.com/Alex-Beng/Yap/releases)下载最新版本的release压缩包，解压。有三个文件：`yap.exe`、`black_lists.json`和`white_lists.json`。PS：可以使用nightly版本帮助debug。
 
 2. 使用记事本/VSCode等编辑器打开`black_lists.json`，添加需要拉黑的拾取物品名称，注意需要使用英文符号，如：
 
