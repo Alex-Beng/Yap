@@ -279,7 +279,7 @@ impl Pickupper {
                     &f_area_cap_gray
                 );
                 
-                let (cos_simi, _valid) = self.f_contour_feat.can_match(&contour_feat, 0.999);
+                let (cos_simi, _valid) = self.f_contour_feat.can_match(&contour_feat, 0.995);
                 if contour_feat.contour_have_father == true && _valid {
                     f_cnt += 1;
 
