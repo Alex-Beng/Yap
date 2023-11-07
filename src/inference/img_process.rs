@@ -139,12 +139,18 @@ impl ContourFeatures {
     pub fn can_match(&self, other: &ContourFeatures,
         cosine_tolorance: f32,
      ) -> (f32, bool) {
+        // let feat_vec1 = self.to_features_vec();
+        // let feat_vec2 = other.to_features_vec();
+
         let cos_simi = cosine_similarity(&self.to_features_vec(), &other.to_features_vec());
         // println!("cos_simi = {}", cos_simi);
         if cos_simi < cosine_tolorance {
             return (cos_simi, false);
         }
         else {
+            // info!("vec: {:?}", self.to_features_vec());
+            // info!("vec: {:?}", other.to_features_vec());
+            // info!("simi: {}", cos_simi);
             return (cos_simi, true);
         }
     }
@@ -152,12 +158,12 @@ impl ContourFeatures {
     pub fn to_features_vec(&self) -> Vec<f32> {
         let mut ans = Vec::new();
         // ans.push(self.contour_have_father as u32 as f32);
-        ans.push(self.bbox_wh_ratio);
-        ans.push(self.area_ratio);
-        ans.push(self.bbox_area_avg_pixel / 255.0);
-        ans.push(self.contour_points_avg_pixel / 255.0);
-        ans.push(self.contour_len2_area_ratio / 20.0);
-        ans.push(self.father_bbox_wh_ratio);
+        ans.push(self.bbox_wh_ratio / 0.7);
+        ans.push(self.area_ratio / 0.010997644);
+        ans.push(self.bbox_area_avg_pixel / 255.0 /  0.7003782);
+        ans.push(self.contour_points_avg_pixel / 255.0 /  0.94793975);
+        ans.push(self.contour_len2_area_ratio / 20.0 /  0.04316346);
+        ans.push(self.father_bbox_wh_ratio / 1.21875);
         ans
     }
 }
