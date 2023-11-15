@@ -391,7 +391,7 @@ impl Pickupper {
                 let inference_result = self.model.inference_string(&raw_img);
                 // info!("inference 1 time: {}ms", t1.elapsed().unwrap().as_millis());
 
-                if dump && inference_result != "" {
+                if dump && inference_result != "" && !self.all_list.contains(&inference_result) {
                     f_text_cap.save(format!("{}/{}_{}_{}_raw.jpg", dump_path, cnt, yi, inference_result)).unwrap();
                     // f_text_cap_bin.save(format!("{}/{}_{}_{}_bin.jpg", dump_path, cnt, yi, inference_result)).unwrap();
                     cnt += 1;
@@ -460,25 +460,28 @@ impl Pickupper {
 
         let mut is_pks = vec![0, 0, 0, 0, 0];
         let mut need_pks = vec![0, 0, 0, 0, 0];
+        let mut need_pks_cnt = 0;
+        let mut all_is_need = true;
         for i in 0..5 {
             let s = &infer_res[i as usize];
             if s != "" {
                 is_pks[i as usize] = 1;
             }
+            else {
+                continue;
+            }
             if self.white_list.contains(s) || self.all_list.contains(s) && !self.black_list.contains(s) {
                 need_pks[i as usize] = 1;
+                need_pks_cnt += 1;
+            }
+            else {
+                all_is_need = false;
             }
         }
-        // 检查是否仅有调查，其余为空
-        let mut only_investigate = infer_res[2] == "调查";
-        for i in 0..5 {
-            if infer_res[i as usize] != ""  && infer_res[i as usize] != "调查" {
-                only_investigate = false;
-                break;
-            }
-        }
-        if only_investigate {
-            warn!("仅有调查，彻底疯狂！， F for 10 times");
+        // 检查是否全是所需物品
+        if all_is_need && need_pks_cnt > 1 {
+            let f_times = need_pks_cnt + 1;
+            warn!("仅有所需，彻底疯狂！， F for {} times", f_times);
             for _ in 0..10 {
                 // copy from logi macro
                 self.enigo.mouse_scroll_y(-1);
