@@ -31,6 +31,10 @@ pub struct WindowInfo {
     pub artifact_skip1_y: f64,
     pub artifact_skip2_y: f64,
     
+    // 用于秘境挑战组队邀请
+    pub online_challange_pos: Rect,
+    pub online_challange_confirm_x: f64,
+    pub online_challange_confirm_y: f64,
 }
 
 impl WindowInfo {
@@ -80,6 +84,10 @@ impl WindowInfo {
             artifact_skip_x: convert_x(self.artifact_skip_x) as u32,
             artifact_skip1_y: convert_y(self.artifact_skip1_y) as u32,
             artifact_skip2_y: convert_y(self.artifact_skip2_y) as u32,
+
+            online_challange_position: convert_rect(&self.online_challange_pos),
+            online_challange_confirm_x: convert_x(self.online_challange_confirm_x) as u32,
+            online_challange_confirm_y: convert_y(self.online_challange_confirm_y) as u32,
         }
     }
 }
@@ -103,5 +111,9 @@ pub const WINDOW_16_9: WindowInfo = WindowInfo {
     artifact_skip_x: 128.0,
     artifact_skip1_y: 150.0,
     artifact_skip2_y: 220.0,
+
+    online_challange_pos: Rect(46.0, 1031.0, 77.0, 831.0),
+    online_challange_confirm_x: 1180.0,
+    online_challange_confirm_y: 759.0,
 };
 //475, 547

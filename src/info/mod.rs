@@ -30,6 +30,9 @@ pub struct PickupInfo {
     pub artifact_skip1_y: u32,
     pub artifact_skip2_y: u32,
 
+    pub online_challange_position: PixelRectBound,
+    pub online_challange_confirm_x: u32,
+    pub online_challange_confirm_y: u32,
 }
 
 impl PickupInfo {

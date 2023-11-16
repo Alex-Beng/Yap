@@ -2,6 +2,7 @@ use std::borrow::BorrowMut;
 use std::collections::HashSet;
 use std::fs::File;
 use std::io::Read;
+use std::thread;
 use std::time::SystemTime;
 use std::sync::{Arc, Mutex, RwLock};
 
@@ -14,7 +15,7 @@ use crate::inference::inference::CRNNModel;
 use crate::capture::{RawCaptureImage, self, PixelRect, RawImage};
 
 use image::imageops::{grayscale, self, crop};
-use image::{GrayImage, ImageBuffer, Luma, ColorType, GenericImage, DynamicImage};
+use image::{GrayImage, ImageBuffer, Luma, ColorType, GenericImage, DynamicImage, SubImage};
 use imageproc::contours;
 use imageproc::contrast::adaptive_threshold;
 use imageproc::definitions::Image;
@@ -177,6 +178,54 @@ impl Pickupper {
     
 
     pub fn start(&mut self) -> ! {
+
+        // 用于秘境挑战邀请的自动点击
+        let (tx, rx) = std::sync::mpsc::channel::<DynamicImage>();
+        let model_online = CRNNModel::new(String::from("model_training.onnx"), String::from("index_2_word.json"));
+        let mut enigo_online = Enigo::new();
+        let online_confirm_x = self.config.info.online_challange_confirm_x + self.config.info.left as u32;
+        let online_confirm_y = self.config.info.online_challange_confirm_y + self.config.info.top as u32;
+        thread::spawn(move || {
+            let mut cnt = 0;
+            loop {
+                cnt += 1;
+
+                let img = rx.recv().unwrap();
+                
+                let img_gray = grayscale(&img);
+                
+                let bin_resized = imageops::resize(&img_gray, 199, 32, imageops::FilterType::Gaussian);
+                let mut padded_image = ImageBuffer::new(384, 32);
+                padded_image.copy_from(&bin_resized, 0, 0).unwrap();
+                let vec: Vec<f32> = padded_image.pixels().map(|p| p[0] as f32 / 255.0).collect();
+                let raw_img = RawImage {
+                    data: vec,
+                    h: padded_image.height(),
+                    w: padded_image.width(),
+                };
+                let inference_result = model_online.inference_string(&raw_img);
+                // info!("online challage inference_result: {}", inference_result);
+                // if inference_result != "" {
+                //     img.save(format!("dumps4.2/20/{}_0_秘境组队邀请_raw.jpg", cnt)).unwrap();
+                // }
+                if inference_result == "秘境挑战组队邀请" {
+                    // press Y first
+                    enigo_online.key_down(enigo::Key::Layout('y'));
+                    sleep(50);
+                    enigo_online.key_up(enigo::Key::Layout('y'));
+
+                    // move mouse to the right position
+                    enigo_online.mouse_move_to(online_confirm_x as i32, online_confirm_y as i32);
+                    sleep(50);
+
+                    // click
+                    enigo_online.mouse_click(enigo::MouseButton::Left);
+                    sleep(50);
+                }
+            }
+        });
+
+
         let dump = self.config.dump;
         let dump_path = self.config.dump_path.clone();
         let cnt = self.config.dump_cnt;
@@ -198,6 +247,7 @@ impl Pickupper {
         // let mut full_cnt = 0;
         // let infer_gap_lock = self.config.infer_gap;
         let mut loop_cnt = -1;
+        let mut last_online_challage_time = SystemTime::now();
         loop {
             loop_cnt += 1;
             { 
@@ -211,7 +261,8 @@ impl Pickupper {
             
             // 截一张全屏
             let mut game_window_cap = capture::capture_absolute_image(&game_win_rect).unwrap();
-            // game_window_cap.save("game_window.jpg").unwrap();
+            game_window_cap.save("game_window.jpg").unwrap();
+            let mut online_challage_cap = game_window_cap.clone();
 
             // 改为从window_cap中crop
             let f_area_cap = crop(&mut game_window_cap, 
@@ -219,6 +270,19 @@ impl Pickupper {
                 self.config.info.f_area_position.top as u32,
                 self.config.info.f_area_position.right as u32 - self.config.info.f_area_position.left as u32,
                 self.config.info.f_area_position.bottom as u32 - self.config.info.f_area_position.top as u32);
+            // 再crop秘境挑战的
+            if last_online_challage_time + std::time::Duration::from_secs(1) < SystemTime::now() {
+                last_online_challage_time = SystemTime::now();
+                let online_challage_cap = crop(&mut online_challage_cap, 
+                    self.config.info.online_challange_position.left as u32,
+                    self.config.info.online_challange_position.top as u32,
+                    self.config.info.online_challange_position.right as u32 - self.config.info.online_challange_position.left as u32,
+                    self.config.info.online_challange_position.bottom as u32 - self.config.info.online_challange_position.top as u32);
+                // 塞进channel
+                let online_challage_cap = DynamicImage::ImageRgb8(online_challage_cap.to_image());
+                tx.send(online_challage_cap).unwrap();
+            }
+            
             let f_area_cap = DynamicImage::ImageRgb8(f_area_cap.to_image());
             let mut f_area_cap_le = f_area_cap.clone();
             // warn!("f_area_cap: w: {}, h: {}", f_area_cap.width(), f_area_cap.height());
