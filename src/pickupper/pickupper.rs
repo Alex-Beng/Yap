@@ -204,11 +204,16 @@ impl Pickupper {
                     w: padded_image.width(),
                 };
                 let inference_result = model_online.inference_string(&raw_img);
-                // info!("online challage inference_result: {}", inference_result);
+                
                 // if inference_result != "" {
-                //     img.save(format!("dumps4.2/20/{}_0_秘境组队邀请_raw.jpg", cnt)).unwrap();
+                //     img.save(format!("dumps4.2/77/{}_0_秘境组队邀请_raw.jpg", cnt)).unwrap();
                 // }
-                if inference_result == "秘境挑战组队邀请" {
+
+                if inference_result == "" || inference_result.len() < 6 {
+                    continue;
+                }
+                // info!("online challage inference_result: {}", inference_result);
+                if inference_result == "秘境挑战组队邀请" || inference_result == "进入世界申请（" {
                     // press Y first
                     enigo_online.key_down(enigo::Key::Layout('y'));
                     sleep(50);
@@ -219,8 +224,8 @@ impl Pickupper {
                     sleep(50);
 
                     // click
-                    enigo_online.mouse_click(enigo::MouseButton::Left);
-                    sleep(50);
+                    // enigo_online.mouse_click(enigo::MouseButton::Left);
+                    // sleep(50);
                 }
             }
         });
@@ -261,7 +266,7 @@ impl Pickupper {
             
             // 截一张全屏
             let mut game_window_cap = capture::capture_absolute_image(&game_win_rect).unwrap();
-            game_window_cap.save("game_window.jpg").unwrap();
+            // game_window_cap.save("game_window.jpg").unwrap();
             let mut online_challage_cap = game_window_cap.clone();
 
             // 改为从window_cap中crop
@@ -548,13 +553,13 @@ impl Pickupper {
             warn!("仅有所需，彻底疯狂！， F for {} times", f_times);
             for _ in 0..10 {
                 // copy from logi macro
-                self.enigo.mouse_scroll_y(-1);
+                self.enigo.mouse_scroll_y(1);
                 sleep(10);
                 self.enigo.key_down(enigo::Key::Layout('f'));
                 sleep(10);
                 self.enigo.key_up(enigo::Key::Layout('f'));
                 sleep(10);
-                self.enigo.mouse_scroll_y(-1);
+                self.enigo.mouse_scroll_y(1);
                 self.enigo.key_down(enigo::Key::Layout('f'));
                 sleep(10);
                 self.enigo.key_up(enigo::Key::Layout('f'));
