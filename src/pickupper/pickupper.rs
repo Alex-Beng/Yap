@@ -461,6 +461,8 @@ impl Pickupper {
                 // info!("inference 1 time: {}ms", t1.elapsed().unwrap().as_millis());
 
                 if dump && inference_result != "" && !self.all_list.contains(&inference_result) {
+                    // remove ? / : * " < > | \ / in file name
+                    let inference_result = inference_result.replace("?", "").replace("/", "").replace(":", "").replace("*", "").replace("\"", "").replace("<", "").replace(">", "").replace("|", "").replace("\\", "").replace("/", "");
                     f_text_cap.save(format!("{}/{}_{}_{}_raw.jpg", dump_path, cnt, yi, inference_result)).unwrap();
                     // f_text_cap_bin.save(format!("{}/{}_{}_{}_bin.jpg", dump_path, cnt, yi, inference_result)).unwrap();
                     cnt += 1;
