@@ -209,10 +209,10 @@ impl Pickupper {
                 //     img.save(format!("dumps4.2/77/{}_0_秘境组队邀请_raw.jpg", cnt)).unwrap();
                 // }
 
-                if inference_result == "" || inference_result.len() < 6 {
+                if inference_result == "" {
                     continue;
                 }
-                // info!("online challage inference_result: {}", inference_result);
+                info!("online challage inference_result: {}", inference_result);
                 if inference_result == "秘境挑战组队邀请" || inference_result == "进入世界申请（" {
                     // press Y first
                     enigo_online.key_down(enigo::Key::Layout('y'));
