@@ -535,10 +535,15 @@ impl Pickupper {
         let mut need_pks = vec![0, 0, 0, 0, 0];
         let mut need_pks_cnt = 0;
         let mut all_is_need = true;
+        // 是否全是调查，进行一个彻底的疯狂
+        let mut is_all_investigate = !self.black_list.contains("调查") || self.white_list.contains("调查");
         for i in 0..5 {
             let s = &infer_res[i as usize];
             if s != "" {
                 is_pks[i as usize] = 1;
+                if s != "调查" {
+                    is_all_investigate = false;
+                }
             }
             else {
                 continue;
@@ -552,9 +557,9 @@ impl Pickupper {
             }
         }
         // 检查是否全是所需物品
-        if all_is_need && need_pks_cnt > 1 {
+        if all_is_need && need_pks_cnt > 1 || is_all_investigate {
             let f_times = need_pks_cnt + 1;
-            warn!("仅有所需，彻底疯狂！， F for {} times", f_times);
+            warn!("仅有所需/调查点，彻底疯狂！， F for {}(10) times", f_times);
             for _ in 0..10 {
                 // copy from logi macro
                 self.enigo.mouse_scroll_y(1);
