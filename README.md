@@ -56,7 +56,7 @@ or // 如果找不到F键
 ... F down ->  sleep f_internal ms -> F_up -> sleep f_gap ms -> ...
 ... scroll -> sleep scroll_gap ms -> ...
 ```
-其中F键和滚轮的三个参数均可配置，分别为`f_internal`、`f_gap`、`scroll_gap`。
+其中F键和滚轮的三个参数均可配置，分别为`f_internal`（F键摁下后等待时间）、`f_gap`（F键松开后的冷却时间）、`scroll_gap`（滚轮滚动后的冷却时间），单位ms。
 
 有两个子线程：
 1. 用于监听全局快捷键，以暂停/恢复拾取，and other functions。
@@ -113,14 +113,15 @@ PS：可以使用nightly版本帮助debug。
 
 默认为0ms。
 
-对于60FPS游戏，一帧为16ms，但是拾取及滚动响应应该不是一帧完成的。
-
-如果出现捡不起来，适当调高`f_internal`（拾取后等待时间），滚动不了，适当调高`scroll_gap`（滚动后等待时间）。
-
+对于60FPS游戏，一帧为16ms，但是拾取及滚动响应应该不是一帧完成的。例如：
 ```bash
 ./yap.exe --infer-gap 16 # 推理间隔为16ms
 ./yap.exe -g 16 # 两种写法都可以
 ```
+
+如果出现捡不起来，适当调高`f_gap`，滚动不了，适当调高`scroll_gap`。
+
+
 
 
 ## 自行编译
