@@ -460,7 +460,9 @@ impl Pickupper {
                 let inference_result = self.model.inference_string(&raw_img);
                 // info!("inference 1 time: {}ms", t1.elapsed().unwrap().as_millis());
 
-                if dump && inference_result != "" && !self.all_list.contains(&inference_result) {
+                // dump 不认识的和需要捡的
+                if dump && inference_result != "" && !self.all_list.contains(&inference_result) || 
+                dump && self.all_list.contains(&inference_result) && !self.black_list.contains(&inference_result) {
                     // remove ? / : * " < > | \ / in file name
                     let inference_result = inference_result.replace("?", "").replace("/", "").replace(":", "").replace("*", "").replace("\"", "").replace("<", "").replace(">", "").replace("|", "").replace("\\", "").replace("/", "");
                     f_text_cap.save(format!("{}/{}_{}_{}_raw.jpg", dump_path, cnt, yi, inference_result)).unwrap();
