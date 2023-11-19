@@ -31,7 +31,7 @@ Which may be the best open source pickupper in terms of performance, usability a
 # 原理
 
 
-使用~~基于L*/灰度通道的模板匹配（which is used in other naive pickuppers）~~基于轮廓提取+特征匹配的方案，实现μs级别的F键的定位；
+使用~~基于L*/灰度通道的模板匹配（which is used in other naive pickuppers~~基于轮廓提取+特征匹配的方案，实现μs级别的F键的定位；
 通过固定位置关系截取拾取物的文字；
 之后，与[Yas](https://github.com/wormtql/yas)一样，使用SVTR网络对预处理后的区域图片进行识别；
 
