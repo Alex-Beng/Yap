@@ -24,7 +24,7 @@ Which may be the best open source pickupper in terms of performance, usability a
 
 视频演示：[v0.1.0锄地](https://www.bilibili.com/video/BV1zk4y1G72J) [v0.1.1捡狗粮](https://www.bilibili.com/video/BV1ix4y197nv) （过于老旧了，目前性能更好）
 
-模型训练：[yap-train](https://github.com/Alex-Beng/yap-train)
+模型训练：[yap-train](https://github.com/Alex-Beng/yap-train)（detach fork from yas-train）
 
 友情链接：[BetterGI--更好的原神，更多有用的功能](https://github.com/babalae/better-genshin-impact)
 
