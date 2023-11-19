@@ -13,8 +13,8 @@ _Named from [Yas](https://github.com/wormtql/yas)_
 
 借鉴了[Yas](https://github.com/wormtql/yas)代码实现的自动拾取器。
 
-一个开箱即用、跑的飞快、占用资源极低、可配置黑名单的自动拾取器，解放滚轮和F键。
-
+一个开箱即用、跑的飞快、占用资源极低、可配置黑名单的自动拾取器，解放滚轮和F键，
+Which may be the best open source pickupper in terms of performance, usability and configurability.
 
 ![pickup demo](./imgs/pk.gif)
 ![cpu](./imgs/cpu.PNG)
@@ -26,17 +26,21 @@ _Named from [Yas](https://github.com/wormtql/yas)_
 
 模型训练：[yap-train](https://github.com/Alex-Beng/yap-train)
 
-友情链接：[BetterGI--更好的原神](https://github.com/babalae/better-genshin-impact)
+友情链接：[BetterGI--更好的原神，更多有用的功能](https://github.com/babalae/better-genshin-impact)
 
 # 原理
 
 
-使用~~基于L*/灰度通道的模板匹配~~（基于轮廓提取+特征匹配的方式）进行F键的定位，使用固定位置截取拾取物的文字。
+使用~~基于L*/灰度通道的模板匹配（which is used in other naive pickuppers）~~基于轮廓提取+特征匹配的方案，实现μs级别的F键的定位；
+通过固定位置关系截取拾取物的文字；
+之后，与[Yas](https://github.com/wormtql/yas)一样，使用SVTR网络对预处理后的区域图片进行识别；
+
+
 目前的策略是截取包含F键上下两个可能存在的拾取物文字，共五个区域。
+然后根据黑白名单，利用硬编码的自上而下拾取算法，生成动作序列`ops`，再进行执行。
 
-之后，与[Yas](https://github.com/wormtql/yas)一样，使用SVTR网络对预处理后的区域图片进行识别。
+其中黑白名单的逻辑是：白名单中的物品必须拾取，黑名单中的物品若没有在白名单中，则不拾取。
 
-通过一组硬编码的自上而下拾取逻辑，生成动作序列`ops`，再进行执行。
 
 整体流程的时序是：
 ```
@@ -54,9 +58,11 @@ or // 如果找不到F键
 ```
 其中F键和滚轮的三个参数均可配置，分别为`f_internal`、`f_gap`、`scroll_gap`。
 
-使用一个子线程监听全局快捷键，以配置参数。
+有两个子线程：
+1. 用于监听全局快捷键，以暂停/恢复拾取，and other functions。
+2. 用于检测进入世界&联机邀请，以自动摁下Y键。
 
-知乎：[【原神】基于文字识别的超快自动拾取](https://zhuanlan.zhihu.com/p/645909098)
+知乎：[【原神】基于文字识别的超快自动拾取（有点老了，还是模板匹配做k键定位）](https://zhuanlan.zhihu.com/p/645909098)
 
 
 
@@ -76,9 +82,13 @@ or // 如果找不到F键
 
 ## 从release获取
 
-1. 点击[此处](https://github.com/Alex-Beng/Yap/releases)下载最新版本的release压缩包，解压。有三个文件：`yap.exe`、`black_lists.json`和`white_lists.json`。PS：可以使用nightly版本帮助debug。
+目前有两种release，一种是由github actions自动构建的nightly版本，一种是手动构建的release版本。前者可能会有bug，后者较为稳定。
 
-2. 使用记事本/VSCode等编辑器打开`black_lists.json`，添加需要拉黑的拾取物品名称，注意需要使用英文符号，如：
+PS：可以使用nightly版本帮助debug。
+
+1. 点击[此处](https://github.com/Alex-Beng/Yap/releases)下载release压缩包，解压。有三个文件：`yap.exe`、`black_lists.json`和`white_lists.json`。
+
+2. 使用记事本/VSCode等编辑器打开`black_lists.json`，添加需要拉黑的拾取物品名称，注意需要使用**英文符号**，如：
 
 
 ```json
@@ -93,19 +103,19 @@ or // 如果找不到F键
 
 3. 白名单`white_lists.json`设置同黑名单，不再赘述
 
-4. 右键`yap.exe`选择以管理员身份运行
+4. 右键`yap.exe`选择以**管理员身份**运行
 
 
 5. 性能调优（如果你会使用命令行设置参数的话）
 
 
-可以通过修改`infer-gap`参数来调整推理间隔，单位ms。
+可以通过修改`infer-gap`参数来调整推理间隔，即检测F键的间隔，单位ms。
 
 默认为0ms。
 
 对于60FPS游戏，一帧为16ms，但是拾取及滚动响应应该不是一帧完成的。
 
-如果出现捡不起来，适当调高`f_internal`，滚动不了，适当调高`scroll_gap`。
+如果出现捡不起来，适当调高`f_internal`（拾取后等待时间），滚动不了，适当调高`scroll_gap`（滚动后等待时间）。
 
 ```bash
 ./yap.exe --infer-gap 16 # 推理间隔为16ms
