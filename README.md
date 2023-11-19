@@ -22,7 +22,7 @@ Which may be the best open source pickupper in terms of performance, usability a
 
 
 
-视频演示：[v0.1.0锄地](https://www.bilibili.com/video/BV1zk4y1G72J) [v0.1.1捡狗粮](https://www.bilibili.com/video/BV1ix4y197nv) 
+视频演示：[v0.1.0锄地](https://www.bilibili.com/video/BV1zk4y1G72J) [v0.1.1捡狗粮](https://www.bilibili.com/video/BV1ix4y197nv) （过于老旧了，目前性能更好）
 
 模型训练：[yap-train](https://github.com/Alex-Beng/yap-train)
 
