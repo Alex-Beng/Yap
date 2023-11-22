@@ -1,6 +1,7 @@
 use std::borrow::BorrowMut;
 use std::collections::HashSet;
 use std::fs::File;
+use std::fs::write;
 use std::io::Read;
 use std::thread;
 use std::time::SystemTime;
@@ -68,36 +69,7 @@ impl Pickupper {
         let mut bk_list: HashSet<String> = HashSet::new();
         let mut wt_list: HashSet<String> = HashSet::new();
 
-        
-        // let black_list_path = "./black_lists.json";
-        let black_list_path = format!("{}/{}", config.bw_path, "black_lists.json");
-
-        let mut file = File::open(black_list_path).expect("Failed to open black list file");
-        let mut content = String::new();
-        file.read_to_string(&mut content).expect("Failed to read black list file");
-
-        let json: serde_json::Value = serde_json::from_str(content.as_str()).unwrap();
-        let bk_items = json.as_array().unwrap();
-        for item in bk_items {
-            bk_list.insert(item.as_str().unwrap().to_string());
-            // info!("添加到黑名单: {}", item.as_str().unwrap().to_string());
-            // TODO: 编译期加入默认黑名单
-        }
-            
-        // let white_list_path = "./white_lists.json";
-        let white_list_path = format!("{}/{}", config.bw_path, "white_lists.json");
-        let mut file = File::open(white_list_path).expect("Failed to open white list file");
-        let mut content = String::new();
-        file.read_to_string(&mut content).expect("Failed to read white list file");
-
-        let json: serde_json::Value = serde_json::from_str(content.as_str()).unwrap();
-        let white_items = json.as_array().unwrap();
-        for item in white_items {
-            wt_list.insert(item.as_str().unwrap().to_string());
-            info!("添加到白名单: {}", item.as_str().unwrap().to_string());
-            
-        }
-
+        // 编译期加载all list
         let mut all_list: HashSet<String> = HashSet::new();
         let content = String::from(include_str!("../../models/all_list.json"));
         let json: serde_json::Value = serde_json::from_str(content.as_str()).unwrap();
@@ -105,6 +77,80 @@ impl Pickupper {
         for item in al_items {
             all_list.insert(item.as_str().unwrap().to_string());
         }
+
+        // 编译期加载默认黑名单
+        let content = String::from(include_str!("../../models/default_black_list.json"));
+        let json: serde_json::Value = serde_json::from_str(content.as_str()).unwrap();
+        let al_items = json.as_array().unwrap();
+        for item in al_items {
+            bk_list.insert(item.as_str().unwrap().to_string());
+        }
+        
+
+        // 运行时加载自定义black & white list
+        let config_list_path = format!("{}/{}", config.bw_path, "config.json");
+        // 处理不存在config的异常，不存在则创建
+        if !std::path::Path::new(config_list_path.as_str()).exists() {
+            
+            let mut file = File::create(config_list_path.as_str()).expect("Failed to create config.json");
+            let mut json = serde_json::json!({
+                "black_list": [],
+                "white_list": [],
+            });
+
+            // 如果存在之前的black list or white list
+            // 读取，以兼容旧版本
+            let black_list = format!("{}/{}", config.bw_path, "black_lists.json");
+            if std::path::Path::new(black_list.as_str()).exists() {
+                info!("存在旧版本black_lists.json，将其合并到config.json");
+                let mut file = File::open(black_list.as_str()).expect("Failed to open black_lists.json");
+                let mut content = String::new();
+                file.read_to_string(&mut content).expect("Failed to read black_lists.json");
+                let old_bk: serde_json::Value = serde_json::from_str(content.as_str()).unwrap();
+                // 删除已经在默认黑名单的
+                let mut new_bk: Vec<String> = Vec::new();
+                for item in old_bk.as_array().unwrap() {
+                    if !bk_list.contains(item.as_str().unwrap()) {
+                        new_bk.push(item.as_str().unwrap().to_string());
+                        info!("添加到自定义黑名单: {}", item.as_str().unwrap().to_string())
+                    }
+                }
+                // make new_bk json
+                json["black_list"] = serde_json::json!(new_bk);
+            }
+            let white_list = format!("{}/{}", config.bw_path, "white_lists.json");
+            if std::path::Path::new(white_list.as_str()).exists() {
+                let mut file = File::open(white_list.as_str()).expect("Failed to open white_list.json");
+                let mut content = String::new();
+                file.read_to_string(&mut content).expect("Failed to read white_list.json");
+                let old_wt: serde_json::Value = serde_json::from_str(content.as_str()).unwrap();
+                json["white_list"] = old_wt;
+            }
+
+            let json_str = serde_json::to_string_pretty(&json).unwrap();
+            std::fs::write(config_list_path, json_str).expect("Unable to write config.json");
+        }
+
+        let config_list_path = format!("{}/{}", config.bw_path, "config.json");
+        let mut file = File::open(config_list_path).expect("Failed to config.json");
+        let mut content = String::new();
+        file.read_to_string(&mut content).expect("Failed to read config.json");
+
+        let json: serde_json::Value = serde_json::from_str(content.as_str()).unwrap();
+        let bk_items = json.as_object().unwrap().get("black_list").unwrap().as_array().unwrap();
+        let wt_items = json.as_object().unwrap().get("white_list").unwrap().as_array().unwrap();
+
+        for item in bk_items {
+            bk_list.insert(item.as_str().unwrap().to_string());
+            // info!("添加到黑名单: {}", item.as_str().unwrap().to_string());
+        }
+
+        for item in wt_items {
+            wt_list.insert(item.as_str().unwrap().to_string());
+            info!("添加到白名单: {}", item.as_str().unwrap().to_string());
+            
+        }
+
 
         let template_raw = image::load_from_memory(include_bytes!("../../models/FFF.bmp")).unwrap();
         let template: GrayImage;
