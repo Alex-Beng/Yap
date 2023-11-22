@@ -86,27 +86,37 @@ or // 如果找不到F键
 
 PS：可以使用nightly版本帮助debug。
 
-1. 点击[此处](https://github.com/Alex-Beng/Yap/releases)下载release压缩包，解压。有三个文件：`yap.exe`、`black_lists.json`和`white_lists.json`。
+1. 点击[此处](https://github.com/Alex-Beng/Yap/releases)下载release压缩包，解压获得`yap.exe`应用。
 
-2. 使用记事本/VSCode等编辑器打开`black_lists.json`，添加需要拉黑的拾取物品名称，注意需要使用**英文符号**，如：
+2. 如果使用过旧版本，路径下有`black_lists.json`, `white_lists.json`，Yap会自动合并为`config.json`，并删去默认黑名单中存在的交互/物品名称；
+如果是第一次使用，Yap也会自动生成一个空白的`config.json`。
+
+2. 使用记事本/VSCode等编辑器打开`config.json`，添加需要拉黑 or 必须交互/拾取的名称，注意需要使用**英文符号**，如：
 
 
 ```json
-[
+{
+  "black_list": [
     "史莱姆凝液",
-    "污秽的面具",
-    "破损的面具",
-    "七天神像",
-    "所有会提示使用F键交互的对象"
-]
+    "薄荷",
+    "甜甜花",
+    "树莓"
+  ],
+  "white_list": [
+    "芙萝拉",
+    "调查",
+    "薄荷",
+    "甜甜花",
+    "树莓",
+    "传送锚点"
+  ]
+}
 ```
 
-3. 白名单`white_lists.json`设置同黑名单，不再赘述
-
-4. 右键`yap.exe`选择以**管理员身份**运行
+3. 右键`yap.exe`选择以**管理员身份**运行
 
 
-5. 性能调优（如果你会使用命令行设置参数的话）
+4. 性能调优（如果你会使用命令行设置参数的话）
 
 
 可以通过修改`infer-gap`参数来调整推理间隔，即检测F键的间隔，单位ms。
@@ -131,18 +141,9 @@ PS：可以使用nightly版本帮助debug。
 cargo build --release
 ```
 
-2. 修改`black_lists.json`及`white_lists.json`，如上。
+2. 配置`config.json`
 
-3. 确保`black_lists.json`及`white_lists.json`在执行文件的同级目录下，如下所示。
-
-
-```bash
-yap> cargo run --release # 项目根目录有black_lists.json&white_lists.json, work
-```
-当然你把黑/白名单加进环境变量也行，但不推荐。
-
-
-4. 管理员运行/管理员身份打开终端运行
+3. 管理员运行/管理员身份打开终端运行
 
 ```bash
 yap> ./target/release/yap.exe 
@@ -152,11 +153,10 @@ or
 yap> cargo run --release
 ```
 
-
-5. 如果需要进行debug调试，可参考命令行参数：
+4. 如果需要进行debug调试，可参考命令行参数：
 ```
 /yap --help
-YAP - 原神自动拾取器 0.1.15
+YAP - 原神自动拾取器 0.2.0
 Alex-Beng <pc98@qq.com>
 Genshin Impact Pickup Helper
 
@@ -174,7 +174,7 @@ OPTIONS:
 
         --dump <dump>                                输出模型预测结果、原始图像、二值图像至指定的文件夹，debug专用
     -i, --dump-idx <dump_idx>                        执行dump时，输出结果起始的index [default: 0]
-    -g, --infer-gap <infer_gap>                      一次检测推理拾取的间隔，单位ms [default: 45]
+    -g, --infer-gap <infer_gap>                      一次检测推理拾取的间隔，单位ms [default: 0]
         --log <log>                                  日志等级，可选值为trace, debug, info, warn, error [default: warn]
     -t, --template-threshold <template-threshold>
             模板匹配的阈值，约小越严格，灰度通道中匹配值在0.01-0.09左右 [default: 0.08]
