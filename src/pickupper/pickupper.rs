@@ -80,8 +80,8 @@ impl Pickupper {
         let bk_items = json.as_array().unwrap();
         for item in bk_items {
             bk_list.insert(item.as_str().unwrap().to_string());
-            info!("添加到黑名单: {}", item.as_str().unwrap().to_string());
-            
+            // info!("添加到黑名单: {}", item.as_str().unwrap().to_string());
+            // TODO: 编译期加入默认黑名单
         }
             
         // let white_list_path = "./white_lists.json";

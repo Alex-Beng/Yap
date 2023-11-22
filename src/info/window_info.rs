@@ -35,6 +35,9 @@ pub struct WindowInfo {
     pub online_challange_pos: Rect,
     pub online_challange_confirm_x: f64,
     pub online_challange_confirm_y: f64,
+
+    // 用于UID的遮罩
+    pub uid_pos: Rect,
 }
 
 impl WindowInfo {
@@ -88,6 +91,8 @@ impl WindowInfo {
             online_challange_position: convert_rect(&self.online_challange_pos),
             online_challange_confirm_x: convert_x(self.online_challange_confirm_x) as u32,
             online_challange_confirm_y: convert_y(self.online_challange_confirm_y) as u32,
+
+            uid_pos: convert_rect(&self.uid_pos),
         }
     }
 }
@@ -115,5 +120,7 @@ pub const WINDOW_16_9: WindowInfo = WindowInfo {
     online_challange_pos: Rect(46.0, 1031.0, 77.0, 831.0),
     online_challange_confirm_x: 1180.0,
     online_challange_confirm_y: 759.0,
+
+    uid_pos: Rect(1051.0, 1865.0, 1073.0, 1682.0),
 };
 //475, 547

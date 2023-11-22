@@ -6,6 +6,10 @@ use std::f32;
 use std::fs;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex, RwLock};
+use std::ptr::null_mut;
+use std::ffi::OsStr;
+use std::iter::once;
+use std::os::windows::ffi::OsStrExt;
 
 use enigo::MouseControllable;
 use yap::capture;
@@ -15,6 +19,7 @@ use yap::info;
 use yap::pickupper::pickupper::{Pickupper, PickupCofig};
 
 use hotkey;
+use rand::{self, Rng};
 
 use image::imageops::grayscale;
 use image::{DynamicImage, ImageBuffer, Pixel};
@@ -27,8 +32,19 @@ use imageproc::map::map_colors;
 use imageproc::rect::Rect;
 use imageproc::template_matching::{find_extremes, match_template, MatchTemplateMethod};
 
-use winapi::um::winuser::{SetForegroundWindow, GetDpiForSystem, SetThreadDpiAwarenessContext, ShowWindow, SW_SHOW, SW_RESTORE, GetSystemMetrics, SetProcessDPIAware, GetDpiForWindow, SM_CXSCREEN, SM_CYSCREEN};
+use winapi::um::winuser::{SetForegroundWindow, GetDpiForSystem, SetThreadDpiAwarenessContext, ShowWindow, SW_SHOW, SW_RESTORE, GetSystemMetrics, SetProcessDPIAware, GetDpiForWindow, SM_CXSCREEN, SM_CYSCREEN, SetTimer};
 use winapi::um::shellscalingapi::SetProcessDpiAwareness;
+use winapi::um::libloaderapi::GetModuleHandleW;
+use winapi::um::wingdi::{CreateSolidBrush, RGB, SetTextColor, CreateFontW};
+use winapi::um::winuser::{
+    CreateWindowExW, DefWindowProcW, GetDC, GetDesktopWindow, GetWindowRect, ReleaseDC,
+    SetLayeredWindowAttributes, UpdateWindow, WS_EX_LAYERED, WS_EX_TOPMOST,
+    WS_POPUP, WM_PAINT, WM_CLOSE, WM_DESTROY, WM_ERASEBKGND, WM_NCHITTEST, WM_SIZE, WNDCLASSW,
+    PAINTSTRUCT, RegisterClassW, LWA_ALPHA, MSG, GetMessageW, TranslateMessage, DispatchMessageW, BeginPaint, DT_CENTER, DT_SINGLELINE, DT_VCENTER, DrawTextW, EndPaint, PostQuitMessage, HTCAPTION, InvalidateRect, LWA_COLORKEY, DT_CALCRECT, FillRect, GetWindowLongW, GWL_EXSTYLE, WS_EX_TOOLWINDOW, SetWindowLongW, SetWindowLongPtrW, WS_DISABLED, FindWindowW, SendMessageW, WS_EX_APPWINDOW,
+     
+};
+use winapi::shared::windef::{RECT, HWND, HBRUSH, HDC, POINT};
+use winapi::shared::minwindef::{LPARAM, LRESULT, WPARAM};
 
 
 use clap::{Arg, App};
@@ -210,8 +226,124 @@ fn main() {
 
     let info_for_artifacts = info.clone();
     
+
+    let pk_config = PickupCofig {
+        info,
+        bw_path: String::from("."),
+        use_l,
+        dump,
+        dump_path: dump_path.to_string(),
+        dump_cnt: cnt,
+        temp_thre: template_threshold,
+        do_pickup: do_pickup_signal,
+        infer_gap: infer_gap_signal,
+        f_inter: f_inter_signal,
+        f_gap: f_gap_signal,
+        scroll_gap: scroll_gap_signal,
+    };
+    let uid_pos = pk_config.info.uid_pos.clone();
+    let uid_pos = RECT {
+        left: uid_pos.left + pk_config.info.left,
+        top: uid_pos.top + pk_config.info.top,
+        right: uid_pos.right + pk_config.info.left,
+        bottom: uid_pos.bottom + pk_config.info.top,
+    };
+    // println!("uid_pos: {}, {}, {}, {}", uid_pos.left, uid_pos.top, uid_pos.right, uid_pos.bottom);
+
+    // 三个子线程+主线程pickupper
+    // 由于主线程是while true，所以不需要join
+
+    // 创建UID的遮罩窗口
+    let uid_handle = std::thread::spawn(move || {
+        // 注册窗口类
+        let class_name = "FloatingWindowClass".to_string();
+        let class_name2 = "FloatingWindowClass".to_string();
+        let h_instance = unsafe { GetModuleHandleW(null_mut()) };
+        let wnd_class = WNDCLASSW {
+            style: 0,
+            lpfnWndProc: Some(window_proc),
+            hInstance: h_instance,
+            lpszClassName: capture::encode_wide(class_name).as_ptr(),
+            cbClsExtra: 0,
+            cbWndExtra: 0,
+            hIcon: null_mut(),
+            hCursor: null_mut(),
+            hbrBackground: null_mut(),
+            lpszMenuName: null_mut(),
+        };
+        unsafe { RegisterClassW(&wnd_class) };
+
+        // 创建窗口
+        let hwnd = unsafe {
+            CreateWindowExW(
+                WS_EX_LAYERED | WS_EX_TOPMOST,
+                capture::encode_wide(class_name2).as_ptr(),
+                capture::encode_wide("YAP float window".to_string()).as_ptr(),
+                WS_POPUP,
+                uid_pos.left,
+                uid_pos.top,
+                uid_pos.right - uid_pos.left,
+                uid_pos.bottom - uid_pos.top,
+                null_mut(),
+                null_mut(),
+                h_instance,
+                null_mut(),
+            )
+        };
+
+        // 设置不在任务栏显示
+        unsafe {
+            let ex_style = GetWindowLongW(hwnd, GWL_EXSTYLE);
+            SetWindowLongW(hwnd, GWL_EXSTYLE,  ex_style | WS_EX_TOOLWINDOW as i32 | WS_EX_LAYERED as i32);
+        }
+
+
+        // 设置窗口透明度
+        unsafe { SetLayeredWindowAttributes(hwnd, 0, 200, LWA_COLORKEY) };
+
+        // 显示窗口
+        unsafe { ShowWindow(hwnd, SW_SHOW) };
+        unsafe { UpdateWindow(hwnd) };
+        
+        let hwnd = match capture::find_window_local() {
+            Err(_) => {
+                // warn!("未找到原神窗口，尝试寻找云·原神");
+                match capture::find_window_cloud() {
+                    Ok(h) => {
+                        h
+                    },
+                    Err(_) => {
+                        common::error_and_quit_no_input("未找到原神窗口，请确认原神已经开启");
+                    }
+                }
+            },
+            Ok(h) => h,
+        };
+        
+        unsafe { ShowWindow(hwnd, SW_RESTORE); }
+        unsafe { SetForegroundWindow(hwnd); }
+        common::sleep(1000);
+
+        // 消息循环
+        let mut msg = MSG {
+            hwnd: null_mut(),
+            message: 0,
+            wParam: 0,
+            lParam: 0,
+            time: 0,
+            pt: POINT { x: 0, y: 0 },
+        };
+        while unsafe { GetMessageW(&mut msg, null_mut(), 0, 0) } > 0 {
+            unsafe {
+                TranslateMessage(&msg);
+                DispatchMessageW(&msg);
+            }
+        }
+    });
+
+
     // 监听快捷键
-    let listen_handle = std::thread::spawn(move || {
+    let hotkey_handle = std::thread::spawn(move || {
         let mut hk = hotkey::Listener::new();
         let do_pk_signal: Arc<Mutex<bool>> = do_pickup_signal_clone;
         if reg_hotkey {
@@ -422,25 +554,68 @@ fn main() {
             sleep(100000);
         }
     });
-
-    let pk_config = PickupCofig {
-        info,
-        bw_path: String::from("."),
-        use_l,
-        dump,
-        dump_path: dump_path.to_string(),
-        dump_cnt: cnt,
-        temp_thre: template_threshold,
-        do_pickup: do_pickup_signal,
-        infer_gap: infer_gap_signal,
-        f_inter: f_inter_signal,
-        f_gap: f_gap_signal,
-        scroll_gap: scroll_gap_signal,
-    };
+    
     let mut pickupper = Pickupper::new(pk_config);
-
     pickupper.start();
 
-    listen_handle.join().unwrap();
 
+}
+
+unsafe extern "system" fn window_proc(
+    hwnd: HWND,
+    msg: u32,
+    w_param: WPARAM,
+    l_param: LPARAM,
+) -> LRESULT {
+    match msg {
+        WM_PAINT => {
+            let mut ps: PAINTSTRUCT = std::mem::zeroed();
+            let hdc = BeginPaint(hwnd, &mut ps);
+            let mut rect = RECT { 
+                left: 0,
+                top: 0,
+                right: 400,
+                bottom: 400,
+            };
+            // 在多个字符串中随机一个显示。
+            let strs: Vec<&str> = vec![
+                "UID: 1145141919810", 
+                "UID: 7777777777777",
+                "UID: 乐乐乐乐乐乐乐乐乐"
+            ];
+            let rand_idx = rand::thread_rng().gen_range(0..strs.len());
+            let text = capture::encode_wide(strs[rand_idx].to_string());
+
+            let white_brush: HBRUSH = CreateSolidBrush(RGB(255, 255, 255));
+            FillRect(hdc, &mut rect as *mut RECT, white_brush);
+
+            // println!("rect: {}, {}, {}, {}", rect.left, rect.top, rect.right, rect.bottom);
+            // use DT_CALCRECT to get the rect
+            DrawTextW(hdc, text.as_ptr(), -1, &mut rect as *mut RECT,  DT_CALCRECT);
+            // println!("rect: {}, {}, {}, {}", rect.left, rect.top, rect.right, rect.bottom);
+            SetTextColor(hdc, RGB(1, 0, 0));
+            DrawTextW(hdc, text.as_ptr(), -1, &mut rect as *mut RECT,  DT_SINGLELINE);
+            EndPaint(hwnd, &ps);
+
+            ReleaseDC(hwnd, hdc);            
+            0
+        }
+        WM_CLOSE | WM_DESTROY => {
+            PostQuitMessage(0);
+            0
+        }
+        WM_ERASEBKGND => 1,
+        WM_NCHITTEST => HTCAPTION,
+        WM_SIZE => {
+            let rect = RECT { 
+                left: 0,
+                top: 0,
+                right: 400,
+                bottom: 400,
+            };
+            InvalidateRect(hwnd, &rect, 1);
+            0
+        }
+        _ => DefWindowProcW(hwnd, msg, w_param, l_param),
+    }
 }
