@@ -13,3 +13,4 @@ yy.json
 *.png
 *.log
 __pycache__
+config.json
