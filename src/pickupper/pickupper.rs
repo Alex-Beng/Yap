@@ -528,20 +528,30 @@ impl Pickupper {
                 // 更新yi的状态机
                 match yi {
                     2 => {
-                        yi = 0;
+                        yi = 1;
                         if res_strings[2] == "" {
                             pk_infer_end = true;
                             warn!("中间为空，不拾取");
                         }
                     }
-                    0 => {
-                        yi = 1;
-                    }
                     1 => {
+                        if res_strings[1] == "" {
+                            yi = 3;
+                        }
+                        else {
+                            yi = 0;
+                        }
+                    }
+                    0 => {
                         yi = 3;
                     }
                     3 => {
-                        yi = 4;
+                        if res_strings[3] == "" {
+                            break;
+                        }
+                        else {
+                            yi = 4;
+                        }
                     }
                     4 => {
                         break;
