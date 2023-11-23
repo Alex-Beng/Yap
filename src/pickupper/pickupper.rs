@@ -614,7 +614,7 @@ impl Pickupper {
                 sleep(10);
                 self.enigo.key_up(enigo::Key::Layout('f'));
                 sleep(10);
-                self.enigo.mouse_scroll_y(1);
+                self.enigo.mouse_scroll_y(-1);
                 self.enigo.key_down(enigo::Key::Layout('f'));
                 sleep(10);
                 self.enigo.key_up(enigo::Key::Layout('f'));
