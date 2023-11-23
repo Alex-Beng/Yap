@@ -603,7 +603,7 @@ impl Pickupper {
             }
         }
         // 检查是否全是所需物品
-        if all_is_need && need_pks_cnt > 1 || is_all_investigate {
+        if *do_pk && (all_is_need && need_pks_cnt > 1 || is_all_investigate) {
             let f_times = need_pks_cnt + 1;
             warn!("仅有所需/调查点，彻底疯狂！， F for {}(10) times", f_times);
             for _ in 0..10 {
