@@ -295,7 +295,7 @@ impl Pickupper {
         };
 
         let mut start_time = SystemTime::now();
-        // let mut full_cnt = 0;
+        let mut full_cnt = 0;
         // let infer_gap_lock = self.config.infer_gap;
         let mut loop_cnt = -1;
         let mut last_online_challage_time = SystemTime::now();
@@ -425,6 +425,13 @@ impl Pickupper {
 
             // warn!("temp match time: {}ms", temp_match_time.elapsed().unwrap().as_millis());
             // info!("best_match: {}, f_cnt: {}", best_match, f_cnt);
+            if false {
+                if full_cnt % 20 == 0 {
+                    info!("save full");
+                    game_window_cap.save(format!("{}/{}.jpg", "./dumps4.2/full", full_cnt)).unwrap();
+                }
+                full_cnt += 1;
+            }
             if rel_x < 0 || f_cnt != 1 || best_match < 0.995 {
                 // // 说明没有找到，保存全图
                 // if full_cnt % 20 == 0 {
