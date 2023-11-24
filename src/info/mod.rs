@@ -35,6 +35,8 @@ pub struct PickupInfo {
     pub online_challange_confirm_y: u32,
 
     pub uid_pos: PixelRectBound,
+
+    pub tp_botton_pos: PixelRectBound,
 }
 
 impl PickupInfo {

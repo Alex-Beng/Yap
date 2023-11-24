@@ -40,6 +40,7 @@ pub struct PickupCofig {
     pub f_inter: Arc<RwLock<u32>>,
     pub f_gap: Arc<RwLock<u32>>,
     pub scroll_gap: Arc<RwLock<u32>>,
+    pub click_tp: Arc<Mutex<bool>>,
 }
 
 pub struct Pickupper {
@@ -47,7 +48,8 @@ pub struct Pickupper {
     enigo: Enigo,
 
     f_template: GrayImage,
-    f_contour_feat: ContourFeatures,
+    f_contour_feat: Vec<f32>,
+    tp_botton_feat: Vec<f32>,
     
     // 合并黑白名单到hashmap: name -> pickup or not
     word2pick: HashMap<String, bool>,
@@ -213,6 +215,11 @@ impl Pickupper {
                 // println!("f_contour_feat: {:?}", f_contour_feat);
             }
         }
+        let f_contour_feat = f_contour_feat.to_features_vec();
+
+        // 计算tp button的feat_vec
+        let tp_button_feat = vec![1., 1., 1., 1., 1.]; // tp_button_feat.to_features_vec();
+
         
         Pickupper {
             model: CRNNModel::new(String::from("model_training.onnx"), String::from("index_2_word.json")),
@@ -220,6 +227,7 @@ impl Pickupper {
 
             f_template: template,
             f_contour_feat: f_contour_feat,
+            tp_botton_feat: tp_button_feat,
 
             word2pick: word2pick,
 
@@ -232,9 +240,11 @@ impl Pickupper {
     
 
     pub fn start(&mut self) -> ! {
-
         // 用于秘境挑战邀请的自动点击
-        let (tx, rx) = std::sync::mpsc::channel::<DynamicImage>();
+        let (tx, rx) = std::sync::mpsc::sync_channel::<DynamicImage>(0);
+        // 用于自动点击传送按钮
+        let (tx_tp, rx_tp) = std::sync::mpsc::sync_channel::<DynamicImage>(0);
+
         let model_online = CRNNModel::new(String::from("model_training.onnx"), String::from("index_2_word.json"));
         let mut enigo_online = Enigo::new();
         let online_confirm_x = self.config.info.online_challange_confirm_x + self.config.info.left as u32;
@@ -284,6 +294,75 @@ impl Pickupper {
             }
         });
 
+        let botton_feat = self.tp_botton_feat.clone();
+        let mut enigo_tp = Enigo::new();
+        let botton_click_x = 
+            (self.config.info.tp_botton_pos.left + self.config.info.tp_botton_pos.right) / 2 + self.config.info.left;
+        let botton_click_y =
+            (self.config.info.tp_botton_pos.top + self.config.info.tp_botton_pos.bottom) / 2 + self.config.info.top;
+        let click_lock = self.config.click_tp.clone();
+        thread::spawn(move || {
+            
+            loop {
+                {
+                    let click = click_lock.lock().unwrap();
+                    if !*click {
+                        continue;
+                    }
+                }
+                let img = rx_tp.recv().unwrap();
+                let img_gray = grayscale(&img);
+
+                let roi_bin = adaptive_threshold(&img_gray, 41);
+                let contours: Vec<contours::Contour<u32>> = imageproc::contours::find_contours(&roi_bin);
+                let mut no_father_cnt = 0;
+                let mut best_match = 0.;
+
+                for i in 0..contours.len() {
+                    let contour = &contours[i];
+                    if contour.parent.is_some() { continue; }
+                    let contour_clone = imageproc::contours::Contour {
+                        points: contour.points.clone(),
+                        border_type: contour.border_type,
+                        parent: contour.parent,
+                    };
+
+                    let contour_feat = ContourFeatures::new_tp(
+                        contour_clone,
+                        &img_gray
+                    );
+                    let (cos_simi, _valid) = contour_feat.can_match_tp(&botton_feat, 0.99);
+                    if _valid {
+                        // info!("{} {}, {}", contour_feat.area_ratio, contour_feat.bbox_wh_ratio, cos_simi);
+                        // info!("{} {} {}", contour_feat.bbox_area_avg_pixel, contour_feat.contour_points_avg_pixel, contour_feat.contour_len2_area_ratio);
+                        // info!("{:?}", contour_feat.to_feature_vec_tp());
+                        no_father_cnt += 1;
+                        if cos_simi > best_match {
+                            best_match = cos_simi;
+                        }
+                    }
+
+                } 
+                // info!("{} {}, {} {} {}", botton_feat[0], botton_feat[1], botton_feat[2], botton_feat[3], botton_feat[4]);
+                // info!("{:?}", botton_feat);
+                
+                // info!("no_father_cnt: {}", no_father_cnt);
+                // info!("tp button click with simi: {}", best_match);
+                if no_father_cnt != 1 {
+                    continue;
+                }
+                if best_match > 0.7 {
+                    info!("tp button click with simi: {}", best_match);
+                    // move to click
+                    enigo_tp.mouse_move_to(botton_click_x as i32, botton_click_y as i32); 
+                    sleep(50);
+                    
+                    enigo_tp.mouse_click(enigo::MouseButton::Left);
+                    sleep(50);
+                }
+
+            }
+        });
 
         let dump = self.config.dump;
         let dump_path = self.config.dump_path.clone();
@@ -307,6 +386,7 @@ impl Pickupper {
         // let infer_gap_lock = self.config.infer_gap;
         let mut loop_cnt = -1;
         let mut last_online_challage_time = SystemTime::now();
+        let mut last_tp_click_time = SystemTime::now();
         loop {
             loop_cnt += 1;
             { 
@@ -321,18 +401,22 @@ impl Pickupper {
             // 截一张全屏
             let mut game_window_cap = capture::capture_absolute_image(&game_win_rect).unwrap();
             // game_window_cap.save("game_window.jpg").unwrap();
-            let mut online_challage_cap = game_window_cap.clone();
 
             // 改为从window_cap中crop
-            let f_area_cap = crop(&mut game_window_cap, 
-                self.config.info.f_area_position.left as u32,
-                self.config.info.f_area_position.top as u32,
-                self.config.info.f_area_position.right as u32 - self.config.info.f_area_position.left as u32,
-                self.config.info.f_area_position.bottom as u32 - self.config.info.f_area_position.top as u32);
-            // 再crop秘境挑战的
+            let mut f_area_cap = None;
+            {
+                f_area_cap = Some(crop(&mut game_window_cap, 
+                    self.config.info.f_area_position.left as u32,
+                    self.config.info.f_area_position.top as u32,
+                    self.config.info.f_area_position.right as u32 - self.config.info.f_area_position.left as u32,
+                    self.config.info.f_area_position.bottom as u32 - self.config.info.f_area_position.top as u32).to_image());
+            }
+            let f_area_cap = f_area_cap.unwrap();
+            
+            // 再crop秘境挑战的 
             if last_online_challage_time + std::time::Duration::from_secs(1) < SystemTime::now() {
                 last_online_challage_time = SystemTime::now();
-                let online_challage_cap = crop(&mut online_challage_cap, 
+                let online_challage_cap = crop(&mut game_window_cap, 
                     self.config.info.online_challange_position.left as u32,
                     self.config.info.online_challange_position.top as u32,
                     self.config.info.online_challange_position.right as u32 - self.config.info.online_challange_position.left as u32,
@@ -341,8 +425,19 @@ impl Pickupper {
                 let online_challage_cap = DynamicImage::ImageRgb8(online_challage_cap.to_image());
                 tx.send(online_challage_cap).unwrap();
             }
+
+            // 再crop传送按钮的
+            if last_tp_click_time + std::time::Duration::from_millis(100) < SystemTime::now() {
+                let tp_botton_roi = crop(&mut game_window_cap, 
+                    self.config.info.tp_botton_pos.left as u32,
+                    self.config.info.tp_botton_pos.top as u32,
+                    self.config.info.tp_botton_pos.right as u32 - self.config.info.tp_botton_pos.left as u32,
+                    self.config.info.tp_botton_pos.bottom as u32 - self.config.info.tp_botton_pos.top as u32);
+                let tp_botton_roi = DynamicImage::ImageRgb8(tp_botton_roi.to_image());
+                tx_tp.send(tp_botton_roi).unwrap();
+            }
             
-            let f_area_cap = DynamicImage::ImageRgb8(f_area_cap.to_image());
+            let f_area_cap = DynamicImage::ImageRgb8(f_area_cap);
             let mut f_area_cap_le = f_area_cap.clone();
             // warn!("f_area_cap: w: {}, h: {}", f_area_cap.width(), f_area_cap.height());
             // info!("f_template: w: {}, h: {}", self.f_template.width(), self.f_template.height());
@@ -402,7 +497,7 @@ impl Pickupper {
                     &f_area_cap_gray
                 );
                 
-                let (cos_simi, _valid) = self.f_contour_feat.can_match(&contour_feat, 0.995);
+                let (cos_simi, _valid) = contour_feat.can_match(&self.f_contour_feat, 0.995);
                 if contour_feat.contour_have_father == true && _valid {
                     f_cnt += 1;
 

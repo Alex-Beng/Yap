@@ -38,6 +38,9 @@ pub struct WindowInfo {
 
     // 用于UID的遮罩
     pub uid_pos: Rect,
+
+    // 用于传送按钮区域
+    pub tp_botton_pos: Rect,
 }
 
 impl WindowInfo {
@@ -93,6 +96,8 @@ impl WindowInfo {
             online_challange_confirm_y: convert_y(self.online_challange_confirm_y) as u32,
 
             uid_pos: convert_rect(&self.uid_pos),
+
+            tp_botton_pos: convert_rect(&self.tp_botton_pos),
         }
     }
 }
@@ -122,5 +127,7 @@ pub const WINDOW_16_9: WindowInfo = WindowInfo {
     online_challange_confirm_y: 759.0,
 
     uid_pos: Rect(1051.0, 1865.0, 1073.0, 1682.0),
+
+    tp_botton_pos: Rect(969.0, 1912.0, 1044.0, 1433.0),
 };
 //475, 547

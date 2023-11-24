@@ -136,13 +136,62 @@ impl ContourFeatures {
         }
     }
 
-    pub fn can_match(&self, other: &ContourFeatures,
+    pub fn new_tp(
+        contour: contours::Contour<u32>,
+        full_image: &GrayImage,
+    ) -> ContourFeatures {
+        let contour_clone = contours::Contour {
+            points: contour.points.clone(),
+            border_type: contour.border_type,
+            parent: contour.parent,
+        };
+
+        let bbox = contours_bbox(contour);
+        let bbox_wh_ratio = bbox.width as f32 / bbox.height as f32;
+        let area = bbox.width * bbox.height;
+        
+        let image_size = full_image.dimensions();
+        let area_ratio = area as f32 / (image_size.0 * image_size.1) as f32;
+
+        // 计算bbox内的平均像素值
+        let mut pixel_sum = 0;
+        for i in bbox.left..(bbox.left + bbox.width) {
+            for j in bbox.top..(bbox.top + bbox.height) {
+                pixel_sum += full_image.get_pixel(i as u32, j as u32)[0] as u32;
+            }
+        }
+        let bbox_area_avg_pixel = pixel_sum as f32 / area as f32;
+
+        // 计算contour内的平均像素值
+        let mut pixel_sum = 0;
+        let _points = &contour_clone.points;
+        let contour_len = _points.len();
+        for point in _points {
+            pixel_sum += full_image.get_pixel(point.x, point.y)[0] as u32;
+        }
+        let contour_points_avg_pixel = pixel_sum as f32 / _points.len() as f32;
+
+        let contour_len2_area_ratio = contour_len as f32 * contour_len as f32 / area as f32 / 30.;
+
+        let mut feat = ContourFeatures::new_empty();
+        feat.contour = contour_clone;
+        feat.bbox = bbox;
+        feat.bbox_wh_ratio = bbox_wh_ratio;
+        feat.area = area as u32;
+        feat.area_ratio = area_ratio;
+        feat.bbox_area_avg_pixel = bbox_area_avg_pixel;
+        feat.contour_points_avg_pixel = contour_points_avg_pixel;
+        feat.contour_len2_area_ratio = contour_len2_area_ratio;
+        feat
+    }
+
+    pub fn can_match(&self, other: &Vec<f32>,
         cosine_tolorance: f32,
      ) -> (f32, bool) {
         // let feat_vec1 = self.to_features_vec();
         // let feat_vec2 = other.to_features_vec();
 
-        let cos_simi = cosine_similarity(&self.to_features_vec(), &other.to_features_vec());
+        let cos_simi = cosine_similarity(&self.to_features_vec(), &other);
         // println!("cos_simi = {}", cos_simi);
         if cos_simi < cosine_tolorance {
             return (cos_simi, false);
@@ -155,6 +204,27 @@ impl ContourFeatures {
         }
     }
 
+    pub fn can_match_tp(&self, other: &Vec<f32>,
+        cosine_tolorance: f32,
+     ) -> (f32, bool) {
+        // let feat_vec1 = self.to_feature_vec_tp();
+        // let feat_vec2 = other;
+
+        let cos_simi = cosine_similarity(&self.to_feature_vec_tp(), &other);
+        // println!("cos_simi = {}", cos_simi);
+        if cos_simi < cosine_tolorance {
+            return (cos_simi, false);
+        }
+        else {
+            // info!("vec: {:?}", self.to_feature_vec_tp());
+            // info!("vec: {:?}", other);
+            // info!("simi: {}", cos_simi);
+            return (cos_simi, true);
+        }
+    }
+
+    // 累了，居然硬编码的F key的特征
+    // 就这样吧
     pub fn to_features_vec(&self) -> Vec<f32> {
         let mut ans = Vec::new();
         // ans.push(self.contour_have_father as u32 as f32);
@@ -164,6 +234,17 @@ impl ContourFeatures {
         ans.push(self.contour_points_avg_pixel / 255.0 /  0.94793975);
         ans.push(self.contour_len2_area_ratio / 20.0 /  0.04316346);
         ans.push(self.father_bbox_wh_ratio / 1.21875);
+        ans
+    }
+
+    // tp的to vec
+    pub fn to_feature_vec_tp(&self) -> Vec<f32> {
+        let mut ans = Vec::new();
+        ans.push(self.bbox_wh_ratio / 7.4126983);
+        ans.push(self.area_ratio / 0.81895614);
+        ans.push(self.bbox_area_avg_pixel / 255.0 / 0.348715843137255);
+        ans.push(self.contour_points_avg_pixel / 255.0 / 0.513257607843137);
+        ans.push(self.contour_len2_area_ratio / 1.1059493);
         ans
     }
 }

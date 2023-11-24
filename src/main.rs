@@ -110,6 +110,10 @@ fn main() {
             .required(false)
             .takes_value(false)
             .help("是否注册hotkey用于调整拾取时序，debug专用"))
+        .arg(Arg::with_name("click_tp")
+            .required(false)
+            .takes_value(false)
+            .help("是否自动点击传送"))
         .get_matches();
     
     let dump: bool = matches.is_present("dump");
@@ -121,6 +125,7 @@ fn main() {
     let log_level = matches.value_of("log").unwrap_or("warn");
     let no_pickup = matches.is_present("no_pickup");
     let reg_hotkey = matches.is_present("hotkey");
+    let click_tp = matches.is_present("click_tp");
 
     // 首先更改日志等级
     let mut builder = Builder::from_env(Env::default().default_filter_or(log_level));
@@ -172,6 +177,7 @@ fn main() {
     let f_inter_signal = Arc::new(RwLock::new(50 as u32));
     let f_gap_signal = Arc::new(RwLock::new(85 as u32));
     let scroll_gap_signal = Arc::new(RwLock::new(70 as u32));
+    let click_tp_signal = Arc::new(Mutex::new(click_tp));
 
     let mut is_cloud = false;
     let hwnd = match capture::find_window_local() {
@@ -224,6 +230,8 @@ fn main() {
     let scroll_gap_signal_clone = scroll_gap_signal.clone();
     let scroll_gap_signal_clone_d = scroll_gap_signal.clone();
 
+    let click_tp_signal_clone = click_tp_signal.clone();
+
     let info_for_artifacts = info.clone();
     
 
@@ -240,6 +248,7 @@ fn main() {
         f_inter: f_inter_signal,
         f_gap: f_gap_signal,
         scroll_gap: scroll_gap_signal,
+        click_tp: click_tp_signal,
     };
     let uid_pos = pk_config.info.uid_pos.clone();
     let uid_pos = RECT {
@@ -472,7 +481,7 @@ fn main() {
             ).unwrap();
         }
 
-        // 仅保留切换和强化
+        // 保留切换、强化、click tp
         // ALT + 0
         hk.register_hotkey(
             hotkey::modifiers::ALT,
@@ -528,6 +537,18 @@ fn main() {
                     info_for_artifacts.artifact_put_in_x as i32 + info_for_artifacts.left as i32, 
                     info_for_artifacts.artifact_put_in_y as i32 + info_for_artifacts.top as i32
                 );
+            }
+        ).unwrap();
+
+        // ALT + 9
+        // 切换click tp
+        hk.register_hotkey(
+            hotkey::modifiers::ALT,
+            '9' as u32, 
+            move || {
+                let mut signal = click_tp_signal_clone.lock().unwrap();
+                *signal = !*signal;
+                warn!("ALT + 9 切换 click tp 模式为 {}", *signal);              
             }
         ).unwrap();
 
