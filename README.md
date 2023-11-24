@@ -41,6 +41,9 @@ Which may be the best open source pickupper in terms of performance, usability a
 
 其中黑白名单的逻辑是：白名单中的物品必须拾取，黑名单中的物品若没有在白名单中，则不拾取。
 
+黑名单 = 默认黑名单 + 用户自定义黑名单。
+**默认黑名单包括了NPC/自机角色、机关/操作/宝箱等探索交互、各种秘境**。
+
 
 整体流程的时序是：
 ```
