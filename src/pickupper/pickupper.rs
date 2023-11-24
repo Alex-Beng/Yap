@@ -304,7 +304,7 @@ impl Pickupper {
         thread::spawn(move || {
             
             loop {
-                let do_click = click_lock.lock().unwrap();
+                let do_click = *click_lock.lock().unwrap();
 
                 let img = rx_tp.recv().unwrap();
                 let img_gray = grayscale(&img);
@@ -347,7 +347,7 @@ impl Pickupper {
                 if no_father_cnt != 1 {
                     continue;
                 }
-                if best_match > 0.7 && *do_click {
+                if best_match > 0.7 && do_click {
                     info!("tp button click with simi: {}", best_match);
                     // move to click
                     enigo_tp.mouse_move_to(botton_click_x as i32, botton_click_y as i32); 
@@ -678,10 +678,10 @@ impl Pickupper {
     }
     pub fn do_pickups(&mut self, infer_res: Vec<String>, loop_cnt: i32) {
         let mut infer_res = infer_res;
-        let do_pk = self.config.do_pickup.lock().unwrap();
-        let f_inter = self.config.f_inter.read().unwrap();
-        let f_gap = self.config.f_gap.read().unwrap();
-        let scroll_gap = self.config.scroll_gap.read().unwrap();
+        let do_pk = *self.config.do_pickup.lock().unwrap();
+        let f_inter = *self.config.f_inter.read().unwrap();
+        let f_gap = *self.config.f_gap.read().unwrap();
+        let scroll_gap = *self.config.scroll_gap.read().unwrap();
 
         // 规划的最终动作
         // 0: do F
@@ -719,7 +719,7 @@ impl Pickupper {
             }
         }
         // 检查是否全是所需物品
-        if *do_pk && (all_is_need && need_pks_cnt > 1 || is_all_investigate) {
+        if do_pk && (all_is_need && need_pks_cnt > 1 || is_all_investigate) {
             let f_times = need_pks_cnt + 1;
             warn!("仅有所需/调查点，彻底疯狂！， F for {}(10) times", f_times);
             for _ in 0..10 {
@@ -818,7 +818,7 @@ impl Pickupper {
         }
 
         info!("拾起动作: {:?}", ops);
-        if !*do_pk {
+        if !do_pk {
             return;
         }
 
@@ -826,15 +826,15 @@ impl Pickupper {
             if op == 0 {
                 self.enigo.key_down(enigo::Key::Layout('f'));
                 // sleep(50);
-                sleep(*f_inter);
+                sleep(f_inter);
                 self.enigo.key_up(enigo::Key::Layout('f'));
                 // sleep(90);
-                sleep(*f_gap);
+                sleep(f_gap);
             }
             else {
                 self.enigo.mouse_scroll_y(op);
                 // sleep(40);
-                sleep(*scroll_gap);
+                sleep(scroll_gap);
             }
         }
 

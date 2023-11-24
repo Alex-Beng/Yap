@@ -355,6 +355,7 @@ fn main() {
     let hotkey_handle = std::thread::spawn(move || {
         let mut hk = hotkey::Listener::new();
         let do_pk_signal: Arc<Mutex<bool>> = do_pickup_signal_clone;
+        let click_tp_signal_clone: Arc<Mutex<bool>> = click_tp_signal_clone;
         if reg_hotkey {
 
             
