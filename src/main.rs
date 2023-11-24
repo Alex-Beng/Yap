@@ -177,7 +177,7 @@ fn main() {
     let f_inter_signal = Arc::new(RwLock::new(50 as u32));
     let f_gap_signal = Arc::new(RwLock::new(85 as u32));
     let scroll_gap_signal = Arc::new(RwLock::new(70 as u32));
-    let click_tp_signal = Arc::new(RwLock::new(click_tp));
+    let click_tp_signal = Arc::new(Mutex::new(click_tp));
 
     let mut is_cloud = false;
     let hwnd = match capture::find_window_local() {
@@ -546,7 +546,7 @@ fn main() {
             hotkey::modifiers::ALT,
             '9' as u32, 
             move || {
-                let mut signal = click_tp_signal_clone.write().unwrap();
+                let mut signal = click_tp_signal_clone.lock().unwrap();
                 *signal = !*signal;
                 warn!("ALT + 9 切换 click tp 模式为 {}", *signal);              
             }

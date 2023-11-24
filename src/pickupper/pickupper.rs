@@ -40,7 +40,7 @@ pub struct PickupCofig {
     pub f_inter: Arc<RwLock<u32>>,
     pub f_gap: Arc<RwLock<u32>>,
     pub scroll_gap: Arc<RwLock<u32>>,
-    pub click_tp: Arc<RwLock<bool>>,
+    pub click_tp: Arc<Mutex<bool>>,
 }
 
 pub struct Pickupper {
@@ -304,7 +304,7 @@ impl Pickupper {
         thread::spawn(move || {
             
             loop {
-                let do_click = click_lock.read().unwrap();
+                let do_click = click_lock.lock().unwrap();
 
                 let img = rx_tp.recv().unwrap();
                 let img_gray = grayscale(&img);
