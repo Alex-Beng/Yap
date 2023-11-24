@@ -40,7 +40,7 @@ pub struct PickupCofig {
     pub f_inter: Arc<RwLock<u32>>,
     pub f_gap: Arc<RwLock<u32>>,
     pub scroll_gap: Arc<RwLock<u32>>,
-    pub click_tp: Arc<Mutex<bool>>,
+    pub click_tp: Arc<RwLock<bool>>,
 }
 
 pub struct Pickupper {
@@ -241,9 +241,9 @@ impl Pickupper {
 
     pub fn start(&mut self) -> ! {
         // 用于秘境挑战邀请的自动点击
-        let (tx, rx) = std::sync::mpsc::sync_channel::<DynamicImage>(0);
+        let (tx, rx) = std::sync::mpsc::sync_channel::<DynamicImage>(1);
         // 用于自动点击传送按钮
-        let (tx_tp, rx_tp) = std::sync::mpsc::sync_channel::<DynamicImage>(0);
+        let (tx_tp, rx_tp) = std::sync::mpsc::sync_channel::<DynamicImage>(1);
 
         let model_online = CRNNModel::new(String::from("model_training.onnx"), String::from("index_2_word.json"));
         let mut enigo_online = Enigo::new();
@@ -304,12 +304,8 @@ impl Pickupper {
         thread::spawn(move || {
             
             loop {
-                {
-                    let click = click_lock.lock().unwrap();
-                    if !*click {
-                        continue;
-                    }
-                }
+                let do_click = click_lock.read().unwrap();
+
                 let img = rx_tp.recv().unwrap();
                 let img_gray = grayscale(&img);
 
@@ -351,7 +347,7 @@ impl Pickupper {
                 if no_father_cnt != 1 {
                     continue;
                 }
-                if best_match > 0.7 {
+                if best_match > 0.7 && *do_click {
                     info!("tp button click with simi: {}", best_match);
                     // move to click
                     enigo_tp.mouse_move_to(botton_click_x as i32, botton_click_y as i32); 
