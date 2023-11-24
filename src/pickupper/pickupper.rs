@@ -327,7 +327,7 @@ impl Pickupper {
                         contour_clone,
                         &img_gray
                     );
-                    let (cos_simi, _valid) = contour_feat.can_match_tp(&botton_feat, 0.99);
+                    let (cos_simi, _valid) = contour_feat.can_match_tp(&botton_feat, 0.995);
                     if _valid {
                         // info!("{} {}, {}", contour_feat.area_ratio, contour_feat.bbox_wh_ratio, cos_simi);
                         // info!("{} {} {}", contour_feat.bbox_area_avg_pixel, contour_feat.contour_points_avg_pixel, contour_feat.contour_len2_area_ratio);
