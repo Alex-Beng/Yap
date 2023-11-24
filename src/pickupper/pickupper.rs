@@ -1,4 +1,5 @@
 use std::borrow::BorrowMut;
+use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fs::File;
 use std::fs::write;
@@ -48,12 +49,8 @@ pub struct Pickupper {
     f_template: GrayImage,
     f_contour_feat: ContourFeatures,
     
-    // 黑名单
-    black_list: HashSet<String>,
-    // 所有物品
-    all_list: HashSet<String>,
-    // 白名单
-    white_list: HashSet<String>,
+    // 合并黑白名单到hashmap: name -> pickup or not
+    word2pick: HashMap<String, bool>,
 
     // 配置
     config: PickupCofig,
@@ -142,14 +139,27 @@ impl Pickupper {
 
         for item in bk_items {
             bk_list.insert(item.as_str().unwrap().to_string());
-            // info!("添加到黑名单: {}", item.as_str().unwrap().to_string());
+            info!("添加到黑名单: {}", item.as_str().unwrap().to_string());
         }
 
         for item in wt_items {
             wt_list.insert(item.as_str().unwrap().to_string());
             info!("添加到白名单: {}", item.as_str().unwrap().to_string());
-            
         }
+        let mut word2pick: HashMap<String, bool> = HashMap::new();
+        // 设全部为true
+        for item in all_list {
+            word2pick.insert(item, true);
+        }
+        // 拉黑bk_item
+        for item in bk_list {
+            word2pick.insert(item, false);
+        }
+        // 拉白wt_item
+        for item in wt_list {
+            word2pick.insert(item, true);
+        }
+
 
 
         let template_raw = image::load_from_memory(include_bytes!("../../models/FFF.bmp")).unwrap();
@@ -211,9 +221,7 @@ impl Pickupper {
             f_template: template,
             f_contour_feat: f_contour_feat,
 
-            black_list: bk_list,
-            all_list: all_list,
-            white_list: wt_list,
+            word2pick: word2pick,
 
             config: config,
 
@@ -514,8 +522,8 @@ impl Pickupper {
                 // info!("inference 1 time: {}ms", t1.elapsed().unwrap().as_millis());
 
                 // dump 不认识的和需要捡的
-                if dump && inference_result != "" && !self.all_list.contains(&inference_result) || 
-                dump && self.all_list.contains(&inference_result) && !self.black_list.contains(&inference_result) {
+                if dump && inference_result != "" && !self.word2pick.contains_key(&inference_result) || 
+                dump && self.word2pick.contains_key(&inference_result) && self.word2pick[&inference_result] {
                     // remove ? / : * " < > | \ / in file name
                     let inference_result = inference_result.replace("?", "").replace("/", "").replace(":", "").replace("*", "").replace("\"", "").replace("<", "").replace(">", "").replace("|", "").replace("\\", "").replace("/", "");
                     f_text_cap.save(format!("{}/{}_{}_{}_raw.jpg", dump_path, cnt, yi, inference_result)).unwrap();
@@ -599,7 +607,7 @@ impl Pickupper {
         let mut need_pks_cnt = 0;
         let mut all_is_need = true;
         // 是否全是调查，进行一个彻底的疯狂
-        let mut is_all_investigate = !self.black_list.contains("调查") || self.white_list.contains("调查");
+        let mut is_all_investigate = self.word2pick["调查"];
         for i in 0..5 {
             let s = &infer_res[i as usize];
             if s != "" {
@@ -611,7 +619,7 @@ impl Pickupper {
             else {
                 continue;
             }
-            if self.white_list.contains(s) || self.all_list.contains(s) && !self.black_list.contains(s) {
+            if self.word2pick.contains_key(s) && self.word2pick[s] {
                 need_pks[i as usize] = 1;
                 need_pks_cnt += 1;
             }
