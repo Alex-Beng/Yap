@@ -241,9 +241,9 @@ impl Pickupper {
 
     pub fn start(&mut self) -> ! {
         // 用于秘境挑战邀请的自动点击
-        let (tx, rx) = std::sync::mpsc::sync_channel::<DynamicImage>(1);
+        let (tx, rx) = std::sync::mpsc::channel::<DynamicImage>();
         // 用于自动点击传送按钮
-        let (tx_tp, rx_tp) = std::sync::mpsc::sync_channel::<DynamicImage>(1);
+        let (tx_tp, rx_tp) = std::sync::mpsc::channel::<DynamicImage>();
 
         let model_online = CRNNModel::new(String::from("model_training.onnx"), String::from("index_2_word.json"));
         let mut enigo_online = Enigo::new();
