@@ -92,9 +92,20 @@ impl Pickupper {
         if !std::path::Path::new(config_list_path.as_str()).exists() {
             
             let mut file = File::create(config_list_path.as_str()).expect("Failed to create config.json");
+            
+            let infer_gap_for_json = *config.infer_gap.read().unwrap();
+            let f_inter_for_json = *config.f_inter.read().unwrap();
+            let f_gap_for_json = *config.f_gap.read().unwrap();
+            let scroll_gap_for_json = *config.scroll_gap.read().unwrap();
+            let click_tp_for_json = *config.click_tp.lock().unwrap();
             let mut json = serde_json::json!({
                 "black_list": [],
                 "white_list": [],
+                "infer_gap": infer_gap_for_json,
+                "f_internal": f_inter_for_json,
+                "f_gap": f_gap_for_json,
+                "scroll_gap": scroll_gap_for_json,
+                "click_tp": click_tp_for_json,
             });
 
             // 如果存在之前的black list or white list

@@ -147,8 +147,45 @@ fn main() {
     if let Some(v) = common::check_update() {
         warn!("检测到新版本，请手动更新：{}", v);
     }
-
     
+    // 尝试从可能存在的 config.json 读取可能存在的拾取参数
+    let mut infer_gap_default = infer_gap;
+    let mut f_internal_default = 50;
+    let mut f_gap_default = 85;
+    let mut scroll_gap_default = 70;
+    let mut click_tp_default = false;
+    let config_path = Path::new("./config.json");
+    if config_path.exists() {
+        let config = fs::read_to_string(config_path).unwrap();
+        let config: serde_json::Value = serde_json::from_str(&config).unwrap();
+        // 拾取参数是可能存在，需要逐一检查
+        if let Some(infer_gap) = config.get("infer_gap") {
+            if infer_gap.is_u64() {
+                infer_gap_default = infer_gap.as_u64().unwrap() as u32;
+            }
+        }
+        if let Some(f_internal) = config.get("f_internal") {
+            if f_internal.is_u64() {
+                f_internal_default = f_internal.as_u64().unwrap() as u32;
+            }
+        }
+        if let Some(f_gap) = config.get("f_gap") {
+            if f_gap.is_u64() {
+                f_gap_default = f_gap.as_u64().unwrap() as u32;
+            }
+        }
+        if let Some(scroll_gap) = config.get("scroll_gap") {
+            if scroll_gap.is_u64() {
+                scroll_gap_default = scroll_gap.as_u64().unwrap() as u32;
+            }
+        }
+        if let Some(click_tp) = config.get("click_tp") {
+            if click_tp.is_boolean() {
+                click_tp_default = click_tp.as_bool().unwrap();
+            }
+        }
+    }
+
     // 检查dump_path是否存在，不存在则创建
     if dump && !Path::new(dump_path).exists() {
         fs::create_dir_all(dump_path).unwrap();
@@ -173,11 +210,11 @@ fn main() {
     }
 
     let do_pickup_signal = Arc::new(Mutex::new(!no_pickup));
-    let infer_gap_signal = Arc::new(RwLock::new(infer_gap));
-    let f_inter_signal = Arc::new(RwLock::new(50 as u32));
-    let f_gap_signal = Arc::new(RwLock::new(85 as u32));
-    let scroll_gap_signal = Arc::new(RwLock::new(70 as u32));
-    let click_tp_signal = Arc::new(Mutex::new(click_tp));
+    let infer_gap_signal = Arc::new(RwLock::new(infer_gap_default));
+    let f_inter_signal = Arc::new(RwLock::new(f_internal_default));
+    let f_gap_signal = Arc::new(RwLock::new(f_gap_default));
+    let scroll_gap_signal = Arc::new(RwLock::new(scroll_gap_default));
+    let click_tp_signal = Arc::new(Mutex::new(click_tp_default));
 
     let mut is_cloud = false;
     let hwnd = match capture::find_window_local() {
