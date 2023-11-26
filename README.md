@@ -119,6 +119,31 @@ PS：可以使用nightly版本帮助debug。
 }
 ```
 
+3. **可选**: 使用config.json配置拾取参数，如：
+```json
+{
+  "black_list": [
+    "史莱姆凝液",
+    "薄荷",
+    "甜甜花",
+    "树莓"
+  ],
+  "white_list": [
+    "芙萝拉",
+    "调查",
+    "薄荷",
+    "甜甜花",
+    "树莓",
+    "传送锚点"
+  ],
+  "click_tp": false,
+  "f_gap": 85,
+  "f_internal": 50,
+  "infer_gap": 0,
+  "scroll_gap": 70
+}
+```
+
 3. 右键`yap.exe`选择以**管理员身份**运行
 
 
