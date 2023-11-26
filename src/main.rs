@@ -211,7 +211,11 @@ fn main() {
     let info: info::PickupInfo;
     if rect.height * 16 == rect.width * 9 {
         info = info::PickupInfo::from_16_9(rect.width as u32, rect.height as u32, rect.left, rect.top);
-    } else {
+    } 
+    else if rect.height * 16 == rect.width * 10 {
+        info = info::PickupInfo::from_16_10(rect.width as u32, rect.height as u32, rect.left, rect.top);
+    } 
+    else {
         common::error_and_quit_no_input("不支持的分辨率");
     }
 

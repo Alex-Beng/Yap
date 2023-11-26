@@ -130,4 +130,35 @@ pub const WINDOW_16_9: WindowInfo = WindowInfo {
 
     tp_botton_pos: Rect(969.0, 1912.0, 1044.0, 1433.0),
 };
-//475, 547
+
+pub const WINDOW_16_10: WindowInfo = WindowInfo {
+    width: 2560.0,
+    height: 1600.0,
+
+    f_area_pos: Rect(502.0, 1540.0, 1057.0, 1454.0),
+    f_template_w: 75.0,
+    f_template_h: 50.0,
+    
+    pickup_x_beg: 1631.0,
+    pickup_x_end: 1997.0,
+    pickup_y_gap: 96.0, 
+
+    // 草，并不支持快速强化，反正下版本就移除了
+    artifact_put_in_x: 1750.0,
+    artifact_put_in_y: 770.0,
+    artifact_upgrade_x: 1750.0,
+    artifact_upgrade_y: 1020.0,
+    artifact_skip_x: 128.0,
+    artifact_skip1_y: 150.0,
+    artifact_skip2_y: 220.0,
+
+
+    online_challange_pos: Rect(64.0, 1366.0, 100.0, 1154.0),
+    online_challange_confirm_x: 1180.0,
+    online_challange_confirm_y: 759.0,
+
+    uid_pos: Rect(1583.0, 2508.0, 1600.0, 2209.0),
+
+    // 也不支持快速传送。
+    tp_botton_pos: Rect(969.0, 1912.0, 1044.0, 1433.0),
+};

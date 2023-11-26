@@ -1,7 +1,7 @@
 pub mod window_info;
 
 use crate::capture::PixelRectBound;
-use crate::info::window_info::WINDOW_16_9;
+use crate::info::window_info::{WINDOW_16_9, WINDOW_16_10};
 
 
 
@@ -42,5 +42,8 @@ pub struct PickupInfo {
 impl PickupInfo {
     pub fn from_16_9(width: u32, height: u32, left: i32, top: i32) -> PickupInfo {
         WINDOW_16_9.to_pickup_info(height as f64, width as f64, left, top)
+    }
+    pub fn from_16_10(width: u32, height: u32, left: i32, top: i32) -> PickupInfo {
+        WINDOW_16_10.to_pickup_info(height as f64, width as f64, left, top)
     }
 }
