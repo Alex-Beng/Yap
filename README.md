@@ -13,7 +13,7 @@ _Named from [Yas](https://github.com/wormtql/yas)_
 
 借鉴了[Yas](https://github.com/wormtql/yas)代码实现的自动拾取器。
 
-一个开箱即用、跑的飞快、占用资源极低、可配置黑名单的自动拾取器，解放滚轮和F键（还有Y键probably），
+一个开箱即用、跑的飞快、占用资源极低、可配置黑名单的自动拾取器，解放滚轮和拾取键（还有Y键probably），
 Which may be the best open source pickupper in terms of performance, usability and configurability.
 
 ![pickup demo](./imgs/pk.gif)
@@ -31,12 +31,12 @@ Which may be the best open source pickupper in terms of performance, usability a
 # 原理
 
 
-使用~~基于L*/灰度通道的模板匹配（which is used in other naive pickuppers~~基于轮廓提取+特征匹配的方案，实现μs级别的F键的定位；
+使用~~基于L*/灰度通道的模板匹配（which is used in other naive pickuppers~~基于轮廓提取+特征匹配的方案，实现μs级别的拾取键的定位；
 通过固定位置关系截取拾取物的文字；
 之后，与[Yas](https://github.com/wormtql/yas)一样，使用SVTR网络对预处理后的区域图片进行识别；
 
 
-目前的策略是截取包含F键上下两个可能存在的拾取物文字，共五个区域。
+目前的策略是截取包含拾取键上下两个可能存在的拾取物文字，共五个区域。
 然后根据黑白名单，利用硬编码的自上而下拾取算法，生成动作序列`ops`，再进行执行。
 
 其中黑白名单的逻辑是：白名单中的物品必须拾取，黑名单中的物品若没有在白名单中，则不拾取。
@@ -119,7 +119,7 @@ PS：可以使用nightly版本帮助debug。
 }
 ```
 
-3. **可选**: 使用config.json配置拾取参数，如：
+3. **可选**: 使用config.json配置拾取参数以及拾取键，如：
 ```json
 {
   "black_list": [
@@ -140,28 +140,15 @@ PS：可以使用nightly版本帮助debug。
   "f_gap": 85,
   "f_internal": 50,
   "infer_gap": 0,
-  "scroll_gap": 70
+  "scroll_gap": 70,
+  "pick_key": "f"
 }
 ```
 
 3. 右键`yap.exe`选择以**管理员身份**运行
 
 
-4. 性能调优（如果你会使用命令行设置参数的话）
-
-
-可以通过修改`infer-gap`参数来调整推理间隔，即检测F键的间隔，单位ms。
-
-默认为0ms。
-
-对于60FPS游戏，一帧为16ms，但是拾取及滚动响应应该不是一帧完成的。例如：
-```bash
-./yap.exe --infer-gap 16 # 推理间隔为16ms
-./yap.exe -g 16 # 两种写法都可以
-```
-
-如果出现捡不起来，适当调高`f_gap`，滚动不了，适当调高`scroll_gap`。
-
+4. 性能调优（如果你会使用命令行/json设置参数的话）
 
 
 
@@ -187,12 +174,12 @@ yap> cargo run --release
 4. 如果需要进行debug调试，可参考命令行参数：
 ```
 /yap --help
-YAP - 原神自动拾取器 0.2.0
+YAP - 原神自动拾取器 0.2.1
 Alex-Beng <pc98@qq.com>
 Genshin Impact Pickup Helper
 
 USAGE:
-    yap.exe [FLAGS] [OPTIONS] [hotkey]
+    yap.exe [FLAGS] [OPTIONS] [ARGS]
 
 FLAGS:
     -h, --help         Prints help information
@@ -200,19 +187,16 @@ FLAGS:
     -V, --version      Prints version information
 
 OPTIONS:
-    -c, --channal <channal>
-            模板匹配时使用的通道，默认使用gray通道，另一个可选值为L*，推荐匹配阈值固定为0.01 [default: gray]
-
-        --dump <dump>                                输出模型预测结果、原始图像、二值图像至指定的文件夹，debug专用
-    -i, --dump-idx <dump_idx>                        执行dump时，输出结果起始的index [default: 0]
-    -g, --infer-gap <infer_gap>                      一次检测推理拾取的间隔，单位ms [default: 0]
-        --log <log>                                  日志等级，可选值为trace, debug, info, warn, error [default: warn]
-    -t, --template-threshold <template-threshold>
-            模板匹配的阈值，约小越严格，灰度通道中匹配值在0.01-0.09左右 [default: 0.08]
-
+    -c, --channal <channal>        灰度化时使用的通道，默认使用gray通道，另一个可选值为L* [default: gray]
+        --dump <dump>              输出模型预测结果、原始图像至指定的文件夹，debug专用
+    -i, --dump-idx <dump_idx>      执行dump时，输出结果起始的index [default: 0]
+    -g, --infer-gap <infer_gap>    一次检测推理拾取的间隔，单位ms [default: 0]
+        --log <log>                日志等级，可选值为trace, debug, info, warn, error [default: warn]
+        --pick-key <pick_key>      拾取案件，正常人默认为F [default: f]
 
 ARGS:
-    <hotkey>    是否注册hotkey用于调整拾取时序，debug专用
+    <hotkey>      是否注册hotkey用于调整拾取时序，debug专用
+    <click_tp>    是否自动点击传送
 ```
 
 Just enjoy it!
