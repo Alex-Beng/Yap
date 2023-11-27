@@ -35,6 +35,7 @@ pub struct PickupCofig {
     pub dump_path: String,
     pub dump_cnt: u32,
     pub pick_key: char,
+    pub cosin_thr: f32,
     pub do_pickup: Arc<Mutex<bool>>,
     pub infer_gap: Arc<RwLock<u32>>,
     pub f_inter: Arc<RwLock<u32>>,
@@ -293,7 +294,7 @@ impl Pickupper {
                         contour_clone,
                         &img_gray
                     );
-                    let (cos_simi, _valid) = contour_feat.can_match_tp(&botton_feat, 0.995);
+                    let (cos_simi, _valid) = contour_feat.can_match_tp(&botton_feat, 0.999);
                     if _valid {
                         // info!("{} {}, {}", contour_feat.area_ratio, contour_feat.bbox_wh_ratio, cos_simi);
                         // info!("{} {} {}", contour_feat.bbox_area_avg_pixel, contour_feat.contour_points_avg_pixel, contour_feat.contour_len2_area_ratio);
@@ -341,6 +342,7 @@ impl Pickupper {
             width: self.config.info.width as i32,
             height: self.config.info.height as i32,
         };
+        let cos_thre = self.config.cosin_thr;
 
         let mut start_time = SystemTime::now();
         let mut full_cnt = 0;
@@ -454,7 +456,7 @@ impl Pickupper {
                     &f_area_cap_gray
                 );
                 
-                let (cos_simi, _valid) = contour_feat.can_match(&self.f_contour_feat, 0.995);
+                let (cos_simi, _valid) = contour_feat.can_match(&self.f_contour_feat, cos_thre);
                 if contour_feat.contour_have_father == true && _valid {
                     f_cnt += 1;
 

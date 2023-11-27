@@ -87,13 +87,20 @@ fn main() {
             .required(false)
             .takes_value(true)
             .default_value("gray")
-            .help("灰度化时使用的通道，默认使用gray通道，另一个可选值为L*"))
+            .help("灰度化时使用的通道，默认使用gray通道，另一个可选值为L*，L*通道可能无法工作"))
         .arg(Arg::with_name("pick_key")
             .long("pick-key")
             .required(false)
             .takes_value(true)
             .default_value("f")
             .help("拾取案件，正常人默认为F"))
+        .arg(Arg::with_name("cosine-threshold")
+            .long("cosine-threshold")
+            .short("t")
+            .required(false)
+            .takes_value(true)
+            .default_value("0.997")
+            .help("拾取键轮廓匹配的余弦阈值，越大越严格，取值(0, 1)"))
         .arg(Arg::with_name("log")
             .long("log")
             .required(false)
@@ -125,6 +132,7 @@ fn main() {
     let reg_hotkey = matches.is_present("hotkey");
     let click_tp = matches.is_present("click_tp");
     let pick_key = matches.value_of("pick_key").unwrap_or("f").parse::<char>().unwrap();
+    let mut cosine_threshold: f32 = matches.value_of("cosine-threshold").unwrap_or("0.997").parse::<f32>().unwrap();
 
     // 首先更改日志等级
     let mut builder = Builder::from_env(Env::default().default_filter_or(log_level));
@@ -145,6 +153,12 @@ fn main() {
 
     if let Some(v) = common::check_update() {
         warn!("检测到新版本，请手动更新：{}", v);
+    }
+
+    // 检查cosine threshold是否合法
+    if cosine_threshold <= 0.0 || cosine_threshold >= 1.0 {
+        warn!("cosine threshold 取值范围为(0, 1)，使用默认值0.997");
+        cosine_threshold = 0.997;
     }
     
     // 尝试从可能存在的 config.json 读取可能存在的拾取参数
@@ -284,6 +298,7 @@ fn main() {
         dump_path: dump_path.to_string(),
         dump_cnt: cnt,
         pick_key: pick_key_json,
+        cosin_thr: cosine_threshold,
         do_pickup: do_pickup_signal,
         infer_gap: infer_gap_signal,
         f_inter: f_inter_signal,
