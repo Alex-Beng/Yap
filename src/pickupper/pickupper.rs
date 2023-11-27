@@ -47,7 +47,6 @@ pub struct Pickupper {
     model: CRNNModel,
     enigo: Enigo,
 
-    f_template: GrayImage,
     f_contour_feat: Vec<f32>,
     tp_botton_feat: Vec<f32>,
     
@@ -174,58 +173,14 @@ impl Pickupper {
         }
 
 
-
-        let template_raw = image::load_from_memory(include_bytes!("../../models/FFF.bmp")).unwrap();
-        let template: GrayImage;
-        if config.use_l {
-            template = rgb_to_l(&template_raw.to_rgb8());
-        }
-        else {
-            template = grayscale(&template_raw);
-        }
-        // 需要对template进行缩放
-        let template = imageops::resize(&template, info.f_template_w, info.f_template_h, imageops::FilterType::Gaussian);
-
         let mut f_contour_feat = ContourFeatures::new_empty();
-        // 根据template计算contour特征
-        let _img = template.clone();
-        let _img_bin = adaptive_threshold(&_img, 14); // block 大小是否需要自适应？
-        let _contours:Vec<imageproc::contours::Contour<u32>> = imageproc::contours::find_contours(&_img_bin);
-        for i in 0.._contours.len() {
-        // for _contour in _contours {
-            let _contour = &_contours[i];
-            let _contour = imageproc::contours::Contour {
-                points: _contour.points.clone(),
-                border_type: _contour.border_type,
-                parent: _contour.parent,
-            };
-
-            // 这个FFF有爸爸轮廓的只有那个F
-            if _contour.parent.is_some() {
-                let _contour_clone = imageproc::contours::Contour {
-                    points: _contour.points.clone(),
-                    border_type: _contour.border_type,
-                    parent: _contour.parent,
-                };
-                let _contour_father = &_contours[_contour.parent.unwrap()];
-                let _contour_father = imageproc::contours::Contour {
-                    points: _contour_father.points.clone(),
-                    border_type: _contour_father.border_type,
-                    parent: _contour_father.parent,
-                };
-
-                f_contour_feat = ContourFeatures::new(_contour, _contour_father, true, &template);
-                
-                // hard code here for feat
-                // 受不了这个傻逼FFF.bmp了，直接硬编码得了
-                f_contour_feat.bbox_wh_ratio = 0.7;
-                f_contour_feat.area_ratio = 0.010997644;
-                f_contour_feat.bbox_area_avg_pixel = 178.59644;
-                f_contour_feat.contour_points_avg_pixel = 241.72464;
-                
-                // println!("f_contour_feat: {:?}", f_contour_feat);
-            }
-        }
+        // hard code here for feat
+        f_contour_feat.bbox_wh_ratio = 0.7;
+        f_contour_feat.area_ratio = 0.010997644;
+        f_contour_feat.bbox_area_avg_pixel = 178.59644;
+        f_contour_feat.contour_points_avg_pixel = 241.72464;
+        f_contour_feat.contour_len2_area_ratio =  0.8632692;
+        f_contour_feat.father_bbox_wh_ratio = 1.21875;
         let f_contour_feat = f_contour_feat.to_features_vec();
 
         // 计算tp button的feat_vec
@@ -236,7 +191,6 @@ impl Pickupper {
             model: CRNNModel::new(String::from("model_training.onnx"), String::from("index_2_word.json")),
             enigo: Enigo::new(),
 
-            f_template: template,
             f_contour_feat: f_contour_feat,
             tp_botton_feat: tp_button_feat,
 
@@ -447,7 +401,6 @@ impl Pickupper {
             let f_area_cap = DynamicImage::ImageRgb8(f_area_cap);
             let mut f_area_cap_le = f_area_cap.clone();
             // warn!("f_area_cap: w: {}, h: {}", f_area_cap.width(), f_area_cap.height());
-            // info!("f_template: w: {}, h: {}", self.f_template.width(), self.f_template.height());
             
             let f_area_cap_gray: GrayImage;
             if use_l {
@@ -459,9 +412,6 @@ impl Pickupper {
 
             let temp_match_time = SystemTime::now();
             // f_area_cap_gray.save("farea.jpg").unwrap();
-            // self.f_template.save("f_template.jpg").unwrap();
-            // let (rel_x1, rel_y1) = run_match_template(&f_area_cap_gray, &self.f_template, temp_thre);
-            // println!("rel_y1: {}", rel_y1);
 
             // contour matching 
             let f_area_cap_thre = adaptive_threshold(&f_area_cap_gray, 14);
@@ -551,7 +501,7 @@ impl Pickupper {
                 continue;
             }
             
-
+            // 什么勾史代码
             if true {
                 info!("best_match: {}", best_match);
                 // crop the gray image using best_father_bbox
@@ -579,7 +529,7 @@ impl Pickupper {
                     self.config.info.pickup_x_beg as u32,
                         (self.config.info.f_area_position.top as i32 + y_offset) as u32,
                         self.config.info.pickup_x_end as u32 - self.config.info.pickup_x_beg as u32,
-                        self.f_template.height() as u32,
+                        best_father_bbox.height as u32,
                     );
                 let f_text_cap = DynamicImage::ImageRgb8(f_text_cap.to_image());
                 let f_text_cap_gray: GrayImage;
