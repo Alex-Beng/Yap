@@ -119,7 +119,7 @@ PS：可以使用nightly版本帮助debug。
 }
 ```
 
-3. **可选**: 使用config.json配置拾取参数以及拾取键，如：
+3. **可选**: 使用config.json配置拾取参数、拾取键以及余弦匹配阈值，如：
 ```json
 {
   "black_list": [
@@ -141,7 +141,8 @@ PS：可以使用nightly版本帮助debug。
   "f_internal": 50,
   "infer_gap": 0,
   "scroll_gap": 70,
-  "pick_key": "f"
+  "pick_key": "f",
+  "cos_thre": 0.9977
 }
 ```
 
