@@ -66,7 +66,7 @@ fn main() {
             .long("dump")
             .required(false)
             .takes_value(true)
-            .help("输出模型预测结果、原始图像、二值图像至指定的文件夹，debug专用"))
+            .help("输出模型预测结果、原始图像至指定的文件夹，debug专用"))
         .arg(Arg::with_name("dump_idx")
             .long("dump-idx")
             .short("i")
@@ -81,20 +81,13 @@ fn main() {
             .takes_value(true)
             .default_value("0")
             .help("一次检测推理拾取的间隔，单位ms"))
-        .arg(Arg::with_name("template-threshold")
-            .long("template-threshold")
-            .short("t")
-            .required(false)
-            .takes_value(true)
-            .default_value("0.08")
-            .help("模板匹配的阈值，约小越严格，灰度通道中匹配值在0.01-0.09左右"))
         .arg(Arg::with_name("channal")
             .long("channal")
             .short("c")
             .required(false)
             .takes_value(true)
             .default_value("gray")
-            .help("模板匹配时使用的通道，默认使用gray通道，另一个可选值为L*，推荐匹配阈值固定为0.01"))
+            .help("灰度化时使用的通道，默认使用gray通道，另一个可选值为L*"))
         .arg(Arg::with_name("log")
             .long("log")
             .required(false)
@@ -120,7 +113,6 @@ fn main() {
     let dump_path = matches.value_of("dump").unwrap_or("./dumps/");
     let cnt:u32 = matches.value_of("dump_idx").unwrap_or("0").parse::<u32>().unwrap();
     let infer_gap: u32 = matches.value_of("infer_gap").unwrap_or("0").parse::<u32>().unwrap();
-    let template_threshold: f32 = matches.value_of("template-threshold").unwrap_or("0.08").parse::<f32>().unwrap();
     let mut channal = matches.value_of("channal").unwrap_or("gray");
     let log_level = matches.value_of("log").unwrap_or("warn");
     let no_pickup = matches.is_present("no_pickup");
@@ -153,7 +145,7 @@ fn main() {
     let mut f_internal_default = 50;
     let mut f_gap_default = 85;
     let mut scroll_gap_default = 70;
-    let mut click_tp_default = false;
+    let mut click_tp_default = click_tp;
     let config_path = Path::new("./config.json");
     if config_path.exists() {
         let config = fs::read_to_string(config_path).unwrap();
@@ -191,10 +183,6 @@ fn main() {
         fs::create_dir_all(dump_path).unwrap();
     }
     
-    // 检查template threshold是否合法
-    if template_threshold < 0.0  {
-        common::error_and_quit_no_input("template threshold必须大于零");
-    }
     
     if channal != "L*" && channal != "gray" {
         // common::error_and_quit("channal参数必须为L*或gray");
@@ -205,8 +193,7 @@ fn main() {
     let mut use_l = false;
     if channal == "L*" {
         use_l = true;
-        info!("使用L*通道进行模板匹配");
-        // template_threshold = 0.01;
+        info!("使用L*通道进行灰度化");
     }
 
     let do_pickup_signal = Arc::new(Mutex::new(!no_pickup));
@@ -283,7 +270,6 @@ fn main() {
         dump,
         dump_path: dump_path.to_string(),
         dump_cnt: cnt,
-        temp_thre: template_threshold,
         do_pickup: do_pickup_signal,
         infer_gap: infer_gap_signal,
         f_inter: f_inter_signal,

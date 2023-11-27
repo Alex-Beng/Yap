@@ -34,7 +34,6 @@ pub struct PickupCofig {
     pub dump: bool,
     pub dump_path: String,
     pub dump_cnt: u32,
-    pub temp_thre: f32,
     pub do_pickup: Arc<Mutex<bool>>,
     pub infer_gap: Arc<RwLock<u32>>,
     pub f_inter: Arc<RwLock<u32>>,
@@ -329,7 +328,6 @@ impl Pickupper {
         let dump_path = self.config.dump_path.clone();
         let cnt = self.config.dump_cnt;
         
-        let temp_thre = self.config.temp_thre;
         // let do_pickup = self.config.do_pickup.clone();
         let use_l = self.config.use_l;
 
