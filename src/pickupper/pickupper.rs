@@ -107,6 +107,7 @@ impl Pickupper {
                 "scroll_gap": scroll_gap_for_json,
                 "click_tp": click_tp_for_json,
                 "pick_key": "f",
+                "cos_thre": 0.9977,
             });
 
             // 如果存在之前的black list or white list

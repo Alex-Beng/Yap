@@ -203,6 +203,12 @@ fn main() {
                 pick_key_json = pick_key.as_str().unwrap().parse::<char>().unwrap();
             }
         }
+        // for cosine thre
+        if let Some(cos_thre) = config.get("cos_thre") {
+            if cos_thre.is_f64() {
+                cosine_threshold = cos_thre.as_f64().unwrap() as f32;
+            }
+        }
     }
 
     // 检查dump_path是否存在，不存在则创建
