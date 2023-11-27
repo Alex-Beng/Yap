@@ -48,7 +48,7 @@ Which may be the best open source pickupper in terms of performance, usability a
 整体流程的时序是：
 ```
 ... -> sleep infer_gap ms -> find F key -> infer image -> do pickup -> ...
-or // 如果找不到F键
+or // 如果找不到拾取键
 ... -> sleep infer_gap ms -> find F key -> ...
 ```
 其中可配置的`infer_gap`参数为推理间隔，单位ms。
@@ -59,7 +59,7 @@ or // 如果找不到F键
 ... F down ->  sleep f_internal ms -> F_up -> sleep f_gap ms -> ...
 ... scroll -> sleep scroll_gap ms -> ...
 ```
-其中F键和滚轮的三个参数均可配置，分别为`f_internal`（F键摁下后等待时间）、`f_gap`（F键松开后的冷却时间）、`scroll_gap`（滚轮滚动后的冷却时间），单位ms。
+其中拾取键和滚轮的三个参数均可配置，分别为`f_internal`（拾取键摁下后等待时间）、`f_gap`（拾取键松开后的冷却时间）、`scroll_gap`（滚轮滚动后的冷却时间），单位ms。
 
 有三个子线程：
 1. 用于监听全局快捷键，以暂停/恢复拾取，and other functions。
