@@ -34,6 +34,7 @@ pub struct PickupCofig {
     pub dump: bool,
     pub dump_path: String,
     pub dump_cnt: u32,
+    pub pick_key: char,
     pub do_pickup: Arc<Mutex<bool>>,
     pub infer_gap: Arc<RwLock<u32>>,
     pub f_inter: Arc<RwLock<u32>>,
@@ -104,6 +105,7 @@ impl Pickupper {
                 "f_gap": f_gap_for_json,
                 "scroll_gap": scroll_gap_for_json,
                 "click_tp": click_tp_for_json,
+                "pick_key": "f",
             });
 
             // 如果存在之前的black list or white list
@@ -641,6 +643,7 @@ impl Pickupper {
         let f_inter = *self.config.f_inter.read().unwrap();
         let f_gap = *self.config.f_gap.read().unwrap();
         let scroll_gap = *self.config.scroll_gap.read().unwrap();
+        let f_truly_key = self.config.pick_key;
 
         // 规划的最终动作
         // 0: do F
@@ -685,14 +688,14 @@ impl Pickupper {
                 // copy from logi macro
                 self.enigo.mouse_scroll_y(1);
                 sleep(10);
-                self.enigo.key_down(enigo::Key::Layout('f'));
+                self.enigo.key_down(enigo::Key::Layout(f_truly_key));
                 sleep(10);
-                self.enigo.key_up(enigo::Key::Layout('f'));
+                self.enigo.key_up(enigo::Key::Layout(f_truly_key));
                 sleep(10);
                 self.enigo.mouse_scroll_y(-1);
-                self.enigo.key_down(enigo::Key::Layout('f'));
+                self.enigo.key_down(enigo::Key::Layout(f_truly_key));
                 sleep(10);
-                self.enigo.key_up(enigo::Key::Layout('f'));
+                self.enigo.key_up(enigo::Key::Layout(f_truly_key));
             }
             return;
         }
@@ -783,10 +786,10 @@ impl Pickupper {
 
         for op in ops {
             if op == 0 {
-                self.enigo.key_down(enigo::Key::Layout('f'));
+                self.enigo.key_down(enigo::Key::Layout(f_truly_key));
                 // sleep(50);
                 sleep(f_inter);
-                self.enigo.key_up(enigo::Key::Layout('f'));
+                self.enigo.key_up(enigo::Key::Layout(f_truly_key));
                 // sleep(90);
                 sleep(f_gap);
             }

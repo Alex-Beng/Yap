@@ -88,6 +88,12 @@ fn main() {
             .takes_value(true)
             .default_value("gray")
             .help("灰度化时使用的通道，默认使用gray通道，另一个可选值为L*"))
+        .arg(Arg::with_name("pick_key")
+            .long("pick-key")
+            .required(false)
+            .takes_value(true)
+            .default_value("f")
+            .help("拾取案件，正常人默认为F"))
         .arg(Arg::with_name("log")
             .long("log")
             .required(false)
@@ -118,6 +124,7 @@ fn main() {
     let no_pickup = matches.is_present("no_pickup");
     let reg_hotkey = matches.is_present("hotkey");
     let click_tp = matches.is_present("click_tp");
+    let pick_key = matches.value_of("pick_key").unwrap_or("f").parse::<char>().unwrap();
 
     // 首先更改日志等级
     let mut builder = Builder::from_env(Env::default().default_filter_or(log_level));
@@ -146,6 +153,7 @@ fn main() {
     let mut f_gap_default = 85;
     let mut scroll_gap_default = 70;
     let mut click_tp_default = click_tp;
+    let mut pick_key_json = pick_key;
     let config_path = Path::new("./config.json");
     if config_path.exists() {
         let config = fs::read_to_string(config_path).unwrap();
@@ -174,6 +182,11 @@ fn main() {
         if let Some(click_tp) = config.get("click_tp") {
             if click_tp.is_boolean() {
                 click_tp_default = click_tp.as_bool().unwrap();
+            }
+        }
+        if let Some(pick_key) = config.get("pick_key") {
+            if pick_key.is_string() {
+                pick_key_json = pick_key.as_str().unwrap().parse::<char>().unwrap();
             }
         }
     }
@@ -270,6 +283,7 @@ fn main() {
         dump,
         dump_path: dump_path.to_string(),
         dump_cnt: cnt,
+        pick_key: pick_key_json,
         do_pickup: do_pickup_signal,
         infer_gap: infer_gap_signal,
         f_inter: f_inter_signal,
