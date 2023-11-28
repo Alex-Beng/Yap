@@ -495,7 +495,7 @@ impl Pickupper {
                 }
                 full_cnt += 1;
             }
-            if rel_x < 0 || f_cnt != 1 || best_match < 0.995 {
+            if rel_x < 0 || best_match < cos_thre {
                 // // 说明没有找到，保存全图
                 // if full_cnt % 20 == 0 {
                 //     game_window_cap.save(format!("{}/{}_full.jpg", "./dumps_full", full_cnt)).unwrap();
