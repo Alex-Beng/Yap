@@ -319,10 +319,10 @@ impl Pickupper {
                     info!("tp button click with simi: {}", best_match);
                     // move to click
                     enigo_tp.mouse_move_to(botton_click_x as i32, botton_click_y as i32); 
-                    sleep(50);
+                    sleep(25);
                     
                     enigo_tp.mouse_click(enigo::MouseButton::Left);
-                    sleep(50);
+                    // sleep(500);
                 }
 
             }
