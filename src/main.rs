@@ -133,6 +133,7 @@ fn main() {
     let click_tp = matches.is_present("click_tp");
     let pick_key = matches.value_of("pick_key").unwrap_or("f").parse::<char>().unwrap();
     let mut cosine_threshold: f32 = matches.value_of("cosine-threshold").unwrap_or("0.997").parse::<f32>().unwrap();
+    let mut single_mode = false;
 
     // 首先更改日志等级
     let mut builder = Builder::from_env(Env::default().default_filter_or(log_level));
@@ -209,6 +210,12 @@ fn main() {
                 cosine_threshold = cos_thre.as_f64().unwrap() as f32;
             }
         }
+        // for single mode
+        if let Some(sing_md) = config.get("single_mode") {
+            if sing_md.is_boolean() {
+                single_mode = sing_md.as_bool().unwrap();
+            }
+        }
     }
 
     // 检查dump_path是否存在，不存在则创建
@@ -235,6 +242,7 @@ fn main() {
     let f_gap_signal = Arc::new(RwLock::new(f_gap_default));
     let scroll_gap_signal = Arc::new(RwLock::new(scroll_gap_default));
     let click_tp_signal = Arc::new(Mutex::new(click_tp_default));
+    let single_md_signal = Arc::new(Mutex::new(single_mode));
 
     let mut is_cloud = false;
     let hwnd = match capture::find_window_local() {
@@ -293,6 +301,8 @@ fn main() {
 
     let click_tp_signal_clone = click_tp_signal.clone();
 
+    let single_md_signal_clone = single_md_signal.clone();
+
     let info_for_artifacts = info.clone();
     
 
@@ -311,6 +321,7 @@ fn main() {
         f_gap: f_gap_signal,
         scroll_gap: scroll_gap_signal,
         click_tp: click_tp_signal,
+        single_mode: single_md_signal,
     };
     let uid_pos = pk_config.info.uid_pos.clone();
     let uid_pos = RECT {
@@ -612,6 +623,18 @@ fn main() {
                 let mut signal = click_tp_signal_clone.lock().unwrap();
                 *signal = !*signal;
                 warn!("ALT + 9 切换 click tp 模式为 {}", *signal);              
+            }
+        ).unwrap();
+
+        // ALT + Z
+        // 切换single mode
+        hk.register_hotkey(
+            hotkey::modifiers::ALT,
+            'Z' as u32, 
+            move || {
+                let mut signal = single_md_signal_clone.lock().unwrap();
+                *signal = !*signal;
+                warn!("ALT + Z 切换 single mode 模式为 {}", *signal);              
             }
         ).unwrap();
 

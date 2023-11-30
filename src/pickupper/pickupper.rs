@@ -12,6 +12,7 @@ use std::sync::{Arc, Mutex, RwLock};
 use crate::common::sleep;
 use crate::inference;
 use crate::inference::img_process::{run_match_template, rgb_to_l, ContourFeatures};
+use crate::info;
 use crate::{info::PickupInfo, common};
 use crate::inference::inference::CRNNModel;
 use crate::capture::{RawCaptureImage, self, PixelRect, RawImage};
@@ -42,6 +43,7 @@ pub struct PickupCofig {
     pub f_gap: Arc<RwLock<u32>>,
     pub scroll_gap: Arc<RwLock<u32>>,
     pub click_tp: Arc<Mutex<bool>>,
+    pub single_mode: Arc<Mutex<bool>>,
 }
 
 pub struct Pickupper {
@@ -108,6 +110,7 @@ impl Pickupper {
                 "click_tp": click_tp_for_json,
                 "pick_key": "f",
                 "cos_thre": 0.9977,
+                "single_mode": false,
             });
 
             // 如果存在之前的black list or white list
@@ -587,6 +590,17 @@ impl Pickupper {
                 }
 
                 res_strings[yi as usize] = inference_result;
+
+                {
+                    let single_mode = *self.config.single_mode.lock().unwrap();
+                    if single_mode {
+                        // info!("单次模式，推理结果: {}", res_strings[2]);
+                        if res_strings[2] == "" {
+                            pk_infer_end = true;
+                        }
+                        break;
+                    }
+                }
 
                 // 更新yi的状态机
                 match yi {
