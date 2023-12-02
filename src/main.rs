@@ -626,11 +626,11 @@ fn main() {
             }
         ).unwrap();
 
-        // ALT + Z
+        // ALT + 8
         // 切换single mode
         hk.register_hotkey(
             hotkey::modifiers::ALT,
-            'Z' as u32, 
+            '8' as u32, 
             move || {
                 let mut signal = single_md_signal_clone.lock().unwrap();
                 *signal = !*signal;
