@@ -96,6 +96,8 @@ PS：可以使用nightly版本帮助debug。
 
 3. **可选**: 
 <details>
+<summary>点击展开/折叠</summary>
+
 使用config.json配置拾取参数、拾取键以及余弦匹配阈值以及其他参数，如：
 ```json
 {
