@@ -120,7 +120,7 @@ PS：可以使用nightly版本帮助debug。
 }
 ```
 
-3. **可选**: 使用config.json配置拾取参数、拾取键以及余弦匹配阈值，如：
+3. **可选**: 使用config.json配置拾取参数、拾取键以及余弦匹配阈值以及其他参数，如：
 ```json
 {
   "black_list": [
@@ -143,11 +143,26 @@ PS：可以使用nightly版本帮助debug。
   "infer_gap": 0,
   "scroll_gap": 70,
   "pick_key": "f",
-  "cos_thre": 0.9977
+  "cos_thre": 0.9977,
+   "uid_mask": true,
+    "press_y": true
 }
 ```
+| 参数 | 功能 |
+| --- | --- |
+| `click_tp` | 是否自动点击传送锚点 |
+| `f_gap` | 拾取键松开后的冷却时间，单位ms |
+| `f_internal` | 拾取键摁下到松开等待时间，单位ms |
+| `infer_gap` | 检测间隔，单位ms |
+| `scroll_gap` | 滚轮滚动后的冷却时间，单位ms |
+| `pick_key` | 拾取键，默认为`f` |
+| `cos_thre` | 余弦匹配阈值，越大越严格，越小越宽松 |
+| `uid_mask` | 是否生成UID遮罩 |
+| `press_y` | 是否自动摁Y键 |
 
-3. 右键`yap.exe`选择以**管理员身份**运行
+
+
+1. 右键`yap.exe`选择以**管理员身份**运行
 
 
 4. 性能调优（如果你会使用命令行/json设置参数的话）

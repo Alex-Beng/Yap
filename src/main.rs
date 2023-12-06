@@ -170,6 +170,7 @@ fn main() {
     let mut click_tp_default = click_tp;
     let mut pick_key_json = pick_key;
     let mut uid_mask_on = true;
+    let mut press_y = true;
     let config_path = Path::new("./config.json");
     if config_path.exists() {
         let config = fs::read_to_string(config_path).unwrap();
@@ -221,6 +222,12 @@ fn main() {
         if let Some(uid_mask) = config.get("uid_mask") {
             if uid_mask.is_boolean() {
                 uid_mask_on = uid_mask.as_bool().unwrap();
+            }
+        }
+        // for press y
+        if let Some(press_y_) = config.get("press_y") {
+            if press_y_.is_boolean() {
+                press_y = press_y_.as_bool().unwrap();
             }
         }
     }
@@ -317,6 +324,7 @@ fn main() {
         info,
         bw_path: String::from("."),
         use_l,
+        press_y,
         dump,
         dump_path: dump_path.to_string(),
         dump_cnt: cnt,

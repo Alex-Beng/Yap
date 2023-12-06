@@ -32,6 +32,7 @@ pub struct PickupCofig {
     pub info: PickupInfo,
     pub bw_path: String,
     pub use_l: bool,
+    pub press_y: bool,
     pub dump: bool,
     pub dump_path: String,
     pub dump_cnt: u32,
@@ -112,6 +113,7 @@ impl Pickupper {
                 "cos_thre": 0.9977,
                 "single_mode": false,
                 "uid_mask": true,
+                "press_y": true,
             });
 
             // 如果存在之前的black list or white list
@@ -221,50 +223,52 @@ impl Pickupper {
         let mut enigo_online = Enigo::new();
         let online_confirm_x = self.config.info.online_challange_confirm_x + self.config.info.left as u32;
         let online_confirm_y = self.config.info.online_challange_confirm_y + self.config.info.top as u32;
-        thread::spawn(move || {
-            let mut cnt = 0;
-            loop {
-                cnt += 1;
+        if self.config.press_y {
+            thread::spawn(move || {
+                let mut cnt = 0;
+                loop {
+                    cnt += 1;
 
-                let img = rx.recv().unwrap();
-                
-                let img_gray = grayscale(&img);
-                
-                let bin_resized = imageops::resize(&img_gray, 199, 32, imageops::FilterType::Gaussian);
-                let mut padded_image = ImageBuffer::new(384, 32);
-                padded_image.copy_from(&bin_resized, 0, 0).unwrap();
-                let vec: Vec<f32> = padded_image.pixels().map(|p| p[0] as f32 / 255.0).collect();
-                let raw_img = RawImage {
-                    data: vec,
-                    h: padded_image.height(),
-                    w: padded_image.width(),
-                };
-                let inference_result = model_online.inference_string(&raw_img);
-                
-                // if inference_result != "" {
-                //     img.save(format!("dumps4.2/77/{}_0_秘境组队邀请_raw.jpg", cnt)).unwrap();
-                // }
+                    let img = rx.recv().unwrap();
+                    
+                    let img_gray = grayscale(&img);
+                    
+                    let bin_resized = imageops::resize(&img_gray, 199, 32, imageops::FilterType::Gaussian);
+                    let mut padded_image = ImageBuffer::new(384, 32);
+                    padded_image.copy_from(&bin_resized, 0, 0).unwrap();
+                    let vec: Vec<f32> = padded_image.pixels().map(|p| p[0] as f32 / 255.0).collect();
+                    let raw_img = RawImage {
+                        data: vec,
+                        h: padded_image.height(),
+                        w: padded_image.width(),
+                    };
+                    let inference_result = model_online.inference_string(&raw_img);
+                    
+                    // if inference_result != "" {
+                    //     img.save(format!("dumps4.2/77/{}_0_秘境组队邀请_raw.jpg", cnt)).unwrap();
+                    // }
 
-                if inference_result == "" {
-                    continue;
+                    if inference_result == "" {
+                        continue;
+                    }
+                    info!("online challage inference_result: {}", inference_result);
+                    if inference_result == "秘境挑战组队邀请" || inference_result == "进入世界申请（" {
+                        // press Y first
+                        enigo_online.key_down(enigo::Key::Layout('y'));
+                        sleep(50);
+                        enigo_online.key_up(enigo::Key::Layout('y'));
+
+                        // move mouse to the right position
+                        enigo_online.mouse_move_to(online_confirm_x as i32, online_confirm_y as i32);
+                        sleep(50);
+
+                        // click
+                        // enigo_online.mouse_click(enigo::MouseButton::Left);
+                        // sleep(50);
+                    }
                 }
-                info!("online challage inference_result: {}", inference_result);
-                if inference_result == "秘境挑战组队邀请" || inference_result == "进入世界申请（" {
-                    // press Y first
-                    enigo_online.key_down(enigo::Key::Layout('y'));
-                    sleep(50);
-                    enigo_online.key_up(enigo::Key::Layout('y'));
-
-                    // move mouse to the right position
-                    enigo_online.mouse_move_to(online_confirm_x as i32, online_confirm_y as i32);
-                    sleep(50);
-
-                    // click
-                    // enigo_online.mouse_click(enigo::MouseButton::Left);
-                    // sleep(50);
-                }
-            }
-        });
+            });
+        }
 
         let botton_feat = self.tp_botton_feat.clone();
         let mut enigo_tp = Enigo::new();
