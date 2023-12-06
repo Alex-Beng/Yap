@@ -61,7 +61,7 @@ Which may be the best open source pickupper in terms of performance, usability a
 
 隐藏功能见：[other_funcs.md](./other_funcs.md)
 
-## 从release获取
+## 获取release
 
 目前有两种release，一种是由github actions自动构建的nightly版本，一种是手动构建的release版本。前者可能会有bug，后者较为稳定。
 
@@ -143,6 +143,11 @@ PS：可以使用nightly版本帮助debug。
 
 4. 性能调优（如果你会使用命令行/json设置参数的话）
 
+## 自行构建
+
+```
+cargo build
+```
 
 Just enjoy it!
 
