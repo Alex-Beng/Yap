@@ -386,7 +386,7 @@ impl Pickupper {
             let f_area_cap = f_area_cap.unwrap();
             
             // 再crop秘境挑战的 
-            if last_online_challage_time + std::time::Duration::from_secs(1) < SystemTime::now() {
+            if self.config.press_y && last_online_challage_time + std::time::Duration::from_secs(1) < SystemTime::now() {
                 last_online_challage_time = SystemTime::now();
                 let online_challage_cap = crop(&mut game_window_cap, 
                     self.config.info.online_challange_position.left as u32,
