@@ -169,6 +169,7 @@ fn main() {
     let mut scroll_gap_default = 70;
     let mut click_tp_default = click_tp;
     let mut pick_key_json = pick_key;
+    let mut uid_mask_on = true;
     let config_path = Path::new("./config.json");
     if config_path.exists() {
         let config = fs::read_to_string(config_path).unwrap();
@@ -214,6 +215,12 @@ fn main() {
         if let Some(sing_md) = config.get("single_mode") {
             if sing_md.is_boolean() {
                 single_mode = sing_md.as_bool().unwrap();
+            }
+        }
+        // for uid mask
+        if let Some(uid_mask) = config.get("uid_mask") {
+            if uid_mask.is_boolean() {
+                uid_mask_on = uid_mask.as_bool().unwrap();
             }
         }
     }
@@ -336,93 +343,94 @@ fn main() {
     // 由于主线程是while true，所以不需要join
 
     // 创建UID的遮罩窗口
-    let uid_handle = std::thread::spawn(move || {
-        // 注册窗口类
-        let class_name = "FloatingWindowClass".to_string();
-        let class_name2 = "FloatingWindowClass".to_string();
-        let h_instance = unsafe { GetModuleHandleW(null_mut()) };
-        let wnd_class = WNDCLASSW {
-            style: 0,
-            lpfnWndProc: Some(window_proc),
-            hInstance: h_instance,
-            lpszClassName: capture::encode_wide(class_name).as_ptr(),
-            cbClsExtra: 0,
-            cbWndExtra: 0,
-            hIcon: null_mut(),
-            hCursor: null_mut(),
-            hbrBackground: null_mut(),
-            lpszMenuName: null_mut(),
-        };
-        unsafe { RegisterClassW(&wnd_class) };
+    if uid_mask_on {
+        let uid_handle = std::thread::spawn(move || {
+            // 注册窗口类
+            let class_name = "FloatingWindowClass".to_string();
+            let class_name2 = "FloatingWindowClass".to_string();
+            let h_instance = unsafe { GetModuleHandleW(null_mut()) };
+            let wnd_class = WNDCLASSW {
+                style: 0,
+                lpfnWndProc: Some(window_proc),
+                hInstance: h_instance,
+                lpszClassName: capture::encode_wide(class_name).as_ptr(),
+                cbClsExtra: 0,
+                cbWndExtra: 0,
+                hIcon: null_mut(),
+                hCursor: null_mut(),
+                hbrBackground: null_mut(),
+                lpszMenuName: null_mut(),
+            };
+            unsafe { RegisterClassW(&wnd_class) };
 
-        // 创建窗口
-        let hwnd = unsafe {
-            CreateWindowExW(
-                WS_EX_LAYERED | WS_EX_TOPMOST,
-                capture::encode_wide(class_name2).as_ptr(),
-                capture::encode_wide("YAP float window".to_string()).as_ptr(),
-                WS_POPUP,
-                uid_pos.left,
-                uid_pos.top,
-                uid_pos.right - uid_pos.left,
-                uid_pos.bottom - uid_pos.top,
-                null_mut(),
-                null_mut(),
-                h_instance,
-                null_mut(),
-            )
-        };
+            // 创建窗口
+            let hwnd = unsafe {
+                CreateWindowExW(
+                    WS_EX_LAYERED | WS_EX_TOPMOST,
+                    capture::encode_wide(class_name2).as_ptr(),
+                    capture::encode_wide("YAP float window".to_string()).as_ptr(),
+                    WS_POPUP,
+                    uid_pos.left,
+                    uid_pos.top,
+                    uid_pos.right - uid_pos.left,
+                    uid_pos.bottom - uid_pos.top,
+                    null_mut(),
+                    null_mut(),
+                    h_instance,
+                    null_mut(),
+                )
+            };
 
-        // 设置不在任务栏显示
-        unsafe {
-            let ex_style = GetWindowLongW(hwnd, GWL_EXSTYLE);
-            SetWindowLongW(hwnd, GWL_EXSTYLE,  ex_style | WS_EX_TOOLWINDOW as i32 | WS_EX_LAYERED as i32);
-        }
-
-
-        // 设置窗口透明度
-        unsafe { SetLayeredWindowAttributes(hwnd, 0, 200, LWA_COLORKEY) };
-
-        // 显示窗口
-        unsafe { ShowWindow(hwnd, SW_SHOW) };
-        unsafe { UpdateWindow(hwnd) };
-        
-        let hwnd = match capture::find_window_local() {
-            Err(_) => {
-                // warn!("未找到原神窗口，尝试寻找云·原神");
-                match capture::find_window_cloud() {
-                    Ok(h) => {
-                        h
-                    },
-                    Err(_) => {
-                        common::error_and_quit_no_input("未找到原神窗口，请确认原神已经开启");
-                    }
-                }
-            },
-            Ok(h) => h,
-        };
-        
-        unsafe { ShowWindow(hwnd, SW_RESTORE); }
-        unsafe { SetForegroundWindow(hwnd); }
-        common::sleep(1000);
-
-        // 消息循环
-        let mut msg = MSG {
-            hwnd: null_mut(),
-            message: 0,
-            wParam: 0,
-            lParam: 0,
-            time: 0,
-            pt: POINT { x: 0, y: 0 },
-        };
-        while unsafe { GetMessageW(&mut msg, null_mut(), 0, 0) } > 0 {
+            // 设置不在任务栏显示
             unsafe {
-                TranslateMessage(&msg);
-                DispatchMessageW(&msg);
+                let ex_style = GetWindowLongW(hwnd, GWL_EXSTYLE);
+                SetWindowLongW(hwnd, GWL_EXSTYLE,  ex_style | WS_EX_TOOLWINDOW as i32 | WS_EX_LAYERED as i32);
             }
-        }
-    });
 
+
+            // 设置窗口透明度
+            unsafe { SetLayeredWindowAttributes(hwnd, 0, 200, LWA_COLORKEY) };
+
+            // 显示窗口
+            unsafe { ShowWindow(hwnd, SW_SHOW) };
+            unsafe { UpdateWindow(hwnd) };
+            
+            let hwnd = match capture::find_window_local() {
+                Err(_) => {
+                    // warn!("未找到原神窗口，尝试寻找云·原神");
+                    match capture::find_window_cloud() {
+                        Ok(h) => {
+                            h
+                        },
+                        Err(_) => {
+                            common::error_and_quit_no_input("未找到原神窗口，请确认原神已经开启");
+                        }
+                    }
+                },
+                Ok(h) => h,
+            };
+            
+            unsafe { ShowWindow(hwnd, SW_RESTORE); }
+            unsafe { SetForegroundWindow(hwnd); }
+            common::sleep(1000);
+
+            // 消息循环
+            let mut msg = MSG {
+                hwnd: null_mut(),
+                message: 0,
+                wParam: 0,
+                lParam: 0,
+                time: 0,
+                pt: POINT { x: 0, y: 0 },
+            };
+            while unsafe { GetMessageW(&mut msg, null_mut(), 0, 0) } > 0 {
+                unsafe {
+                    TranslateMessage(&msg);
+                    DispatchMessageW(&msg);
+                }
+            }
+        });
+    }
 
     // 监听快捷键
     let hotkey_handle = std::thread::spawn(move || {

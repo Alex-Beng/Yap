@@ -111,6 +111,7 @@ impl Pickupper {
                 "pick_key": "f",
                 "cos_thre": 0.9977,
                 "single_mode": false,
+                "uid_mask": true,
             });
 
             // 如果存在之前的black list or white list
