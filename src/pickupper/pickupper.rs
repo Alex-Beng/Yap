@@ -415,8 +415,8 @@ impl Pickupper {
             let f_area_cap = f_area_cap.unwrap();
             let f_ares_cap_alpha = f_ares_cap_alpha.unwrap();
 
-            f_ares_cap_alpha.save("le.jpg").unwrap();
-            alpha.save("le2.jpg").unwrap();
+            // f_ares_cap_alpha.save("le.jpg").unwrap();
+            // alpha.save("le2.jpg").unwrap();
             
             // 再crop秘境挑战的 
             if self.config.press_y && last_online_challage_time + std::time::Duration::from_secs(1) < SystemTime::now() {
