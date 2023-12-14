@@ -15,7 +15,7 @@ use crate::inference::img_process::{run_match_template, rgb_to_l, ContourFeature
 use crate::info;
 use crate::{info::PickupInfo, common};
 use crate::inference::inference::CRNNModel;
-use crate::capture::{RawCaptureImage, self, PixelRect, RawImage};
+use crate::capture::{self, PixelRect, RawImage};
 
 use image::imageops::{grayscale, self, crop};
 use image::{GrayImage, ImageBuffer, Luma, ColorType, GenericImage, DynamicImage, SubImage};

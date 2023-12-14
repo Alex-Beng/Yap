@@ -68,11 +68,6 @@ pub struct RawImage {
     pub h: u32,
 }
 
-pub struct RawCaptureImage {
-    pub data: Vec<u8>,
-    pub w: u32,
-    pub h: u32,
-}
 
 #[inline]
 fn get_index(width: u32, x: u32, y: u32) -> usize {
@@ -132,95 +127,6 @@ impl RawImage {
         uint8_raw_to_img(&self)
     }
 }
-
-
-impl RawCaptureImage {
-    pub fn save(&self, path: &str) {
-        let width = self.w;
-        let height = self.h;
-        let data = &self.data;
-
-        let img = ImageBuffer::from_fn(width, height, |x, y| {
-            let index = (y * self.w + x) as usize;
-
-            let b = data[index * 4];
-            let g = data[index * 4 + 1];
-            let r = data[index * 4 + 2];
-
-            image::Rgb([r, g, b])
-            // image::Luma([pixel])
-        });
-
-        img.save(path);
-    }
-
-    pub fn to_RawImage(&self) -> RawImage {
-        // let now = SystemTime::now();
-        let vol = self.w * self.h;
-        let mut data = vec![0.0; vol as usize];
-        for i in 0..self.w as i32 {
-            for j in 0..self.h as i32 {
-                let x = i;
-                let y = self.h as i32 - j - 1;
-                let b: u8 = self.data[((y * self.w as i32 + x) * 4) as usize];
-                let g: u8 = self.data[((y * self.w as i32 + x) * 4 + 1) as usize];
-                let r: u8 = self.data[((y * self.w as i32 + x) * 4 + 2) as usize];
-
-                let gray = r as f32 * 0.2989 + g as f32 * 0.5870 + b as f32 * 0.1140;
-                let new_index = (j * self.w as i32 + i) as usize;
-                data[new_index] = gray;
-            }
-        }
-
-        let im = RawImage {
-            data,
-            w: self.w,
-            h: self.h
-        };
-        // let im = pre_process(im);
-        // No preprocess!
-
-        // info!("preprocess time: {}ms", now.elapsed().unwrap().as_millis());
-        // im.to_gray_image().save("test.png");
-        im
-    }
-    
-    pub fn crop_to_raw_img(&self, rect: &PixelRect) -> RawImage {
-        // let now = SystemTime::now();
-        let vol = rect.width * rect.height;
-        let mut data = vec![0.0; vol as usize];
-        for i in rect.left..rect.left + rect.width {
-            for j in rect.top..rect.top + rect.height {
-                let x = i;
-                let y = self.h as i32 - j - 1;
-                let b: u8 = self.data[((y * self.w as i32 + x) * 4) as usize];
-                let g: u8 = self.data[((y * self.w as i32 + x) * 4 + 1) as usize];
-                let r: u8 = self.data[((y * self.w as i32 + x) * 4 + 2) as usize];
-
-                let gray = r as f32 * 0.2989 + g as f32 * 0.5870 + b as f32 * 0.1140;
-                let new_index = ((j - rect.top) * rect.width + i - rect.left) as usize;
-                data[new_index] = gray;
-            }
-        }
-
-        let im = RawImage {
-            data,
-            w: rect.width as u32,
-            h: rect.height as u32,
-        };
-        // let im = pre_process(im);
-        // No preprocess!
-
-        // info!("preprocess time: {}ms", now.elapsed().unwrap().as_millis());
-        // im.to_gray_image().save("test.png");
-        im
-    }
-
-}
-
-
-// find_window -> capture 
-// capture -> rgb/gray 
 
 
 pub fn encode_wide(s: String) -> Vec<u16> {
