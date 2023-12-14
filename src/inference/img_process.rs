@@ -350,6 +350,83 @@ pub fn run_match_template_contours_speedup(
 }
 
 
+pub fn run_contours_cosine_matching(
+    image: &GrayImage,
+    template_cosine: &Vec<f32>,
+    threshold: f32,
+) -> (i32, i32) {
+    let f_area_cap_gray = image;
+    let f_area_cap_thre = adaptive_threshold(&f_area_cap_gray, 14);
+    let f_area_contours: Vec<contours::Contour<u32>> = imageproc::contours::find_contours(&f_area_cap_thre);
+    
+    let mut f_cnt = 0;
+    let mut rel_x = -1;
+    let mut rel_y = -1;
+
+    let mut best_match = 0.;
+    let mut best_father_bbox = PixelRect {
+        left: 0,
+        top: 0,
+        width: 0,
+        height: 0,
+    };
+
+    // for contour in f_area_contours {
+    for i in 0..f_area_contours.len() {
+        let contour = &f_area_contours[i];
+        let contour_clone = imageproc::contours::Contour {
+            points: contour.points.clone(),
+            border_type: contour.border_type,
+            parent: contour.parent,
+        };
+        let has_parent = contour.parent.is_some();
+        if !has_parent { continue; }
+
+        let father_contour = &f_area_contours[contour.parent.unwrap()];
+        let father_contour_clone = imageproc::contours::Contour {
+            points: father_contour.points.clone(),
+            border_type: father_contour.border_type,
+            parent: father_contour.parent,
+        };
+
+        let contour_feat = ContourFeatures::new(
+            contour_clone,
+            father_contour_clone,
+            has_parent,
+            &f_area_cap_gray
+        );
+        
+        let (cos_simi, _valid) = contour_feat.can_match(&template_cosine, threshold);
+        if contour_feat.contour_have_father == true && _valid {
+            f_cnt += 1;
+
+            // compute the rel x and y
+            
+            // 使用父亲轮廓bbox的计算
+            let father_contour = &f_area_contours[contour.parent.unwrap()];
+            let father_contour = imageproc::contours::Contour {
+                points: father_contour.points.clone(),
+                border_type: father_contour.border_type,
+                parent: father_contour.parent,
+            };
+            let father_contour_bbox = contours_bbox(father_contour);
+
+            rel_y = father_contour_bbox.top;
+            rel_x = father_contour_bbox.left;
+            // rel_y = bbox.top - self.config.info.f_area_position.top;
+            // rel_x = 1;
+            if cos_simi > best_match {
+                best_match = cos_simi;
+                best_father_bbox = father_contour_bbox;
+            }
+
+        }
+        
+    }
+    return (rel_x, rel_y);
+}
+
+
 
 // u8 sRGB to L channel
 pub fn rgb_to_l(image: &RgbImage) -> GrayImage {

@@ -12,6 +12,7 @@ use std::sync::{Arc, Mutex, RwLock};
 
 use crate::common::sleep;
 use crate::inference;
+use crate::inference::img_process::run_contours_cosine_matching;
 use crate::inference::img_process::{run_match_template, rgb_to_l, ContourFeatures};
 use crate::info;
 use crate::{info::PickupInfo, common};
@@ -356,6 +357,9 @@ impl Pickupper {
         };
         let cos_thre = self.config.cosin_thr;
 
+        // text 高度，这里先硬编码成 30 / 72 * info.pickup_y_gap
+        let text_h = (30. / 72. * self.config.info.pickup_y_gap as f64) as u32;
+
         let mut start_time = SystemTime::now();
         let mut full_cnt = 0;
         // let infer_gap_lock = self.config.infer_gap;
@@ -441,74 +445,7 @@ impl Pickupper {
             // f_area_cap_gray.save("farea.jpg").unwrap();
 
             // contour matching 
-            let f_area_cap_thre = adaptive_threshold(&f_area_cap_gray, 14);
-            let f_area_contours: Vec<contours::Contour<u32>> = imageproc::contours::find_contours(&f_area_cap_thre);
-            
-            let mut f_cnt = 0;
-            let mut rel_x = -1;
-            let mut rel_y = -1;
-
-            let mut best_match = 0.;
-            let mut best_father_bbox = PixelRect {
-                left: 0,
-                top: 0,
-                width: 0,
-                height: 0,
-            };
-
-            // for contour in f_area_contours {
-            for i in 0..f_area_contours.len() {
-                let contour = &f_area_contours[i];
-                let contour_clone = imageproc::contours::Contour {
-                    points: contour.points.clone(),
-                    border_type: contour.border_type,
-                    parent: contour.parent,
-                };
-                let has_parent = contour.parent.is_some();
-                if !has_parent { continue; }
-
-                let father_contour = &f_area_contours[contour.parent.unwrap()];
-                let father_contour_clone = imageproc::contours::Contour {
-                    points: father_contour.points.clone(),
-                    border_type: father_contour.border_type,
-                    parent: father_contour.parent,
-                };
-
-                let contour_feat = ContourFeatures::new(
-                    contour_clone,
-                    father_contour_clone,
-                    has_parent,
-                    &f_area_cap_gray
-                );
-                
-                let (cos_simi, _valid) = contour_feat.can_match(&self.f_contour_feat, cos_thre);
-                if contour_feat.contour_have_father == true && _valid {
-                    f_cnt += 1;
-
-                    // compute the rel x and y
-                    
-                    // 使用父亲轮廓bbox的计算
-                    let father_contour = &f_area_contours[contour.parent.unwrap()];
-                    let father_contour = imageproc::contours::Contour {
-                        points: father_contour.points.clone(),
-                        border_type: father_contour.border_type,
-                        parent: father_contour.parent,
-                    };
-                    let father_contour_bbox = inference::img_process::contours_bbox(father_contour);
-
-                    rel_y = father_contour_bbox.top;
-                    rel_x = father_contour_bbox.left;
-                    // rel_y = bbox.top - self.config.info.f_area_position.top;
-                    // rel_x = 1;
-                    if cos_simi > best_match {
-                        best_match = cos_simi;
-                        best_father_bbox = father_contour_bbox;
-                    }
-
-                }
-                
-            }
-            // println!(", rel_y2: {}; {}, {}, {}", rel_y, f_cnt, self.config.info.pickup_y_gap, rel_y-rel_y1);
+            let (rel_x, rel_y) = run_contours_cosine_matching(&f_area_cap_gray, &self.f_contour_feat, cos_thre);
 
             // warn!("temp match time: {}ms", temp_match_time.elapsed().unwrap().as_millis());
             // info!("best_match: {}, f_cnt: {}", best_match, f_cnt);
@@ -519,27 +456,13 @@ impl Pickupper {
                 }
                 full_cnt += 1;
             }
-            if rel_x < 0 || best_match < cos_thre {
+            if rel_x < 0 {
                 // // 说明没有找到，保存全图
                 // if full_cnt % 20 == 0 {
                 //     game_window_cap.save(format!("{}/{}_full.jpg", "./dumps_full", full_cnt)).unwrap();
                 // }
                 // full_cnt += 1;
                 continue;
-            }
-            
-            // 什么勾史代码
-            if true {
-                info!("best_match: {}", best_match);
-                // crop the gray image using best_father_bbox
-                let F_father_cap = crop(&mut f_area_cap_le,
-                    best_father_bbox.left as u32,
-                    best_father_bbox.top as u32,
-                    best_father_bbox.width as u32,
-                    best_father_bbox.height as u32,
-                );
-                // F_father_cap.to_image().save(format!("{}_F_father.jpg", loop_cnt)).unwrap();
-                // f_area_cap_le.save(format!("{}_f_area_cap_le.jpg", loop_cnt)).unwrap();
             }
             
             let infer_time = SystemTime::now();
@@ -556,7 +479,7 @@ impl Pickupper {
                     self.config.info.pickup_x_beg as u32,
                         (self.config.info.f_area_position.top as i32 + y_offset) as u32,
                         self.config.info.pickup_x_end as u32 - self.config.info.pickup_x_beg as u32,
-                        best_father_bbox.height as u32,
+                        text_h
                     );
                 let f_text_cap = DynamicImage::ImageRgb8(f_text_cap.to_image());
                 let f_text_cap_gray: GrayImage;
