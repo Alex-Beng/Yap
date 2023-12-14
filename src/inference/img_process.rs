@@ -427,6 +427,50 @@ pub fn run_contours_cosine_matching(
 }
 
 
+pub fn run_alpha_triangle_matching(
+    image: &GrayImage,
+    offset: u32,
+) -> (i32, i32) {
+    // 首先查找min_value
+    // 没有必要，因为只支持bitblt，而且也不应该在这里做
+    // let mut min_value = 255;
+    // for i in 0..image.width() {
+    //     for j in 0..image.height() {
+    //         let pixel = image.get_pixel(i, j)[0];
+    //         if pixel < min_value {
+    //             min_value = pixel;
+    //         }
+    //     }
+    // }
+    // //
+    // if min_value == 255 {
+    //     return (-1, -1);
+    // }
+    // 实际上就是查找所有像素点不为0的坐标均值
+    let mut x_sum = 0;
+    let mut y_sum = 0;
+    let mut cnt = 0;
+    for i in 0..image.width() {
+        for j in 0..image.height() {
+            let pixel = image.get_pixel(i, j)[0];
+            if pixel != 0 {
+                x_sum += i;
+                y_sum += j;
+                cnt += 1;
+            }
+        }
+    }
+    if cnt == 0 {
+        return (-1, -1);
+    }
+    let x_avg = x_sum / cnt;
+    let y_avg = y_sum / cnt;
+    // 需要减掉offset，即text高度的一半
+    let y_avg = y_avg - offset as u32;
+
+    return  (x_avg as i32, y_avg as i32);
+}
+
 
 // u8 sRGB to L channel
 pub fn rgb_to_l(image: &RgbImage) -> GrayImage {

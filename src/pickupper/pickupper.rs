@@ -12,6 +12,7 @@ use std::sync::{Arc, Mutex, RwLock};
 
 use crate::common::sleep;
 use crate::inference;
+use crate::inference::img_process::run_alpha_triangle_matching;
 use crate::inference::img_process::run_contours_cosine_matching;
 use crate::inference::img_process::{run_match_template, rgb_to_l, ContourFeatures};
 use crate::info;
@@ -384,26 +385,35 @@ impl Pickupper {
             let mut game_window_cap = game_window_cap_rgba.to_rgb8();
             // 获取 alpha 通道图
             let alpha = game_window_cap_rgba.to_rgba8().pixels().map(|p| p[3]).collect::<Vec<u8>>();
-            let alpha: ImageBuffer<Luma<u8>, Vec<_>> = ImageBuffer::from_vec(game_window_cap.width(), game_window_cap.height(), alpha).unwrap();
+            let mut alpha: ImageBuffer<Luma<u8>, Vec<_>> = ImageBuffer::from_vec(game_window_cap.width(), game_window_cap.height(), alpha).unwrap();
             alpha.save("le.jpg");
-            if loop_cnt == 10 {
-                game_window_cap_rgba.save("game_window.png").unwrap();
-                process::exit(0);
-            }
+            
+            
+            // if loop_cnt == 10 {
+            //     game_window_cap_rgba.save("game_window.png").unwrap();
+            //     process::exit(0);
+            // }
 
             // let mut game_window_cap 
             // game_window_cap.save("game_window.jpg").unwrap();
 
             // 改为从window_cap中crop
             let mut f_area_cap = None;
+            let mut f_ares_cap_alpha = None;
             {
                 f_area_cap = Some(crop(&mut game_window_cap, 
                     self.config.info.f_area_position.left as u32,
                     self.config.info.f_area_position.top as u32,
                     self.config.info.f_area_position.right as u32 - self.config.info.f_area_position.left as u32,
                     self.config.info.f_area_position.bottom as u32 - self.config.info.f_area_position.top as u32).to_image());
+                f_ares_cap_alpha = Some(crop(&mut alpha, 
+                    self.config.info.f_area_position.left as u32,
+                    self.config.info.f_area_position.top as u32,
+                    self.config.info.f_area_position.right as u32 - self.config.info.f_area_position.left as u32,
+                    self.config.info.f_area_position.bottom as u32 - self.config.info.f_area_position.top as u32).to_image());
             }
             let f_area_cap = f_area_cap.unwrap();
+            let f_ares_cap_alpha = f_ares_cap_alpha.unwrap();
             
             // 再crop秘境挑战的 
             if self.config.press_y && last_online_challage_time + std::time::Duration::from_secs(1) < SystemTime::now() {
@@ -430,8 +440,7 @@ impl Pickupper {
             }
             
             let f_area_cap = DynamicImage::ImageRgb8(f_area_cap);
-            let mut f_area_cap_le = f_area_cap.clone();
-            // warn!("f_area_cap: w: {}, h: {}", f_area_cap.width(), f_area_cap.height());
+            let f_ares_cap_alpha = GrayImage::from(f_ares_cap_alpha);
             
             let f_area_cap_gray: GrayImage;
             if use_l {
@@ -445,9 +454,12 @@ impl Pickupper {
             // f_area_cap_gray.save("farea.jpg").unwrap();
 
             // contour matching 
-            let (rel_x, rel_y) = run_contours_cosine_matching(&f_area_cap_gray, &self.f_contour_feat, cos_thre);
+            // let (rel_x, rel_y) = run_contours_cosine_matching(&f_area_cap_gray, &self.f_contour_feat, cos_thre);
 
-            // warn!("temp match time: {}ms", temp_match_time.elapsed().unwrap().as_millis());
+            // aplha triangle matching
+            let (rel_x, rel_y) = run_alpha_triangle_matching(&f_ares_cap_alpha, text_h/2);
+
+            warn!("temp match time: {}ms", temp_match_time.elapsed().unwrap().as_millis());
             // info!("best_match: {}, f_cnt: {}", best_match, f_cnt);
             if false {
                 if full_cnt % 20 == 0 {
