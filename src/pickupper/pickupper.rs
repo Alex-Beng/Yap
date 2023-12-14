@@ -4,6 +4,7 @@ use std::collections::HashSet;
 use std::fs::File;
 use std::fs::write;
 use std::io::Read;
+use std::process;
 use std::thread;
 use std::time::SystemTime;
 use std::sync::{Arc, Mutex, RwLock};
@@ -26,10 +27,12 @@ use tract_onnx::prelude::*;
 use serde_json;
 use enigo::*;
 use log::{info, warn, trace};
+use winapi::shared::windef::HWND;
 
 
 pub struct PickupCofig {
     pub info: PickupInfo,
+    pub hwnd: HWND,
     pub bw_path: String,
     pub use_l: bool,
     pub press_y: bool,
@@ -371,7 +374,20 @@ impl Pickupper {
 
             
             // 截一张全屏
-            let mut game_window_cap = capture::capture_absolute_image(&game_win_rect).unwrap();
+            let mut game_window_cap_rgba = DynamicImage::ImageRgba8(capture::capture_absolute_image(self.config.hwnd, &game_win_rect).unwrap());
+            // split it to rgb + alpha 
+            // convert to rgb
+            let mut game_window_cap = game_window_cap_rgba.to_rgb8();
+            // 获取 alpha 通道图
+            let alpha = game_window_cap_rgba.to_rgba8().pixels().map(|p| p[3]).collect::<Vec<u8>>();
+            let alpha: ImageBuffer<Luma<u8>, Vec<_>> = ImageBuffer::from_vec(game_window_cap.width(), game_window_cap.height(), alpha).unwrap();
+            alpha.save("le.jpg");
+            if loop_cnt == 10 {
+                game_window_cap_rgba.save("game_window.png").unwrap();
+                process::exit(0);
+            }
+
+            // let mut game_window_cap 
             // game_window_cap.save("game_window.jpg").unwrap();
 
             // 改为从window_cap中crop

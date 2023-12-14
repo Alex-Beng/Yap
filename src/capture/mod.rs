@@ -213,13 +213,30 @@ unsafe fn get_client_rect_unsafe(hwnd: HWND) -> Result<PixelRect, String> {
 }
 
 #[cfg(windows)]
-unsafe fn unsafe_capture(rect: &PixelRect) -> Result<Vec<u8>, String> {
-    // 这个函数用于设置当前线程的 DPI 感知级别，
-    // DPI_AWARENESS_CONTEXT_SYSTEM_AWARE 表示系统 DPI 感知级别，即不会自动缩放应用程序的界面。
-    // SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_SYSTEM_AWARE);
+unsafe fn unsafe_capture(hwnd: HWND, rect: &PixelRect) -> Result<Vec<u8>, String> {
+    // copy from cvat
+    use winapi::um::winuser::{IsWindow, GetWindowRect};
+    if hwnd == null_mut() {
+        return Err(String::from("窗口句柄失效"));
+    }
+    if IsWindow(hwnd) == 0 {
+        return Err(String::from("无效句柄或指定句柄所指向窗口不存在"));
+    }
+    let rect_winrect = Box::new(WinRect {
+        left: rect.left,
+        top: rect.top,
+        right: rect.left + rect.width,
+        bottom: rect.top + rect.height,
+    });
+    let rect_ptr: *mut WinRect = Box::into_raw(rect_winrect) as *mut WinRect;
+    if GetWindowRect(hwnd, rect_ptr) == 0 {
+        return Err(String::from("无效句柄或指定句柄所指向窗口不存在"));
+    }
+    if GetClientRect(hwnd, rect_ptr) == 0 {
+        return Err(String::from("无效句柄或指定句柄所指向窗口不存在"));
+    }
 
-    let dc_window: HDC = GetDC(null_mut());
-    
+    let dc_window: HDC = GetDC(hwnd);
     
     let dc_mem: HDC = CreateCompatibleDC(dc_window);
     if dc_mem.is_null() {
@@ -240,8 +257,8 @@ unsafe fn unsafe_capture(rect: &PixelRect) -> Result<Vec<u8>, String> {
         rect.width,
         rect.height,
         dc_window,
-        rect.left,
-        rect.top,
+        0,
+        0,
         SRCCOPY
     );
     if result == 0 {
@@ -315,15 +332,15 @@ unsafe fn unsafe_capture(rect: &PixelRect) -> Result<Vec<u8>, String> {
 }
 
 #[cfg(windows)]
-pub fn capture_absolute(rect: &PixelRect) -> Result<Vec<u8>, String> {
+pub fn capture_absolute(hwnd: HWND, rect: &PixelRect) -> Result<Vec<u8>, String> {
     unsafe {
-        unsafe_capture(&rect)
+        unsafe_capture(hwnd, &rect)
     }
 }
 
 #[cfg(windows)]
-pub fn capture_absolute_image(rect: &PixelRect) -> Result<image::RgbImage, String> {
-    let raw: Vec<u8> = match capture_absolute(rect) {
+pub fn capture_absolute_image(hwnd: HWND, rect: &PixelRect) -> Result<image::RgbaImage, String> {
+    let raw: Vec<u8> = match capture_absolute(hwnd, rect) {
         Err(s) => {
             return Err(s);
         },
@@ -333,7 +350,7 @@ pub fn capture_absolute_image(rect: &PixelRect) -> Result<image::RgbImage, Strin
     let height = rect.height as u32;
     let width = rect.width as u32;
 
-    let img: ImageBuffer<image::Rgb<u8>, Vec<u8>> = ImageBuffer::from_fn(
+    let img: ImageBuffer<image::Rgba<u8>, Vec<u8>> = ImageBuffer::from_fn(
         width,
         height,
         move |x, y| {
@@ -341,7 +358,8 @@ pub fn capture_absolute_image(rect: &PixelRect) -> Result<image::RgbImage, Strin
             let b = raw[((y * width + x) * 4 + 0) as usize];
             let g = raw[((y * width + x) * 4 + 1) as usize];
             let r = raw[((y * width + x) * 4 + 2) as usize];
-            image::Rgb([r, g, b])
+            let a = raw[((y * width + x) * 4 + 3) as usize];
+            image::Rgba([r, g, b, a])
         }
     );
 

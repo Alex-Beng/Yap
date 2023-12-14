@@ -284,7 +284,7 @@ fn main() {
     let rect = capture::get_client_rect(hwnd).unwrap();
     info!("left = {}, top = {}, width = {}, height = {}", rect.left, rect.top, rect.width, rect.height);
     
-    capture::capture_absolute_image(&rect).unwrap().save("test.png").unwrap();
+    capture::capture_absolute_image(hwnd, &rect).unwrap().save("test.png").unwrap();
 
 
     let info: info::PickupInfo;
@@ -322,6 +322,7 @@ fn main() {
 
     let pk_config = PickupCofig {
         info,
+        hwnd,
         bw_path: String::from("."),
         use_l,
         press_y,
