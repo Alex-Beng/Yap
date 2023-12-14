@@ -16,6 +16,7 @@ pub struct PickupInfo {
     pub f_area_position: PixelRectBound,
     pub f_template_w: u32,
     pub f_template_h: u32,
+    pub f_alpha_left: u32,
 
     pub pickup_x_beg: u32,
     pub pickup_x_end: u32,

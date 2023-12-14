@@ -386,7 +386,7 @@ impl Pickupper {
             // 获取 alpha 通道图
             let alpha = game_window_cap_rgba.to_rgba8().pixels().map(|p| p[3]).collect::<Vec<u8>>();
             let mut alpha: ImageBuffer<Luma<u8>, Vec<_>> = ImageBuffer::from_vec(game_window_cap.width(), game_window_cap.height(), alpha).unwrap();
-            alpha.save("le.jpg");
+            // alpha.save("le.jpg");
             
             
             // if loop_cnt == 10 {
@@ -407,13 +407,16 @@ impl Pickupper {
                     self.config.info.f_area_position.right as u32 - self.config.info.f_area_position.left as u32,
                     self.config.info.f_area_position.bottom as u32 - self.config.info.f_area_position.top as u32).to_image());
                 f_ares_cap_alpha = Some(crop(&mut alpha, 
-                    self.config.info.f_area_position.left as u32,
+                    self.config.info.f_alpha_left as u32,
                     self.config.info.f_area_position.top as u32,
-                    self.config.info.f_area_position.right as u32 - self.config.info.f_area_position.left as u32,
+                    self.config.info.f_area_position.right as u32 - self.config.info.f_alpha_left as u32,
                     self.config.info.f_area_position.bottom as u32 - self.config.info.f_area_position.top as u32).to_image());
             }
             let f_area_cap = f_area_cap.unwrap();
             let f_ares_cap_alpha = f_ares_cap_alpha.unwrap();
+
+            f_ares_cap_alpha.save("le.jpg").unwrap();
+            alpha.save("le2.jpg").unwrap();
             
             // 再crop秘境挑战的 
             if self.config.press_y && last_online_challage_time + std::time::Duration::from_secs(1) < SystemTime::now() {
@@ -459,7 +462,7 @@ impl Pickupper {
             // aplha triangle matching
             let (rel_x, rel_y) = run_alpha_triangle_matching(&f_ares_cap_alpha, text_h/2);
 
-            warn!("temp match time: {}ms", temp_match_time.elapsed().unwrap().as_millis());
+            // warn!("temp match time: {}ms", temp_match_time.elapsed().unwrap().as_millis());
             // info!("best_match: {}, f_cnt: {}", best_match, f_cnt);
             if false {
                 if full_cnt % 20 == 0 {

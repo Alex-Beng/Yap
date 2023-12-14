@@ -450,6 +450,7 @@ pub fn run_alpha_triangle_matching(
     let mut x_sum = 0;
     let mut y_sum = 0;
     let mut cnt = 0;
+    let mut pixel_sum = 0;
     for i in 0..image.width() {
         for j in 0..image.height() {
             let pixel = image.get_pixel(i, j)[0];
@@ -457,6 +458,7 @@ pub fn run_alpha_triangle_matching(
                 x_sum += i;
                 y_sum += j;
                 cnt += 1;
+                pixel_sum += pixel as u32;
             }
         }
     }
@@ -465,6 +467,9 @@ pub fn run_alpha_triangle_matching(
     }
     let x_avg = x_sum / cnt;
     let y_avg = y_sum / cnt;
+    let pixel_avg = pixel_sum as f32 / cnt as f32;
+
+    info!("pixel_avg = {}", pixel_avg);
     // 需要减掉offset，即text高度的一半
     let y_avg = y_avg - offset as u32;
 

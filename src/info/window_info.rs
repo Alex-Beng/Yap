@@ -12,6 +12,8 @@ pub struct WindowInfo {
     // 模板宽高
     pub f_template_w: f64,
     pub f_template_h: f64,
+    // 使用alpha通道时，左边界的x坐标
+    pub f_area_left_alpha: f64,
     
     // 拾取框的x坐标范围
     pub pickup_x_beg: f64,
@@ -77,6 +79,7 @@ impl WindowInfo {
             f_area_position: convert_rect(&self.f_area_pos), 
             f_template_w: convert_x(self.f_template_w) as u32,
             f_template_h: convert_y(self.f_template_h) as u32,
+            f_alpha_left: convert_x(self.f_area_left_alpha) as u32,
 
             pickup_x_beg: convert_x(self.pickup_x_beg) as u32,
             pickup_x_end: convert_x(self.pickup_x_end) as u32,
@@ -109,6 +112,7 @@ pub const WINDOW_16_9: WindowInfo = WindowInfo {
     f_area_pos: Rect(340.0, 1157.0, 720.0, 1090.0),
     f_template_w: 56.0,
     f_template_h: 38.0,
+    f_area_left_alpha: 1140.0,
     
     pickup_x_beg: 1218.0,
     pickup_x_end: 1495.0,
@@ -138,6 +142,7 @@ pub const WINDOW_16_10: WindowInfo = WindowInfo {
     f_area_pos: Rect(502.0, 1540.0, 1057.0, 1454.0),
     f_template_w: 75.0,
     f_template_h: 50.0,
+    f_area_left_alpha: 1522.0,
     
     pickup_x_beg: 1631.0,
     pickup_x_end: 1997.0,
