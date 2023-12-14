@@ -427,7 +427,7 @@ pub fn capture_absolute_image(rect: &PixelRect) -> Result<image::RgbImage, Strin
     let height = rect.height as u32;
     let width = rect.width as u32;
 
-    let mut img: ImageBuffer<image::Rgb<u8>, Vec<u8>> = ImageBuffer::from_fn(
+    let img: ImageBuffer<image::Rgb<u8>, Vec<u8>> = ImageBuffer::from_fn(
         width,
         height,
         move |x, y| {
