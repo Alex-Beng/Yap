@@ -264,8 +264,8 @@ impl Pickupper {
                         enigo_online.key_up(enigo::Key::Layout('y'));
 
                         // move mouse to the right position
-                        enigo_online.mouse_move_to(online_confirm_x as i32, online_confirm_y as i32);
-                        sleep(50);
+                        // enigo_online.mouse_move_to(online_confirm_x as i32, online_confirm_y as i32);
+                        // sleep(50);
 
                         // click
                         // enigo_online.mouse_click(enigo::MouseButton::Left);
