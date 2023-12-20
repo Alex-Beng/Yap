@@ -181,7 +181,7 @@ unsafe fn get_client_rect_unsafe(hwnd: HWND) -> Result<PixelRect, String> {
             break;
         }
         warn!("GetClientRect failed with {}", GetLastError());
-        warn!("Rect is {:?}", rect);
+        // warn!("Rect is {:?}", rect);
         sleep(1000);
     };
     
