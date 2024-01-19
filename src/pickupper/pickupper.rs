@@ -12,7 +12,7 @@ use std::sync::{Arc, Mutex, RwLock};
 
 use crate::common::sleep;
 use crate::inference;
-use crate::inference::img_process::run_alpha_triangle_matching;
+use crate::inference::img_process::{run_alpha_triangle_matching, run_alpha_contours_cosine_matching};
 use crate::inference::img_process::run_contours_cosine_matching;
 use crate::inference::img_process::{run_match_template, rgb_to_l, ContourFeatures};
 use crate::info;
@@ -401,7 +401,7 @@ impl Pickupper {
             let mut f_area_cap = None;
             let mut f_ares_cap_alpha = None;
             {
-                f_area_cap = Some(crop(&mut game_window_cap, 
+                f_area_cap = Some(crop(&mut alpha, 
                     self.config.info.f_area_position.left as u32,
                     self.config.info.f_area_position.top as u32,
                     self.config.info.f_area_position.right as u32 - self.config.info.f_area_position.left as u32,
@@ -442,25 +442,28 @@ impl Pickupper {
                 tx_tp.send(tp_botton_roi).unwrap();
             }
             
-            let f_area_cap = DynamicImage::ImageRgb8(f_area_cap);
+            // let f_area_cap = DynamicImage::ImageRgb8(f_area_cap);
+            // f_area也是用alpha通道
+            let f_area_cap = GrayImage::from(f_area_cap);
             let f_ares_cap_alpha = GrayImage::from(f_ares_cap_alpha);
             
-            let f_area_cap_gray: GrayImage;
-            if use_l {
-                f_area_cap_gray = rgb_to_l(&f_area_cap.to_rgb8());
-            }
-            else {
-                f_area_cap_gray = grayscale(&f_area_cap);
-            }
+            // let f_area_cap_gray: GrayImage;
+            // if use_l {
+            //     f_area_cap_gray = rgb_to_l(&f_area_cap.to_rgb8());
+            // }
+            // else {
+            //     f_area_cap_gray = grayscale(&f_area_cap);
+            // }
+            let f_area_cap_gray = f_area_cap;
 
             let temp_match_time = SystemTime::now();
             // f_area_cap_gray.save("farea.jpg").unwrap();
 
             // contour matching 
-            // let (rel_x, rel_y) = run_contours_cosine_matching(&f_area_cap_gray, &self.f_contour_feat, cos_thre);
+            let (rel_x, rel_y, _, cont_height) = run_alpha_contours_cosine_matching(&f_area_cap_gray, &self.f_contour_feat, cos_thre);
 
             // aplha triangle matching
-            let (rel_x, rel_y) = run_alpha_triangle_matching(&f_ares_cap_alpha, text_h/2);
+            // let (rel_x, rel_y) = run_alpha_triangle_matching(&f_ares_cap_alpha, text_h/2);
 
             // warn!("temp match time: {}ms", temp_match_time.elapsed().unwrap().as_millis());
             // info!("best_match: {}, f_cnt: {}", best_match, f_cnt);
@@ -494,7 +497,7 @@ impl Pickupper {
                     self.config.info.pickup_x_beg as u32,
                         (self.config.info.f_area_position.top as i32 + y_offset) as u32,
                         self.config.info.pickup_x_end as u32 - self.config.info.pickup_x_beg as u32,
-                        text_h
+                        cont_height as u32
                     );
                 let f_text_cap = DynamicImage::ImageRgb8(f_text_cap.to_image());
                 let f_text_cap_gray: GrayImage;
@@ -541,6 +544,7 @@ impl Pickupper {
                 // dump 不认识的和需要捡的
                 if dump && inference_result != "" && !self.word2pick.contains_key(&inference_result) || 
                 dump && self.word2pick.contains_key(&inference_result) && self.word2pick[&inference_result] {
+                // if dump {
                     // remove ? / : * " < > | \ / in file name
                     let inference_result = inference_result.replace("?", "").replace("/", "").replace(":", "").replace("*", "").replace("\"", "").replace("<", "").replace(">", "").replace("|", "").replace("\\", "").replace("/", "");
                     f_text_cap.save(format!("{}/{}_{}_{}_raw.jpg", dump_path, cnt, yi, inference_result)).unwrap();

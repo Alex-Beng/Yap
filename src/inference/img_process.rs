@@ -228,12 +228,12 @@ impl ContourFeatures {
     pub fn to_features_vec(&self) -> Vec<f32> {
         let mut ans = Vec::new();
         // ans.push(self.contour_have_father as u32 as f32);
-        // ans.push(self.bbox_wh_ratio / 0.7);
+        ans.push(self.bbox_wh_ratio / 0.7);
         // ans.push(self.area_ratio / 0.010997644);
-        ans.push(self.bbox_area_avg_pixel / 255.0 /  0.7003782);
-        ans.push(self.contour_points_avg_pixel / 255.0 /  0.94793975);
+        // ans.push(self.bbox_area_avg_pixel / 255.0 /  0.7003782);
+        // ans.push(self.contour_points_avg_pixel / 255.0 /  0.94793975);
         // ans.push(self.contour_len2_area_ratio / 20.0 /  0.04316346);
-        ans.push(self.father_bbox_wh_ratio / 1.21875);
+        // ans.push(self.father_bbox_wh_ratio / 1.21875);
         ans
     }
 
@@ -425,6 +425,60 @@ pub fn run_contours_cosine_matching(
     }
     return (rel_x, rel_y);
 }
+
+// 在alpha通道进行F的轮廓匹配
+// xjb弄吧，已经是依托了，这样应该已经最优了
+pub fn run_alpha_contours_cosine_matching(
+    image: &GrayImage,
+    template_cosine: &Vec<f32>,
+    threshold: f32,
+) -> (i32, i32, i32, i32) {
+    let f_area_cap_gray = image;
+    let f_area_cap_thre = adaptive_threshold(&f_area_cap_gray, 14);
+    let f_area_contours: Vec<contours::Contour<u32>> = imageproc::contours::find_contours(&f_area_cap_thre);
+
+    
+    let mut f_cnt = 0;
+    let mut rel_x = -1;
+    let mut rel_y = -1;
+
+    let mut best_father_bbox = PixelRect {
+        left: 0,
+        top: 0,
+        width: 0,
+        height: 0,
+    };
+    // info!("f_area_contours.len() = {}", f_area_contours.len());
+
+    // for contour in f_area_contours {
+    for i in 0..f_area_contours.len() {
+        let contour = &f_area_contours[i];
+        if contour.parent.is_some() { continue; }
+        let contour_clone = contours::Contour {
+            points: contour.points.clone(),
+            border_type: contour.border_type,
+            parent: contour.parent,
+        };
+        let contours_bbox = contours_bbox(contour_clone);
+        
+
+        let contour_bbox_wh_ratio = contours_bbox.width as f32 / contours_bbox.height as f32;
+        // info!("contour_bbox_wh_ratio = {}", contour_bbox_wh_ratio);
+        // TODO: rm magic number
+        if (contour_bbox_wh_ratio - 1.25).abs() > 0.1 {
+            continue;
+        }
+        // info!("contours_bbox = {:?}", contours_bbox);
+        f_cnt += 1;
+        // compute the rel x and y
+        rel_y = contours_bbox.top;
+        rel_x = contours_bbox.left;
+        best_father_bbox = contours_bbox;
+    }
+    // info!("bbx: {:?}, fcnt: {}", best_father_bbox, f_cnt);
+    return (rel_x, rel_y, best_father_bbox.width as i32, best_father_bbox.height as i32);
+}
+
 
 
 pub fn run_alpha_triangle_matching(
