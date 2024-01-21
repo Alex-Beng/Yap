@@ -439,6 +439,8 @@ pub fn run_alpha_triangle_matching(
     let mut rel_x = -1;
     let mut rel_y = -1;
 
+    let mut max_area = 0;
+
 
     for contour in f_area_contours {
         // 小三角没有父母
@@ -451,9 +453,14 @@ pub fn run_alpha_triangle_matching(
         if (cont_wh_ratio-0.5).abs() > 0.1 { continue; }
 
         // 算了，直接视为有效
+
         f_cnt += 1;
-        rel_x = bbox.left;
-        rel_y = bbox.top;
+
+        if bbox.width * bbox.height > max_area {
+            max_area = bbox.width * bbox.height;
+            rel_x = bbox.left;
+            rel_y = bbox.top;
+        }    
     }
 
     (rel_x, rel_y - offset as i32)
