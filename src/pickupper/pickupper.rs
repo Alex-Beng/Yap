@@ -461,6 +461,7 @@ impl Pickupper {
 
             // aplha triangle matching
             let (rel_x, rel_y) = run_alpha_triangle_matching(&f_ares_cap_alpha, text_h/2);
+            // f_ares_cap_alpha.save("f_ares_cap_alpha.jpg").unwrap();
 
             // warn!("temp match time: {}ms", temp_match_time.elapsed().unwrap().as_millis());
             // info!("best_match: {}, f_cnt: {}", best_match, f_cnt);

@@ -431,49 +431,32 @@ pub fn run_alpha_triangle_matching(
     image: &GrayImage,
     offset: u32,
 ) -> (i32, i32) {
-    // 首先查找min_value
-    // 没有必要，因为只支持bitblt，而且也不应该在这里做
-    // let mut min_value = 255;
-    // for i in 0..image.width() {
-    //     for j in 0..image.height() {
-    //         let pixel = image.get_pixel(i, j)[0];
-    //         if pixel < min_value {
-    //             min_value = pixel;
-    //         }
-    //     }
-    // }
-    // //
-    // if min_value == 255 {
-    //     return (-1, -1);
-    // }
-    // 实际上就是查找所有像素点不为0的坐标均值
-    let mut x_sum = 0;
-    let mut y_sum = 0;
-    let mut cnt = 0;
-    let mut pixel_sum = 0;
-    for i in 0..image.width() {
-        for j in 0..image.height() {
-            let pixel = image.get_pixel(i, j)[0];
-            if pixel != 0 {
-                x_sum += i;
-                y_sum += j;
-                cnt += 1;
-                pixel_sum += pixel as u32;
-            }
-        }
-    }
-    if cnt == 0 {
-        return (-1, -1);
-    }
-    let x_avg = x_sum / cnt;
-    let y_avg = y_sum / cnt;
-    let pixel_avg = pixel_sum as f32 / cnt as f32;
+    let f_area_cap_gray = image;
+    let f_area_cap_thre = adaptive_threshold(&f_area_cap_gray, 14);
+    let f_area_contours: Vec<contours::Contour<u32>> = imageproc::contours::find_contours(&f_area_cap_thre);
+    
+    let mut f_cnt = 0;
+    let mut rel_x = -1;
+    let mut rel_y = -1;
 
-    info!("pixel_avg = {}", pixel_avg);
-    // 需要减掉offset，即text高度的一半
-    let y_avg = y_avg - offset as u32;
 
-    return  (x_avg as i32, y_avg as i32);
+    for contour in f_area_contours {
+        // 小三角没有父母
+        if contour.parent.is_some() { continue; }
+
+        let bbox = contours_bbox(contour);
+
+        // 小三角的宽高比约为 1:2
+        let cont_wh_ratio = bbox.width as f32 / bbox.height as f32;
+        if (cont_wh_ratio-0.5).abs() > 0.1 { continue; }
+
+        // 算了，直接视为有效
+        f_cnt += 1;
+        rel_x = bbox.left;
+        rel_y = bbox.top;
+    }
+
+    (rel_x, rel_y - offset as i32)
 }
 
 
