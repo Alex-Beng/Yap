@@ -466,6 +466,41 @@ pub fn run_alpha_triangle_matching(
     (rel_x, rel_y - offset as i32)
 }
 
+// 使用最初版本的直接统计的方法
+pub fn run_naive_alpha_triangle_matching(
+    image: &GrayImage,
+    offset: u32,
+) -> (i32, i32) {
+    // 实际上就是查找所有像素点不为0的坐标均值
+    let mut x_sum = 0;
+    let mut y_sum = 0;
+    let mut cnt = 0;
+    let mut pixel_sum = 0;
+    for i in 0..image.width() {
+        for j in 0..image.height() {
+            let pixel = image.get_pixel(i, j)[0];
+            if pixel != 0 {
+                x_sum += i;
+                y_sum += j;
+                cnt += 1;
+                pixel_sum += pixel as u32;
+            }
+        }
+    }
+    if cnt == 0 {
+        return (-1, -1);
+    }
+    let x_avg = x_sum / cnt;
+    let y_avg = y_sum / cnt;
+    let pixel_avg = pixel_sum as f32 / cnt as f32;
+
+    info!("pixel_avg = {}", pixel_avg);
+    // 需要减掉offset，即text高度的一半
+    let y_avg = y_avg - offset as u32;
+
+    return  (x_avg as i32, y_avg as i32);
+}
+
 
 // u8 sRGB to L channel
 pub fn rgb_to_l(image: &RgbImage) -> GrayImage {

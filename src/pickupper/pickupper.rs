@@ -14,6 +14,7 @@ use crate::common::sleep;
 use crate::inference;
 use crate::inference::img_process::run_alpha_triangle_matching;
 use crate::inference::img_process::run_contours_cosine_matching;
+use crate::inference::img_process::run_naive_alpha_triangle_matching;
 use crate::inference::img_process::{run_match_template, rgb_to_l, ContourFeatures};
 use crate::info;
 use crate::{info::PickupInfo, common};
@@ -460,7 +461,10 @@ impl Pickupper {
             // let (rel_x, rel_y) = run_contours_cosine_matching(&f_area_cap_gray, &self.f_contour_feat, cos_thre);
 
             // aplha triangle matching
-            let (rel_x, rel_y) = run_alpha_triangle_matching(&f_ares_cap_alpha, text_h/2);
+            // let (rel_x, rel_y) = run_alpha_triangle_matching(&f_ares_cap_alpha, text_h/2);
+            
+            // rollback to the most naive version
+            let (rel_x, rel_y) = run_naive_alpha_triangle_matching(&f_ares_cap_alpha, text_h/2);
             // f_ares_cap_alpha.save("f_ares_cap_alpha.jpg").unwrap();
 
             // warn!("temp match time: {}ms", temp_match_time.elapsed().unwrap().as_millis());
