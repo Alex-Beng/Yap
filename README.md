@@ -65,7 +65,7 @@ Which may be the best open source pickupper in terms of performance, usability a
 
 目前有两种release，一种是由github actions自动构建的nightly版本，一种是手动构建的release版本。前者可能会有bug，后者较为稳定。
 
-PS：可以使用nightly版本帮助debug。
+PS：可以使用nightly版本帮助debug。srds，作者已经懒得发手工构建的版本了，直接下最新的nightly即可。
 
 1. 点击[此处](https://github.com/Alex-Beng/Yap/releases)下载release压缩包，解压获得`yap.exe`应用。
 
