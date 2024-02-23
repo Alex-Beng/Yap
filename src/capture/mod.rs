@@ -1,6 +1,6 @@
 #[cfg(windows)] extern crate winapi;
 use std::io::Error;
-use std::ffi::{OsStr};
+use std::ffi::OsStr;
 use std::iter::once;
 use std::os::windows::ffi::OsStrExt;
 use std::ptr::null_mut;
@@ -33,7 +33,7 @@ use winapi::um::wingdi::{
     BITMAPINFO,
     DIB_RGB_COLORS,
 };
-use winapi::ctypes::{c_void};
+use winapi::ctypes::c_void;
 use winapi::um::winbase::{GlobalAlloc, GHND, GlobalLock};
 
 use image::{ImageBuffer, GrayImage};

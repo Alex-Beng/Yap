@@ -624,7 +624,7 @@ impl Pickupper {
         let f_inter = *self.config.f_inter.read().unwrap();
         let f_gap = *self.config.f_gap.read().unwrap();
         let scroll_gap = *self.config.scroll_gap.read().unwrap();
-        let f_truly_key = self.config.pick_key;
+        let f_truly_key = enigo::Key::Layout(self.config.pick_key.to_ascii_lowercase());
 
         // 规划的最终动作
         // 0: do F
@@ -669,14 +669,14 @@ impl Pickupper {
                 // copy from logi macro
                 self.enigo.mouse_scroll_y(1);
                 sleep(10);
-                self.enigo.key_down(enigo::Key::Layout(f_truly_key));
+                self.enigo.key_down(f_truly_key);
                 sleep(10);
-                self.enigo.key_up(enigo::Key::Layout(f_truly_key));
+                self.enigo.key_up(f_truly_key);
                 sleep(10);
                 self.enigo.mouse_scroll_y(-1);
-                self.enigo.key_down(enigo::Key::Layout(f_truly_key));
+                self.enigo.key_down(f_truly_key);
                 sleep(10);
-                self.enigo.key_up(enigo::Key::Layout(f_truly_key));
+                self.enigo.key_up(f_truly_key);
             }
             return;
         }
@@ -767,10 +767,10 @@ impl Pickupper {
 
         for op in ops {
             if op == 0 {
-                self.enigo.key_down(enigo::Key::Layout(f_truly_key));
+                self.enigo.key_down(f_truly_key);
                 // sleep(50);
                 sleep(f_inter);
-                self.enigo.key_up(enigo::Key::Layout(f_truly_key));
+                self.enigo.key_up(f_truly_key);
                 // sleep(90);
                 sleep(f_gap);
             }
