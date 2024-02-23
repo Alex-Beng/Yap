@@ -171,7 +171,7 @@ fn main() {
     let mut pick_key_json = pick_key;
     let mut uid_mask_on = true;
     let mut press_y = true;
-    let config_path = Path::new("./config.json");
+    let config_path = env::current_exe().unwrap().parent().unwrap().to_path_buf().join("config.json");
     if config_path.exists() {
         let config = fs::read_to_string(config_path).unwrap();
         let config: serde_json::Value = serde_json::from_str(&config).unwrap();
@@ -264,6 +264,7 @@ fn main() {
             warn!("未找到原神窗口，尝试寻找云·原神");
             match capture::find_window_cloud() {
                 Ok(h) => {
+                    info!("已成功查找到云·原神窗口");
                     is_cloud = true;
                     h
                 },
@@ -409,6 +410,7 @@ fn main() {
                     // warn!("未找到原神窗口，尝试寻找云·原神");
                     match capture::find_window_cloud() {
                         Ok(h) => {
+                            info!("已成功查找到云·原神窗口");
                             h
                         },
                         Err(_) => {
