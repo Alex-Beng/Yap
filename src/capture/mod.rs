@@ -33,7 +33,7 @@ use winapi::um::wingdi::{
     BITMAPINFO,
     DIB_RGB_COLORS,
 };
-use winapi::ctypes::{c_void};
+use winapi::ctypes::c_void;
 use winapi::um::winbase::{GlobalAlloc, GHND, GlobalLock};
 
 use image::{ImageBuffer, GrayImage};

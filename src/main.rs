@@ -122,6 +122,9 @@ fn main() {
             .help("是否自动点击传送"))
         .get_matches();
     
+    //设置软件工作目录，避免下面未使用 PathBuf 的路径使用错误
+    let _ = env::set_current_dir(env::current_exe().unwrap().parent().unwrap());
+
     let dump: bool = matches.is_present("dump");
     let dump_path = matches.value_of("dump").unwrap_or("./dumps/");
     let cnt:u32 = matches.value_of("dump_idx").unwrap_or("0").parse::<u32>().unwrap();
@@ -324,7 +327,7 @@ fn main() {
     let pk_config = PickupCofig {
         info,
         hwnd,
-        bw_path: String::from("."),
+        bw_path: env::current_exe().unwrap().parent().unwrap().to_string_lossy().to_string(),
         use_l,
         press_y,
         dump,
