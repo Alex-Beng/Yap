@@ -1,4 +1,5 @@
 #[cfg(windows)] extern crate winapi;
+use std::io::Error;
 use std::ffi::OsStr;
 use std::iter::once;
 use std::os::windows::ffi::OsStrExt;
