@@ -1,4 +1,5 @@
 extern crate winres;
+use winres::VersionInfo;
 
 fn main() {
     // only run if target os is windows
