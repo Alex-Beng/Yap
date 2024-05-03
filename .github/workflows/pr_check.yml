@@ -15,6 +15,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          rust-version: 1.72.0
+          override: true
 
       - name: cargo check
         run: cargo check
