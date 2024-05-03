@@ -28,7 +28,7 @@ rand = "0.8"
 
 
 [target.'cfg(windows)'.dependencies]
-winapi = { version = "0.3.9", features = ["winuser", "winbase", "wingdi", "winnt", "securitybaseapi", "libloaderapi", "shellscalingapi"] }
+winapi = { version = "0.3.9", features = ["errhandlingapi", "winuser", "winbase", "wingdi", "winnt", "securitybaseapi", "libloaderapi", "shellscalingapi"] }
 
 # always use target build-dependencies for winres so that
 # it won't get pulled for non-windows OSs (saves them resources)
