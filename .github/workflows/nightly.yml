@@ -17,11 +17,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      - name: Setup Rust
-        uses: actions/setup-rust@v1
-        with:
-          rust-version: 1.72.0
-          override: true
+      - name: Setup Rust Toolchain
+        run: rustup toolchain install 1.72.0
       
       - name: cargo check
         run: cargo check
