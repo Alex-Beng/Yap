@@ -17,3 +17,4 @@ __pycache__
 config.json
 Cargo.lock
 /.idea
+*.ico
