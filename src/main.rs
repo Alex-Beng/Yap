@@ -1,56 +1,38 @@
-use std::io::stdin;
 use std::path::Path;
-use std::time::{Duration, Instant, SystemTime};
 use std::env;
 use std::f32;
 use std::fs;
-use std::path::PathBuf;
 use std::sync::{Arc, Mutex, RwLock};
 use std::ptr::null_mut;
-use std::ffi::OsStr;
-use std::iter::once;
-use std::os::windows::ffi::OsStrExt;
 
 use enigo::MouseControllable;
 use yap::capture;
 use yap::common::{self, sleep};
-use yap::inference::img_process::rgb_to_l;
 use yap::info;
-use yap::pickupper::pickupper::{Pickupper, PickupCofig};
+use yap::pickupper::pickup::{Pickupper, PickupCofig};
 
-use hotkey;
 use rand::{self, Rng};
 
-use image::imageops::grayscale;
-use image::{DynamicImage, ImageBuffer, Pixel};
-use imageproc::template_matching;
-
-use image::{open, GenericImage, GrayImage, Luma, Rgb, RgbImage};
-use imageproc::definitions::Image;
-use imageproc::drawing::draw_hollow_rect_mut;
-use imageproc::map::map_colors;
-use imageproc::rect::Rect;
-use imageproc::template_matching::{find_extremes, match_template, MatchTemplateMethod};
-
-use winapi::um::winuser::{SetForegroundWindow, GetDpiForSystem, SetThreadDpiAwarenessContext, ShowWindow, SW_SHOW, SW_RESTORE, GetSystemMetrics, SetProcessDPIAware, GetDpiForWindow, SM_CXSCREEN, SM_CYSCREEN, SetTimer};
+use winapi::um::winuser::{SetForegroundWindow, ShowWindow, SW_SHOW, SW_RESTORE};
 use winapi::um::shellscalingapi::SetProcessDpiAwareness;
 use winapi::um::libloaderapi::GetModuleHandleW;
-use winapi::um::wingdi::{CreateSolidBrush, RGB, SetTextColor, CreateFontW};
+use winapi::um::wingdi::{CreateSolidBrush, RGB, SetTextColor};
 use winapi::um::winuser::{
-    CreateWindowExW, DefWindowProcW, GetDC, GetDesktopWindow, GetWindowRect, ReleaseDC,
+    CreateWindowExW, DefWindowProcW, ReleaseDC,
     SetLayeredWindowAttributes, UpdateWindow, WS_EX_LAYERED, WS_EX_TOPMOST,
     WS_POPUP, WM_PAINT, WM_CLOSE, WM_DESTROY, WM_ERASEBKGND, WM_NCHITTEST, WM_SIZE, WNDCLASSW,
-    PAINTSTRUCT, RegisterClassW, LWA_ALPHA, MSG, GetMessageW, TranslateMessage, DispatchMessageW, BeginPaint, DT_CENTER, DT_SINGLELINE, DT_VCENTER, DrawTextW, EndPaint, PostQuitMessage, HTCAPTION, InvalidateRect, LWA_COLORKEY, DT_CALCRECT, FillRect, GetWindowLongW, GWL_EXSTYLE, WS_EX_TOOLWINDOW, SetWindowLongW, SetWindowLongPtrW, WS_DISABLED, FindWindowW, SendMessageW, WS_EX_APPWINDOW,
-     
+    PAINTSTRUCT, RegisterClassW,  MSG, GetMessageW, TranslateMessage, DispatchMessageW, BeginPaint, 
+    DT_SINGLELINE, DrawTextW, EndPaint, PostQuitMessage, HTCAPTION, InvalidateRect, 
+    LWA_COLORKEY, DT_CALCRECT, FillRect, GetWindowLongW, GWL_EXSTYLE, WS_EX_TOOLWINDOW, SetWindowLongW, 
 };
-use winapi::shared::windef::{RECT, HWND, HBRUSH, HDC, POINT};
+use winapi::shared::windef::{RECT, HWND, HBRUSH, POINT};
 use winapi::shared::minwindef::{LPARAM, LRESULT, WPARAM};
 
 
 use clap::{Arg, App};
 
 use env_logger::{Env, Builder, Target};
-use log::{info, LevelFilter, warn};
+use log::{info, warn};
 
 
 
@@ -287,6 +269,7 @@ fn main() {
     common::sleep(1000);
 
     // get windows size
+    let hwnd = common::WindowHandle::new(hwnd).unwrap();
     let rect = capture::get_client_rect(hwnd).unwrap();
     info!("left = {}, top = {}, width = {}, height = {}", rect.left, rect.top, rect.width, rect.height);
     
@@ -359,7 +342,7 @@ fn main() {
 
     // 创建UID的遮罩窗口
     if uid_mask_on {
-        let uid_handle = std::thread::spawn(move || {
+        let _uid_handle = std::thread::spawn(move || {
             // 注册窗口类
             let class_name = "FloatingWindowClass".to_string();
             let class_name2 = "FloatingWindowClass".to_string();
@@ -449,7 +432,7 @@ fn main() {
     }
 
     // 监听快捷键
-    let hotkey_handle = std::thread::spawn(move || {
+    let _hotkey_handle = std::thread::spawn(move || {
         let mut hk = hotkey::Listener::new();
         let do_pk_signal: Arc<Mutex<bool>> = do_pickup_signal_clone;
         let click_tp_signal_clone: Arc<Mutex<bool>> = click_tp_signal_clone;
@@ -466,7 +449,7 @@ fn main() {
                     let mut signal = infer_gap_signal.write().unwrap();
                     warn!("ALT + J with {}", *signal);
                     // let mut signal = infer_gap_signal.write().unwrap();
-                    *signal = *signal + 1;
+                    *signal += 1;
                     warn!("ALT + J 增加 infer gap 至 {} ms", *signal);
                     
                     
@@ -603,37 +586,37 @@ fn main() {
 
                 // do once
                 enigo.mouse_move_to(  
-                    info_for_artifacts.artifact_put_in_x as i32 + info_for_artifacts.left as i32, 
-                    info_for_artifacts.artifact_put_in_y as i32 + info_for_artifacts.top as i32
+                    info_for_artifacts.artifact_put_in_x as i32 + info_for_artifacts.left, 
+                    info_for_artifacts.artifact_put_in_y as i32 + info_for_artifacts.top
                 );
                 enigo.mouse_click(enigo::MouseButton::Left);
                 sleep(100);
                 // warn!("click {}, {}", info_for_artifacts.artifact_put_in_x, info_for_artifacts.artifact_put_in_y);
 
                 enigo.mouse_move_to(
-                    info_for_artifacts.artifact_upgrade_x as i32 + info_for_artifacts.left as i32,
-                    info_for_artifacts.artifact_upgrade_y as i32 + info_for_artifacts.top as i32
+                    info_for_artifacts.artifact_upgrade_x as i32 + info_for_artifacts.left,
+                    info_for_artifacts.artifact_upgrade_y as i32 + info_for_artifacts.top
                 );
                 enigo.mouse_click(enigo::MouseButton::Left);
                 sleep(100);
 
                 enigo.mouse_move_to(
-                    info_for_artifacts.artifact_skip_x as i32 + info_for_artifacts.left as i32,
-                    info_for_artifacts.artifact_skip1_y as i32 + info_for_artifacts.top as i32
+                    info_for_artifacts.artifact_skip_x as i32 + info_for_artifacts.left,
+                    info_for_artifacts.artifact_skip1_y as i32 + info_for_artifacts.top
                 );
                 enigo.mouse_click(enigo::MouseButton::Left);
                 sleep(100);
 
                 enigo.mouse_move_to(
-                    info_for_artifacts.artifact_skip_x as i32 + info_for_artifacts.left as i32,
-                    info_for_artifacts.artifact_skip2_y as i32 + info_for_artifacts.top as i32
+                    info_for_artifacts.artifact_skip_x as i32 + info_for_artifacts.left,
+                    info_for_artifacts.artifact_skip2_y as i32 + info_for_artifacts.top
                 );
                 enigo.mouse_click(enigo::MouseButton::Left);
                 sleep(100);
 
                 enigo.mouse_move_to(  
-                    info_for_artifacts.artifact_put_in_x as i32 + info_for_artifacts.left as i32, 
-                    info_for_artifacts.artifact_put_in_y as i32 + info_for_artifacts.top as i32
+                    info_for_artifacts.artifact_put_in_x as i32 + info_for_artifacts.left, 
+                    info_for_artifacts.artifact_put_in_y as i32 + info_for_artifacts.top
                 );
             }
         ).unwrap();
@@ -665,17 +648,17 @@ fn main() {
         hk.listen();
     });
     // 监视原神进程是否结束
-    let monitor_handel = std::thread::spawn(move ||{
+    let _monitor_handel = std::thread::spawn(move ||{
         loop {
             if is_cloud {
-                let hwnd = match capture::find_window_cloud() {
+                let _hwnd = match capture::find_window_cloud() {
                     Ok(h) => h,
                     Err(_) => {
                         common::error_and_quit_no_input("原神进程已结束");
                     }
                 };
             } else {
-                let hwnd = match capture::find_window_local() {
+                let _hwnd = match capture::find_window_local() {
                     Ok(h) => h,
                     Err(_) => {
                         common::error_and_quit_no_input("原神进程已结束");

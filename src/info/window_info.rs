@@ -71,8 +71,8 @@ impl WindowInfo {
             y / self.height * h
         };
         PickupInfo { 
-            left: left,
-            top: top,
+            left,
+            top,
             width: w as u32,
             height: h as u32,
 

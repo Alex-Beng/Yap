@@ -1,11 +1,5 @@
-use std::collections::HashMap;
-use std::io::Read;
-
-use log::info;
-use log::warn;
 use tract_onnx::prelude::*;
-use tract_onnx::Onnx;
-use serde_json::{Result, Value};
+use serde_json::Value;
 
 use crate::capture::RawImage;
 use image::EncodableLayout;
@@ -23,14 +17,14 @@ pub struct CRNNModel {
 
 impl CRNNModel {
     // 我测，真就不用名字，直接硬编码啊
-    pub fn new(name: String, dict_name: String) -> CRNNModel {
+    pub fn new(_name: String, _dict_name: String) -> CRNNModel {
         // let model = tract_onnx::onnx()
         //     .model_for_path(String::from("models/") + name.as_str()).unwrap()
         //     .with_input_fact(0, InferenceFact::dt_shape(f32::datum_type(), tvec!(1, 1, 32, 384))).unwrap()
         //     .into_optimized().unwrap()
         //     .into_runnable().unwrap();
         // let mut bytes = include_bytes!("../../models/model_acc100-epoch12.onnx");
-        let mut bytes = include_bytes!("../../models/model_training.onnx");
+        let bytes = include_bytes!("../../models/model_training.onnx");
         
         let model = tract_onnx::onnx()
             .model_for_read(&mut bytes.as_bytes()).unwrap()
@@ -52,11 +46,7 @@ impl CRNNModel {
 
         let mut index_2_word: Vec<String> = Vec::new();
         let mut i = 0;
-        loop {
-            let word = match json.get(i.to_string()) {
-                Some(x) => x,
-                None => break,
-            };
+        while let Some(word) = json.get(i.to_string()) {
             index_2_word.push(word.as_str().unwrap().to_string());
             i += 1;
         }
@@ -124,7 +114,7 @@ impl CRNNModel {
         let shape = arr.shape();
 
         // info!("arr shape: {:?}", arr.shape());
-        for i  in 0..5 {
+        for string in &mut strings {
             
             let mut ans = String::new();
             let mut last_word = String::new();
@@ -145,7 +135,7 @@ impl CRNNModel {
 
                 last_word = word.clone();
             }
-            strings[i] = ans;
+            *string = ans;
         }
         
         

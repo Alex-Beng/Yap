@@ -1,13 +1,10 @@
-use image::imageops::colorops::grayscale;
 use image::{RgbImage, GrayImage, ImageBuffer};
-use image::imageops::resize;
 use imageproc::template_matching::{match_template, MatchTemplateMethod, find_extremes};
 use imageproc::{self, contours};
 use imageproc::contrast::adaptive_threshold;
-use log::{info, trace};
+use log::info;
 
 use crate::capture::{RawImage, PixelRect};
-use crate::info;
 
 // 图像上的contour特征，用于contour matching
 #[derive(Debug)]
@@ -185,73 +182,73 @@ impl ContourFeatures {
         feat
     }
 
-    pub fn can_match(&self, other: &Vec<f32>,
+    pub fn can_match(&self, other: &[f32],
         cosine_tolorance: f32,
      ) -> (f32, bool) {
         // let feat_vec1 = self.to_features_vec();
         // let feat_vec2 = other.to_features_vec();
 
-        let cos_simi = cosine_similarity(&self.to_features_vec(), &other);
+        let cos_simi = cosine_similarity(&self.to_features_vec(), other);
         // println!("cos_simi = {}", cos_simi);
         if cos_simi < cosine_tolorance {
-            return (cos_simi, false);
+            (cos_simi, false)
         }
         else {
             // info!("vec: {:?}", self.to_features_vec());
             // info!("vec: {:?}", other.to_features_vec());
             // info!("simi: {}", cos_simi);
-            return (cos_simi, true);
+            (cos_simi, true)
         }
     }
 
-    pub fn can_match_tp(&self, other: &Vec<f32>,
+    pub fn can_match_tp(&self, other: &[f32],
         cosine_tolorance: f32,
      ) -> (f32, bool) {
         // let feat_vec1 = self.to_feature_vec_tp();
         // let feat_vec2 = other;
 
-        let cos_simi = cosine_similarity(&self.to_feature_vec_tp(), &other);
+        let cos_simi = cosine_similarity(&self.to_feature_vec_tp(), other);
         // println!("cos_simi = {}", cos_simi);
         if cos_simi < cosine_tolorance {
-            return (cos_simi, false);
+            (cos_simi, false)
         }
         else {
             // info!("vec: {:?}", self.to_feature_vec_tp());
             // info!("vec: {:?}", other);
             // info!("simi: {}", cos_simi);
-            return (cos_simi, true);
+            (cos_simi, true)
         }
     }
 
     // 累了，居然硬编码的F key的特征
     // 就这样吧
     pub fn to_features_vec(&self) -> Vec<f32> {
-        let mut ans = Vec::new();
-        // ans.push(self.contour_have_father as u32 as f32);
-        // ans.push(self.bbox_wh_ratio / 0.7);
-        // ans.push(self.area_ratio / 0.010997644);
-        ans.push(self.bbox_area_avg_pixel / 255.0 /  0.7003782);
-        ans.push(self.contour_points_avg_pixel / 255.0 /  0.94793975);
-        // ans.push(self.contour_len2_area_ratio / 20.0 /  0.04316346);
-        ans.push(self.father_bbox_wh_ratio / 1.21875);
-        ans
+        vec![
+            // self.contour_have_father as u32 as f32
+            // self.bbox_wh_ratio / 0.7
+            // self.area_ratio / 0.010997644
+            self.bbox_area_avg_pixel / 255.0 /  0.7003782,
+            self.contour_points_avg_pixel / 255.0 /  0.94793975,
+            // self.contour_len2_area_ratio / 20.0 /  0.04316346
+            self.father_bbox_wh_ratio / 1.21875
+        ]
     }
 
     // tp的to vec
     pub fn to_feature_vec_tp(&self) -> Vec<f32> {
-        let mut ans = Vec::new();
-        ans.push(self.bbox_wh_ratio / 7.4126983);
-        ans.push(self.area_ratio / 0.81895614);
-        ans.push(self.bbox_area_avg_pixel / 255.0 / 0.348715843137255);
-        ans.push(self.contour_points_avg_pixel / 255.0 / 0.513257607843137);
-        ans.push(self.contour_len2_area_ratio / 1.1059493);
-        ans
+        vec![
+            self.bbox_wh_ratio / 7.4126983,
+            self.area_ratio / 0.81895614,
+            self.bbox_area_avg_pixel / 255.0 / 0.348_715_84, // clippy said 0.348715843137255 over float literal
+            self.contour_points_avg_pixel / 255.0 / 0.513_257_6,
+            self.contour_len2_area_ratio / 1.1059493,
+        ]
     }
 }
 
 
 #[inline]
-fn cosine_similarity(v1: &Vec<f32>, v2: &Vec<f32>) -> f32 {
+fn cosine_similarity(v1: &[f32], v2: &[f32]) -> f32 {
     let dot_product = v1.iter().zip(v2.iter()).map(|(a, b)| a * b).sum::<f32>();
     let v1_norm = v1.iter().map(|x| x * x).sum::<f32>().sqrt();
     let v2_norm = v2.iter().map(|x| x * x).sum::<f32>().sqrt();
@@ -275,21 +272,17 @@ pub fn raw_to_img(im: &RawImage) -> GrayImage {
     let height = im.h;
     let data = &im.data;
 
-    let img = ImageBuffer::from_fn(width, height, |x, y| {
+    ImageBuffer::from_fn(width, height, |x, y| {
         let index = get_index(width, x, y);
         let p = data[index];
         let pixel = (p * 255.0) as u32;
         let pixel: u8 = if pixel > 255 {
             255
-        } else if pixel < 0 {
-            0
         } else {
             pixel as u8
         };
         image::Luma([pixel])
-    });
-
-    img
+    })
 }
 
 pub fn uint8_raw_to_img(im: &RawImage) -> GrayImage {
@@ -297,20 +290,16 @@ pub fn uint8_raw_to_img(im: &RawImage) -> GrayImage {
     let height = im.h;
     let data = &im.data;
 
-    let img = ImageBuffer::from_fn(width, height, |x, y| {
+    ImageBuffer::from_fn(width, height, |x, y| {
         let index = get_index(width, x, y);
         let pixel =  data[index] as u32;
         let pixel: u8 = if pixel > 255 {
             255
-        } else if pixel < 0 {
-            0
         } else {
             pixel as u8
         };
         image::Luma([pixel])
-    });
-
-    img
+    })
 }
 
 
@@ -322,7 +311,7 @@ pub fn run_match_template(
     threshold: f32,
 ) -> (i32, i32) {
     // info!("{},{} {},{}", image.width(), image.height(), template.width(), template.height());
-    let result = match_template(&image, &template, MatchTemplateMethod::SumOfSquaredErrorsNormalized);
+    let result = match_template(image, template, MatchTemplateMethod::SumOfSquaredErrorsNormalized);
     
     let res_mm = find_extremes(&result);
     let res_x = res_mm.min_value_location.0 as i32;
@@ -344,19 +333,22 @@ pub fn run_match_template_contours_speedup(
     template: &GrayImage,
     threshold: f32,
 ) -> (i32, i32) {
+    // in order to reduce clippy warning
+    let _ = image;
+    let _ = template;
+    let _ = threshold;
     
-
-    return (-1, -1)
+    (-1, -1)
 }
 
 
 pub fn run_contours_cosine_matching(
     image: &GrayImage,
-    template_cosine: &Vec<f32>,
+    template_cosine: &[f32],
     threshold: f32,
 ) -> (i32, i32) {
     let f_area_cap_gray = image;
-    let f_area_cap_thre = adaptive_threshold(&f_area_cap_gray, 14);
+    let f_area_cap_thre = adaptive_threshold(f_area_cap_gray, 14);
     let f_area_contours: Vec<contours::Contour<u32>> = imageproc::contours::find_contours(&f_area_cap_thre);
     
     let mut f_cnt = 0;
@@ -364,12 +356,12 @@ pub fn run_contours_cosine_matching(
     let mut rel_y = -1;
 
     let mut best_match = 0.;
-    let mut best_father_bbox = PixelRect {
-        left: 0,
-        top: 0,
-        width: 0,
-        height: 0,
-    };
+    // let mut best_father_bbox = PixelRect {
+    //     left: 0,
+    //     top: 0,
+    //     width: 0,
+    //     height: 0,
+    // };
 
     // for contour in f_area_contours {
     for i in 0..f_area_contours.len() {
@@ -393,11 +385,11 @@ pub fn run_contours_cosine_matching(
             contour_clone,
             father_contour_clone,
             has_parent,
-            &f_area_cap_gray
+            f_area_cap_gray
         );
         
-        let (cos_simi, _valid) = contour_feat.can_match(&template_cosine, threshold);
-        if contour_feat.contour_have_father == true && _valid {
+        let (cos_simi, _valid) = contour_feat.can_match(template_cosine, threshold);
+        if contour_feat.contour_have_father && _valid {
             f_cnt += 1;
 
             // compute the rel x and y
@@ -417,13 +409,13 @@ pub fn run_contours_cosine_matching(
             // rel_x = 1;
             if cos_simi > best_match {
                 best_match = cos_simi;
-                best_father_bbox = father_contour_bbox;
+                // best_father_bbox = father_contour_bbox;
             }
-
         }
-        
     }
-    return (rel_x, rel_y);
+    // f_cnt
+    info!("f_cnt = {}", f_cnt);
+    (rel_x, rel_y)
 }
 
 
@@ -432,7 +424,7 @@ pub fn run_alpha_triangle_matching(
     offset: u32,
 ) -> (i32, i32) {
     let f_area_cap_gray = image;
-    let f_area_cap_thre = adaptive_threshold(&f_area_cap_gray, 14);
+    let f_area_cap_thre = adaptive_threshold(f_area_cap_gray, 14);
     let f_area_contours: Vec<contours::Contour<u32>> = imageproc::contours::find_contours(&f_area_cap_thre);
     
     let mut f_cnt = 0;
@@ -462,6 +454,7 @@ pub fn run_alpha_triangle_matching(
             rel_y = bbox.top;
         }    
     }
+    info!("f_cnt = {}", f_cnt);
 
     (rel_x, rel_y - offset as i32)
 }
@@ -496,9 +489,9 @@ pub fn run_naive_alpha_triangle_matching(
 
     info!("pixel_avg = {}", pixel_avg);
     // 需要减掉offset，即text高度的一半
-    let y_avg = y_avg - offset as u32;
+    let y_avg = y_avg - offset;
 
-    return  (x_avg as i32, y_avg as i32);
+    (x_avg as i32, y_avg as i32)
 }
 
 

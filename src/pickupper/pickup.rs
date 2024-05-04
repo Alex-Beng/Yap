@@ -1,41 +1,31 @@
-use std::borrow::BorrowMut;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fs::File;
-use std::fs::write;
 use std::io::Read;
-use std::process;
 use std::thread;
 use std::time::SystemTime;
 use std::sync::{Arc, Mutex, RwLock};
 
 
 use crate::common::sleep;
-use crate::inference;
-use crate::inference::img_process::run_alpha_triangle_matching;
-use crate::inference::img_process::run_contours_cosine_matching;
 use crate::inference::img_process::run_naive_alpha_triangle_matching;
-use crate::inference::img_process::{run_match_template, rgb_to_l, ContourFeatures};
-use crate::info;
+use crate::inference::img_process::{rgb_to_l, ContourFeatures};
 use crate::{info::PickupInfo, common};
-use crate::inference::inference::CRNNModel;
+use crate::inference::net_infer::CRNNModel;
 use crate::capture::{self, PixelRect, RawImage};
 
 use image::imageops::{grayscale, self, crop};
-use image::{GrayImage, ImageBuffer, Luma, ColorType, GenericImage, DynamicImage, SubImage};
+use image::{GrayImage, ImageBuffer, Luma, GenericImage, DynamicImage};
 use imageproc::contours;
 use imageproc::contrast::adaptive_threshold;
-use imageproc::definitions::Image;
-use tract_onnx::prelude::*;
 use serde_json;
 use enigo::*;
-use log::{info, warn, trace};
-use winapi::shared::windef::HWND;
+use log::{info, warn};
 
 
 pub struct PickupCofig {
     pub info: PickupInfo,
-    pub hwnd: HWND,
+    pub hwnd: common::WindowHandle,
     pub bw_path: String,
     pub use_l: bool,
     pub press_y: bool,
@@ -53,6 +43,7 @@ pub struct PickupCofig {
     pub single_mode: Arc<Mutex<bool>>,
 }
 
+#[allow(dead_code)]
 pub struct Pickupper {
     model: CRNNModel,
     enigo: Enigo,
@@ -73,7 +64,6 @@ pub struct Pickupper {
 
 impl Pickupper {
     pub fn new(config: PickupCofig) -> Pickupper {
-        let info = &config.info;
         let mut bk_list: HashSet<String> = HashSet::new();
         let mut wt_list: HashSet<String> = HashSet::new();
 
@@ -100,7 +90,7 @@ impl Pickupper {
         // 处理不存在config的异常，不存在则创建
         if !std::path::Path::new(config_list_path.as_str()).exists() {
             
-            let mut file = File::create(config_list_path.as_str()).expect("Failed to create config.json");
+            let _ = File::create(config_list_path.as_str()).expect("Failed to create config.json");
             
             let infer_gap_for_json = *config.infer_gap.read().unwrap();
             let f_inter_for_json = *config.f_inter.read().unwrap();
@@ -206,19 +196,19 @@ impl Pickupper {
             model: CRNNModel::new(String::from("model_training.onnx"), String::from("index_2_word.json")),
             enigo: Enigo::new(),
 
-            f_contour_feat: f_contour_feat,
+            f_contour_feat,
             tp_botton_feat: tp_button_feat,
 
-            word2pick: word2pick,
+            word2pick,
 
-            config: config,
+            config,
 
             last_pickup_loop_cnt: -1,
             last_pickup_name: String::new(),
         }
     }
     
-
+    #[allow(unused_variables, unused_assignments)]
     pub fn start(&mut self) -> ! {
         // 用于秘境挑战邀请的自动点击
         let (tx, rx) = std::sync::mpsc::channel::<DynamicImage>();
@@ -254,7 +244,7 @@ impl Pickupper {
                     //     img.save(format!("dumps4.2/77/{}_0_秘境组队邀请_raw.jpg", cnt)).unwrap();
                     // }
 
-                    if inference_result == "" {
+                    if inference_result.is_empty() {
                         continue;
                     }
                     info!("online challage inference_result: {}", inference_result);
@@ -296,8 +286,7 @@ impl Pickupper {
                 let mut no_father_cnt = 0;
                 let mut best_match = 0.;
 
-                for i in 0..contours.len() {
-                    let contour = &contours[i];
+                for contour in &contours {
                     if contour.parent.is_some() { continue; }
                     let contour_clone = imageproc::contours::Contour {
                         points: contour.points.clone(),
@@ -332,7 +321,7 @@ impl Pickupper {
                 if best_match > 0.7 && do_click {
                     info!("tp button click with simi: {}", best_match);
                     // move to click
-                    enigo_tp.mouse_move_to(botton_click_x as i32, botton_click_y as i32); 
+                    enigo_tp.mouse_move_to(botton_click_x, botton_click_y); 
                     sleep(25);
                     
                     enigo_tp.mouse_click(enigo::MouseButton::Left);
@@ -367,7 +356,7 @@ impl Pickupper {
         // let infer_gap_lock = self.config.infer_gap;
         let mut loop_cnt = -1;
         let mut last_online_challage_time = SystemTime::now();
-        let mut last_tp_click_time = SystemTime::now();
+        let last_tp_click_time = SystemTime::now();
         loop {
             loop_cnt += 1;
             { 
@@ -380,7 +369,7 @@ impl Pickupper {
 
             
             // 截一张全屏
-            let mut game_window_cap_rgba = DynamicImage::ImageRgba8(capture::capture_absolute_image(self.config.hwnd, &game_win_rect).unwrap());
+            let game_window_cap_rgba = DynamicImage::ImageRgba8(capture::capture_absolute_image(self.config.hwnd, &game_win_rect).unwrap());
             // split it to rgb + alpha 
             // convert to rgb
             let mut game_window_cap = game_window_cap_rgba.to_rgb8();
@@ -408,9 +397,9 @@ impl Pickupper {
                     self.config.info.f_area_position.right as u32 - self.config.info.f_area_position.left as u32,
                     self.config.info.f_area_position.bottom as u32 - self.config.info.f_area_position.top as u32).to_image());
                 f_ares_cap_alpha = Some(crop(&mut alpha, 
-                    self.config.info.f_alpha_left as u32,
+                    self.config.info.f_alpha_left,
                     self.config.info.f_area_position.top as u32,
-                    self.config.info.f_area_position.right as u32 - self.config.info.f_alpha_left as u32,
+                    self.config.info.f_area_position.right as u32 - self.config.info.f_alpha_left,
                     self.config.info.f_area_position.bottom as u32 - self.config.info.f_area_position.top as u32).to_image());
             }
             let f_area_cap = f_area_cap.unwrap();
@@ -446,13 +435,11 @@ impl Pickupper {
             let f_area_cap = DynamicImage::ImageRgb8(f_area_cap);
             let f_ares_cap_alpha = GrayImage::from(f_ares_cap_alpha);
             
-            let f_area_cap_gray: GrayImage;
-            if use_l {
-                f_area_cap_gray = rgb_to_l(&f_area_cap.to_rgb8());
-            }
-            else {
-                f_area_cap_gray = grayscale(&f_area_cap);
-            }
+            let f_area_cap_gray: GrayImage = if use_l {
+                rgb_to_l(&f_area_cap.to_rgb8())
+            } else {
+                grayscale(&f_area_cap)
+            };
 
             let temp_match_time = SystemTime::now();
             // f_area_cap_gray.save("farea.jpg").unwrap();
@@ -493,22 +480,21 @@ impl Pickupper {
             let mut yi = 2;
             let mut pk_infer_end = false;
             while ! pk_infer_end {
-                let y_offset = (yi - 2) * self.config.info.pickup_y_gap as i32 + rel_y as i32;
+                let y_offset = (yi - 2) * self.config.info.pickup_y_gap as i32 + rel_y;
 
                 let f_text_cap = crop(&mut game_window_cap,
-                    self.config.info.pickup_x_beg as u32,
-                        (self.config.info.f_area_position.top as i32 + y_offset) as u32,
-                        self.config.info.pickup_x_end as u32 - self.config.info.pickup_x_beg as u32,
+                    self.config.info.pickup_x_beg,
+                        (self.config.info.f_area_position.top + y_offset) as u32,
+                        self.config.info.pickup_x_end - self.config.info.pickup_x_beg,
                         text_h
                     );
                 let f_text_cap = DynamicImage::ImageRgb8(f_text_cap.to_image());
-                let f_text_cap_gray: GrayImage;
-                if use_l {
-                    f_text_cap_gray = rgb_to_l(&f_text_cap.to_rgb8());
+                let f_text_cap_gray: GrayImage = if use_l {
+                    rgb_to_l(&f_text_cap.to_rgb8())
                 }
                 else {
-                    f_text_cap_gray = grayscale(&f_text_cap);
-                }
+                    grayscale(&f_text_cap)
+                };
                 
                 // let otsu_thr = imageproc::contrast::otsu_level(&f_text_cap_gray);
                 // let f_text_cap_bin: ImageBuffer<Luma<u8>, Vec<u8>> = imageproc::contrast::threshold(&f_text_cap_gray, otsu_thr);
@@ -544,10 +530,10 @@ impl Pickupper {
                 // info!("inference 1 time: {}ms", t1.elapsed().unwrap().as_millis());
 
                 // dump 不认识的和需要捡的
-                if dump && inference_result != "" && !self.word2pick.contains_key(&inference_result) || 
+                if dump && !inference_result.is_empty() && !self.word2pick.contains_key(&inference_result) || 
                 dump && self.word2pick.contains_key(&inference_result) && self.word2pick[&inference_result] {
                     // remove ? / : * " < > | \ / in file name
-                    let inference_result = inference_result.replace("?", "").replace("/", "").replace(":", "").replace("*", "").replace("\"", "").replace("<", "").replace(">", "").replace("|", "").replace("\\", "").replace("/", "");
+                    let inference_result = inference_result.replace(['?', '/', ':', '*', '"', '<', '>', '|', '\\', '/'], "");
                     f_text_cap.save(format!("{}/{}_{}_{}_raw.jpg", dump_path, cnt, yi, inference_result)).unwrap();
                     // f_text_cap_bin.save(format!("{}/{}_{}_{}_bin.jpg", dump_path, cnt, yi, inference_result)).unwrap();
                     cnt += 1;
@@ -559,7 +545,7 @@ impl Pickupper {
                     let single_mode = *self.config.single_mode.lock().unwrap();
                     if single_mode {
                         // info!("单次模式，推理结果: {}", res_strings[2]);
-                        if res_strings[2] == "" {
+                        if res_strings[2].is_empty() {
                             pk_infer_end = true;
                         }
                         break;
@@ -570,13 +556,13 @@ impl Pickupper {
                 match yi {
                     2 => {
                         yi = 1;
-                        if res_strings[2] == "" {
+                        if res_strings[2].is_empty() {
                             pk_infer_end = true;
                             warn!("中间为空，不拾取");
                         }
                     }
                     1 => {
-                        if res_strings[1] == "" {
+                        if res_strings[1].is_empty() {
                             yi = 3;
                         }
                         else {
@@ -587,7 +573,7 @@ impl Pickupper {
                         yi = 3;
                     }
                     3 => {
-                        if res_strings[3] == "" {
+                        if res_strings[3].is_empty() {
                             break;
                         }
                         else {
@@ -618,6 +604,7 @@ impl Pickupper {
         
         }
     }
+    #[allow(clippy::collapsible_else_if)]
     pub fn do_pickups(&mut self, infer_res: Vec<String>, loop_cnt: i32) {
         let mut infer_res = infer_res;
         let do_pk = *self.config.do_pickup.lock().unwrap();
@@ -636,7 +623,7 @@ impl Pickupper {
         // }
         let mut ops: Vec<i32> = Vec::new();
 
-        let mut is_pks = vec![0, 0, 0, 0, 0];
+        let mut is_pks = [0, 0, 0, 0, 0];
         let mut need_pks = vec![0, 0, 0, 0, 0];
         let mut need_pks_cnt = 0;
         let mut all_is_need = true;
@@ -644,7 +631,7 @@ impl Pickupper {
         let mut is_all_investigate = self.word2pick["调查"];
         for i in 0..5 {
             let s = &infer_res[i as usize];
-            if s != "" {
+            if !s.is_empty() {
                 is_pks[i as usize] = 1;
                 if s != "调查" {
                     is_all_investigate = false;
@@ -695,7 +682,7 @@ impl Pickupper {
             }
             else {
                 // 11100 01100 
-                if up2sum == 2 && dn2sum == 0 || up2sum == 1 && dn2sum == 0 {
+                if (up2sum == 2 || up2sum == 1) && dn2sum == 0 {
                 }
                 // not 00100
                 else if up2sum != 0 {
@@ -722,7 +709,7 @@ impl Pickupper {
 
                 need_pks_sum -= 1;
                 if t_curr_f != 0 && t_curr_f == need_pks.len()-1 
-                || t_curr_f != 0 && t_curr_f+1 < infer_res.len() && infer_res[t_curr_f+1] == "" {
+                || t_curr_f != 0 && t_curr_f+1 < infer_res.len() && infer_res[t_curr_f+1].is_empty() {
                     t_curr_f -= 1;
                 }
                 need_pks.remove(t_curr_f);
@@ -730,8 +717,8 @@ impl Pickupper {
 
             }
             else {
-                for i in 0..need_pks.len() {
-                    if need_pks[i] == 1 {
+                for (i, nd_pk) in need_pks.iter().enumerate() {
+                    if *nd_pk == 1 {
                         if i < t_curr_f {
                             if t_curr_f - i == 1 {
                                 ops.push(1);

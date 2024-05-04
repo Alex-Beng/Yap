@@ -6,19 +6,37 @@ use std::thread;
 
 use crate::dto::GithubTag;
 
-use log::{error, info, warn, LevelFilter};
+use log::error;
 use reqwest::blocking::Client;
-use reqwest::header::{HeaderMap, HeaderValue, USER_AGENT};
+use reqwest::header::{HeaderValue, USER_AGENT};
+use winapi::shared::windef::HWND;
 use winapi::shared::minwindef::BOOL;
 use winapi::um::securitybaseapi::{AllocateAndInitializeSid, CheckTokenMembership, FreeSid};
 use winapi::um::winnt::{SID_IDENTIFIER_AUTHORITY, SECURITY_NT_AUTHORITY, PSID, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS};
 
+#[derive(Clone, Copy)]
+pub struct  WindowHandle {
+    pub hwnd: HWND,
+}
 
+impl WindowHandle {
+    pub fn new(hwnd: HWND) -> Option<Self> {
+        if hwnd.is_null() {
+            None
+        } else {
+            Some(WindowHandle { hwnd })
+        }
+    }
+    
+    pub fn as_ptr(&self) -> HWND {
+        self.hwnd
+    }
+}
 
 pub fn error_and_quit(msg: &str) -> ! {
     error!("{}, 按Enter退出", msg);
     let mut s: String = String::new();
-    stdin().read_line(&mut s);
+    let _ = stdin().read_line(&mut s);
     process::exit(0);
 }
 
@@ -69,11 +87,11 @@ pub fn is_admin() -> bool {
 // 版本更新
 static mut VERSION: String = String::new();
 unsafe fn get_version_unsafe() -> String {
-    if VERSION.len() == 0 {
+    if VERSION.is_empty() {
         let s = include_str!("../../Cargo.toml");
         for line in s.lines() {
             if line.starts_with("version = ") {
-                let temp = line.split("\"").collect::<Vec<_>>();
+                let temp = line.split('\"').collect::<Vec<_>>();
                 let version = String::from(temp[temp.len() - 2]);
                 VERSION = version;
             }
@@ -97,14 +115,14 @@ pub fn check_update() -> Option<String> {
         .header(USER_AGENT, HeaderValue::from_static("reqwest"))
         .send().ok()?.json::<Vec<GithubTag>>().ok()?;
 
-    let latest = if resp.len() == 0 {
+    let latest = if resp.is_empty() {
         return None
     } else {
         resp[0].name.clone()
     };
     let latest = &latest[1..];
 
-    let latest_sem: semver::Version = semver::Version::parse(&latest).unwrap();
+    let latest_sem: semver::Version = semver::Version::parse(latest).unwrap();
     let current_sem: semver::Version = semver::Version::parse(&get_version()).unwrap();
 
     if latest_sem > current_sem {

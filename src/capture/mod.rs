@@ -1,23 +1,19 @@
 #[cfg(windows)] extern crate winapi;
-use std::io::Error;
 use std::ffi::OsStr;
 use std::iter::once;
 use std::os::windows::ffi::OsStrExt;
 use std::ptr::null_mut;
-use std::mem::{size_of, transmute};
+use std::mem::size_of;
 
 use winapi::um::errhandlingapi::GetLastError;
 use winapi::um::winuser::{
     FindWindowW,
     GetDC,
     ReleaseDC,
-    SetThreadDpiAwarenessContext,
     GetClientRect,
-    SetForegroundWindow,
     ClientToScreen
 };
 use winapi::shared::windef::{HWND, RECT as WinRect, POINT as WinPoint, HDC, HBITMAP};
-use winapi::shared::ntdef::NULL;
 use winapi::um::wingdi::{
     CreateCompatibleDC,
     DeleteObject,
@@ -34,17 +30,13 @@ use winapi::um::wingdi::{
     DIB_RGB_COLORS,
 };
 use winapi::ctypes::c_void;
-use winapi::um::winbase::{GlobalAlloc, GHND, GlobalLock};
 
 use image::{ImageBuffer, GrayImage};
 
-use winapi::shared::windef::DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE;
+use crate::common::WindowHandle;
 use crate::common::sleep;
-use crate::info;
 
-use self::winapi::um::wingdi::{GetDeviceCaps, HORZRES};
-use self::winapi::shared::windef::DPI_AWARENESS_CONTEXT_SYSTEM_AWARE;
-use log::{info, warn};
+use log::warn;
 
 #[derive(Debug)]
 pub struct PixelRect {
@@ -79,21 +71,17 @@ pub fn raw_to_img(im: &RawImage) -> GrayImage {
     let height = im.h;
     let data = &im.data;
 
-    let img = ImageBuffer::from_fn(width, height, |x, y| {
+    ImageBuffer::from_fn(width, height, |x, y| {
         let index = get_index(width, x, y);
         let p = data[index];
         let pixel = (p * 255.0) as u32;
         let pixel: u8 = if pixel > 255 {
             255
-        } else if pixel < 0 {
-            0
         } else {
             pixel as u8
         };
         image::Luma([pixel])
-    });
-
-    img
+    })
 }
 
 pub fn uint8_raw_to_img(im: &RawImage) -> GrayImage {
@@ -101,30 +89,26 @@ pub fn uint8_raw_to_img(im: &RawImage) -> GrayImage {
     let height = im.h;
     let data = &im.data;
 
-    let img = ImageBuffer::from_fn(width, height, |x, y| {
+    ImageBuffer::from_fn(width, height, |x, y| {
         let index = get_index(width, x, y);
         let pixel =  data[index] as u32;
         let pixel: u8 = if pixel > 255 {
             255
-        } else if pixel < 0 {
-            0
         } else {
             pixel as u8
         };
         image::Luma([pixel])
-    });
-
-    img
+    })
 }
 
 
 impl RawImage {
     pub fn to_gray_image(&self) -> GrayImage {
-        raw_to_img(&self)
+        raw_to_img(self)
     }
 
     pub fn grayscale_to_gray_image(&self) -> GrayImage {
-        uint8_raw_to_img(&self)
+        uint8_raw_to_img(self)
     }
 }
 
@@ -160,9 +144,9 @@ pub fn find_window_cloud() -> Result<HWND, String> {
 }
 
 // 获取窗口的尺寸
-pub fn get_client_rect(hwnd: HWND) -> Result<PixelRect, String> {
+pub fn get_client_rect(hwnd: WindowHandle) -> Result<PixelRect, String> {
     unsafe {
-        get_client_rect_unsafe(hwnd)
+        get_client_rect_unsafe(hwnd.as_ptr())
     }
 }
 
@@ -174,7 +158,7 @@ unsafe fn get_client_rect_unsafe(hwnd: HWND) -> Result<PixelRect, String> {
         bottom: 0,
     };
     // 尝试多次获取rect
-    let mut sucess = 0;
+    let mut sucess;
     loop {
         sucess = GetClientRect(hwnd, &mut rect);
         if sucess != 0 {
@@ -193,7 +177,6 @@ unsafe fn get_client_rect_unsafe(hwnd: HWND) -> Result<PixelRect, String> {
         y: 0,
     };
 
-    sucess = 0;
     loop {
         sucess = ClientToScreen(hwnd, &mut point as *mut WinPoint);
         if sucess != 0 {
@@ -216,7 +199,7 @@ unsafe fn get_client_rect_unsafe(hwnd: HWND) -> Result<PixelRect, String> {
 unsafe fn unsafe_capture(hwnd: HWND, rect: &PixelRect) -> Result<Vec<u8>, String> {
     // copy from cvat
     use winapi::um::winuser::{IsWindow, GetWindowRect};
-    if hwnd == null_mut() {
+    if hwnd.is_null() {
         return Err(String::from("窗口句柄失效"));
     }
     if IsWindow(hwnd) == 0 {
@@ -228,7 +211,7 @@ unsafe fn unsafe_capture(hwnd: HWND, rect: &PixelRect) -> Result<Vec<u8>, String
         right: rect.left + rect.width,
         bottom: rect.top + rect.height,
     });
-    let rect_ptr: *mut WinRect = Box::into_raw(rect_winrect) as *mut WinRect;
+    let rect_ptr: *mut WinRect = Box::into_raw(rect_winrect);
     if GetWindowRect(hwnd, rect_ptr) == 0 {
         return Err(String::from("无效句柄或指定句柄所指向窗口不存在"));
     }
@@ -266,7 +249,7 @@ unsafe fn unsafe_capture(hwnd: HWND, rect: &PixelRect) -> Result<Vec<u8>, String
     }
 
     let mut bitmap: BITMAP = BITMAP {
-        bmBits: 0 as *mut c_void,
+        bmBits: std::ptr::null_mut::<c_void>(),
         bmBitsPixel: 0,
         bmPlanes: 0,
         bmWidthBytes: 0,
@@ -332,14 +315,14 @@ unsafe fn unsafe_capture(hwnd: HWND, rect: &PixelRect) -> Result<Vec<u8>, String
 }
 
 #[cfg(windows)]
-pub fn capture_absolute(hwnd: HWND, rect: &PixelRect) -> Result<Vec<u8>, String> {
+pub fn capture_absolute(hwnd: WindowHandle, rect: &PixelRect) -> Result<Vec<u8>, String> {
     unsafe {
-        unsafe_capture(hwnd, &rect)
+        unsafe_capture(hwnd.as_ptr(), rect)
     }
 }
 
 #[cfg(windows)]
-pub fn capture_absolute_image(hwnd: HWND, rect: &PixelRect) -> Result<image::RgbaImage, String> {
+pub fn capture_absolute_image(hwnd: WindowHandle, rect: &PixelRect) -> Result<image::RgbaImage, String> {
     let raw: Vec<u8> = match capture_absolute(hwnd, rect) {
         Err(s) => {
             return Err(s);
@@ -355,7 +338,7 @@ pub fn capture_absolute_image(hwnd: HWND, rect: &PixelRect) -> Result<image::Rgb
         height,
         move |x, y| {
             let y = height - y - 1;
-            let b = raw[((y * width + x) * 4 + 0) as usize];
+            let b = raw[((y * width + x) * 4) as usize];
             let g = raw[((y * width + x) * 4 + 1) as usize];
             let r = raw[((y * width + x) * 4 + 2) as usize];
             let a = raw[((y * width + x) * 4 + 3) as usize];
