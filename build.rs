@@ -18,10 +18,10 @@ fn main() {
     // }
 
     let mut version = 0;
-    version |= 0 << 48;
-    version |= 2 << 32;
-    version |= 2 << 16;
-    version |= 0;
+    version |= 4 << 48;
+    version |= 6 << 32;
+    version |= 0 << 16;
+    version |= 71;
 
     res.set_version_info(VersionInfo::FILEVERSION, version)
         .set_version_info(VersionInfo::PRODUCTVERSION, version)
