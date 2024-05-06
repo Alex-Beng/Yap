@@ -703,7 +703,7 @@ impl Pickupper {
                 }
 
                 ops.push(0);
-                self.last_pickup_name = infer_res[t_curr_f].clone();
+                self.last_pickup_name.clone_from(&infer_res[t_curr_f]);
                 self.last_pickup_loop_cnt = loop_cnt;
             
 

@@ -87,8 +87,7 @@ impl CRNNModel {
             if *word != last_word && word != "|" {
                 ans = ans + word;
             }
-
-            last_word = word.clone();
+            last_word.clone_from(word);
         }
 
         ans
@@ -133,7 +132,7 @@ impl CRNNModel {
                     ans = ans + word;
                 }
 
-                last_word = word.clone();
+                last_word.clone_from(word);
             }
             *string = ans;
         }
