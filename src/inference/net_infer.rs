@@ -1,9 +1,9 @@
+use std::fs;
+
 use tract_onnx::prelude::*;
 use serde_json::Value;
 
 use crate::capture::RawImage;
-use image::EncodableLayout;
-
 
 type ModelType = RunnableModel<TypedFact, Box<dyn TypedOp>, Graph<TypedFact, Box<dyn TypedOp>>>;
 
@@ -17,13 +17,9 @@ pub struct CRNNModel {
 
 impl CRNNModel {
     // 我测，真就不用名字，直接硬编码啊
+    // update: 这里硬编码无所谓，是编译期进去的
     pub fn new(_name: String, _dict_name: String) -> CRNNModel {
-        // let model = tract_onnx::onnx()
-        //     .model_for_path(String::from("models/") + name.as_str()).unwrap()
-        //     .with_input_fact(0, InferenceFact::dt_shape(f32::datum_type(), tvec!(1, 1, 32, 384))).unwrap()
-        //     .into_optimized().unwrap()
-        //     .into_runnable().unwrap();
-        // let mut bytes = include_bytes!("../../models/model_acc100-epoch12.onnx");
+        /* 
         let bytes = include_bytes!("../../models/model_training.onnx");
         
         let model = tract_onnx::onnx()
@@ -43,6 +39,22 @@ impl CRNNModel {
         // let content = utils::read_file_to_string(String::from("models/index_2_word.json"));
         let content = String::from(include_str!("../../models/index_2_word.json"));
         let json: Value = serde_json::from_str(content.as_str()).unwrap();
+        */
+
+        let model = tract_onnx::onnx()
+            .model_for_path("./model_training.onnx").unwrap()
+            .with_input_fact(0, InferenceFact::dt_shape(f32::datum_type(), tvec!(1, 1, 32, 384))).unwrap()
+            .into_optimized().unwrap()
+            .into_runnable().unwrap();
+        let model5 = tract_onnx::onnx()
+            .model_for_path("./model_training.onnx").unwrap()
+            .with_input_fact(0, InferenceFact::dt_shape(f32::datum_type(), tvec!(5, 1, 32, 384))).unwrap()
+            .into_optimized().unwrap()
+            .into_runnable().unwrap();
+        let content = fs::read_to_string("./index_2_word.json").unwrap();
+        let json: Value = serde_json::from_str(content.as_str()).unwrap();
+
+
 
         let mut index_2_word: Vec<String> = Vec::new();
         let mut i = 0;

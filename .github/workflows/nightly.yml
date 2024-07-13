@@ -29,7 +29,7 @@ jobs:
       - name: Create zip file
         run : |
           cd target/release
-          Compress-Archive -Path .\yap.exe -DestinationPath ./yap.zip
+          Compress-Archive -Path ./yap.exe, ./model_training.onnx, ./index_2_word.json -DestinationPath ./yap.zip
       
       - name: Create release
         uses: softprops/action-gh-release@v1
