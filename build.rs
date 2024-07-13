@@ -28,7 +28,7 @@ fn main() {
     let files_to_copy = vec![
         "models/model_training.onnx", 
         "models/index_2_word.json",
-        "config.json"
+        // "config.json"
         ];
 
     // 复制每个文件到可执行文件输出目录
