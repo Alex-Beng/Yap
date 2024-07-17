@@ -762,7 +762,8 @@ impl Pickupper {
                 sleep(f_gap);
             }
             else {
-                self.enigo.mouse_scroll_y(op);
+                // 草为什么不同电脑上翻和下翻不一样
+                self.enigo.mouse_scroll_y(-op);
                 // sleep(40);
                 sleep(scroll_gap);
             }
