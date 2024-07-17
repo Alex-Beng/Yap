@@ -1,6 +1,6 @@
 [package]
 name = "yap"
-version = "4.7.0"
+version = "4.8.0"
 edition = "2021"
 build = "build.rs"
 
