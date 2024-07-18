@@ -18,8 +18,8 @@ jobs:
 
       - name: Setup Rust Toolchain
         run: |
-          rustup toolchain install 1.72.0
-          rustup default 1.72.0
+          rustup toolchain install nightly
+          rustup default nightly
           
       - name: cargo check
         run: cargo check
