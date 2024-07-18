@@ -38,4 +38,4 @@ winres = "0.1.12"
 [profile.release]
 panic = "abort"
 strip = true
-codegen-units = 1
+codegen-units = 4
