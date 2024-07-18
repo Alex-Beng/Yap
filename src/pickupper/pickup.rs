@@ -21,6 +21,8 @@ use imageproc::contrast::adaptive_threshold;
 use serde_json;
 use enigo::*;
 use log::{info, warn};
+use enigo::Coordinate;
+use enigo::Direction;
 
 
 pub struct PickupCofig {
@@ -194,7 +196,7 @@ impl Pickupper {
         
         Pickupper {
             model: CRNNModel::new(String::from("model_training.onnx"), String::from("index_2_word.json")),
-            enigo: Enigo::new(),
+            enigo: Enigo::new(&Settings::default()).unwrap(),
 
             f_contour_feat,
             tp_botton_feat: tp_button_feat,
@@ -216,7 +218,7 @@ impl Pickupper {
         let (tx_tp, rx_tp) = std::sync::mpsc::channel::<DynamicImage>();
 
         let model_online = CRNNModel::new(String::from("model_training.onnx"), String::from("index_2_word.json"));
-        let mut enigo_online = Enigo::new();
+        let mut enigo_online = Enigo::new(&Settings::default()).unwrap();
         let online_confirm_x = self.config.info.online_challange_confirm_x + self.config.info.left as u32;
         let online_confirm_y = self.config.info.online_challange_confirm_y + self.config.info.top as u32;
         if self.config.press_y {
@@ -250,9 +252,9 @@ impl Pickupper {
                     info!("online challage inference_result: {}", inference_result);
                     if inference_result == "秘境挑战组队邀请" || inference_result == "进入世界申请（" {
                         // press Y first
-                        enigo_online.key_down(enigo::Key::Layout('y'));
+                        enigo_online.key(Key::Y, Direction::Press).unwrap();
                         sleep(50);
-                        enigo_online.key_up(enigo::Key::Layout('y'));
+                        enigo_online.key(Key::Y, Direction::Release).unwrap();
 
                         // move mouse to the right position
                         // enigo_online.mouse_move_to(online_confirm_x as i32, online_confirm_y as i32);
@@ -267,7 +269,7 @@ impl Pickupper {
         }
 
         let botton_feat = self.tp_botton_feat.clone();
-        let mut enigo_tp = Enigo::new();
+        let mut enigo_tp = Enigo::new(&Settings::default()).unwrap();
         let botton_click_x = 
             (self.config.info.tp_botton_pos.left + self.config.info.tp_botton_pos.right) / 2 + self.config.info.left;
         let botton_click_y =
@@ -321,10 +323,10 @@ impl Pickupper {
                 if best_match > 0.7 && do_click {
                     info!("tp button click with simi: {}", best_match);
                     // move to click
-                    enigo_tp.mouse_move_to(botton_click_x, botton_click_y); 
+                    enigo_tp.move_mouse(botton_click_x as i32, botton_click_y as i32, Coordinate::Abs).unwrap();
                     sleep(25);
                     
-                    enigo_tp.mouse_click(enigo::MouseButton::Left);
+                    enigo_tp.button(Button::Left, Direction::Click).unwrap();
                     // sleep(500);
                 }
 
@@ -611,7 +613,7 @@ impl Pickupper {
         let f_inter = *self.config.f_inter.read().unwrap();
         let f_gap = *self.config.f_gap.read().unwrap();
         let scroll_gap = *self.config.scroll_gap.read().unwrap();
-        let f_truly_key = enigo::Key::Layout(self.config.pick_key.to_ascii_lowercase());
+        let f_truly_key = Key::Unicode(self.config.pick_key.to_ascii_lowercase());
 
         // 规划的最终动作
         // 0: do F
@@ -654,16 +656,16 @@ impl Pickupper {
             warn!("仅有所需/调查点，彻底疯狂！， F for {}(10) times", f_times);
             for _ in 0..10 {
                 // copy from logi macro
-                self.enigo.mouse_scroll_y(1);
+                self.enigo.scroll(1, Axis::Vertical).unwrap();
                 sleep(10);
-                self.enigo.key_down(f_truly_key);
+                self.enigo.key(f_truly_key, Direction::Press).unwrap();
                 sleep(10);
-                self.enigo.key_up(f_truly_key);
+                self.enigo.key(f_truly_key, Direction::Release).unwrap();
                 sleep(10);
-                self.enigo.mouse_scroll_y(-1);
-                self.enigo.key_down(f_truly_key);
+                self.enigo.scroll(-1, Axis::Vertical).unwrap();
+                self.enigo.key(f_truly_key, Direction::Press).unwrap();
                 sleep(10);
-                self.enigo.key_up(f_truly_key);
+                self.enigo.key(f_truly_key, Direction::Release).unwrap();
             }
             return;
         }
@@ -754,16 +756,16 @@ impl Pickupper {
 
         for op in ops {
             if op == 0 {
-                self.enigo.key_down(f_truly_key);
+                self.enigo.key(f_truly_key, Direction::Press).unwrap();
                 // sleep(50);
                 sleep(f_inter);
-                self.enigo.key_up(f_truly_key);
+                self.enigo.key(f_truly_key, Direction::Release).unwrap();
                 // sleep(90);
                 sleep(f_gap);
             }
             else {
                 // 草为什么不同电脑上翻和下翻不一样
-                self.enigo.mouse_scroll_y(-op);
+                self.enigo.scroll(-op, Axis::Vertical).unwrap();
                 // sleep(40);
                 sleep(scroll_gap);
             }

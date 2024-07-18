@@ -11,16 +11,16 @@ LegalCopyright = "Copyright Alex-Beng © 2024"
 FileDescription = "Yap for Genshin"
 
 [dependencies]
-image = "0.24.6"
-imageproc = "0.23.0"
+image = "0.25.1"
+imageproc = "0.25.0"
 rayon = "1.5.1"
 serde_json = "1.0.68"
 serde = { version = "1.0.130", features = ["derive"]}
-reqwest = { version = "0.11", features = ["blocking", "json"] }
+reqwest = { version = "0.12.5", features = ["blocking", "json"] }
 log = "0.4.14"
-tract-onnx = "0.15.4"
-env_logger = "0.10.0"
-enigo = "0.1.2"
+tract-onnx = "0.21.5"
+env_logger = "0.11.3"
+enigo = "0.2.1"
 clap = "2.33.3"
 semver = "1.0.7"
 hotkey = "0.3.1"
@@ -36,8 +36,6 @@ winapi = { version = "0.3.9", features = ["errhandlingapi", "winuser", "winbase"
 winres = "0.1.12"
 
 [profile.release]
-lto = true
 panic = "abort"
 strip = true
-opt-level = 3
 codegen-units = 1

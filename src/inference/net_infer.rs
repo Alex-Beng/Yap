@@ -78,7 +78,7 @@ impl CRNNModel {
             img.data[index as usize]
         }).into();
 
-        let result = self.model.run(tvec!(tensor)).unwrap();
+        let result = self.model.run(tvec!(tensor.into())).unwrap();
         let arr = result[0].to_array_view::<f32>().unwrap();
 
         let shape = arr.shape();
@@ -119,7 +119,7 @@ impl CRNNModel {
             imgs[i].data[index as usize]
         }).into();
 
-        let result = self.model5.run(tvec!(tensor)).unwrap();
+        let result = self.model5.run(tvec!(tensor.into())).unwrap();
         let arr = result[0].to_array_view::<f32>().unwrap();
 
         let shape = arr.shape();
