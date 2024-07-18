@@ -5,7 +5,6 @@ use std::fs;
 use std::sync::{Arc, Mutex, RwLock};
 use std::ptr::null_mut;
 
-use enigo::MouseControllable;
 use yap::capture;
 use yap::common::{self, sleep};
 use yap::info;
@@ -306,8 +305,8 @@ fn main() {
 
     let single_md_signal_clone = single_md_signal.clone();
 
-    let info_for_artifacts = info.clone();
-    
+    // 弃用
+    // let info_for_artifacts = info.clone();
 
     let pk_config = PickupCofig {
         info,
@@ -580,44 +579,44 @@ fn main() {
             hotkey::modifiers::ALT,
             'B' as u32, 
             move || {
-                warn!("ALT + B 固定动作强化圣遗物");
+                warn!("ALT + B 固定动作强化圣遗物 已经弃用！！！");
 
-                let mut enigo = enigo::Enigo::new();
+                // let mut enigo = enigo::Enigo::new();
 
-                // do once
-                enigo.mouse_move_to(  
-                    info_for_artifacts.artifact_put_in_x as i32 + info_for_artifacts.left, 
-                    info_for_artifacts.artifact_put_in_y as i32 + info_for_artifacts.top
-                );
-                enigo.mouse_click(enigo::MouseButton::Left);
-                sleep(100);
-                // warn!("click {}, {}", info_for_artifacts.artifact_put_in_x, info_for_artifacts.artifact_put_in_y);
+                // // do once
+                // enigo.mouse_move_to(  
+                //     info_for_artifacts.artifact_put_in_x as i32 + info_for_artifacts.left, 
+                //     info_for_artifacts.artifact_put_in_y as i32 + info_for_artifacts.top
+                // );
+                // enigo.mouse_click(enigo::MouseButton::Left);
+                // sleep(100);
+                // // warn!("click {}, {}", info_for_artifacts.artifact_put_in_x, info_for_artifacts.artifact_put_in_y);
 
-                enigo.mouse_move_to(
-                    info_for_artifacts.artifact_upgrade_x as i32 + info_for_artifacts.left,
-                    info_for_artifacts.artifact_upgrade_y as i32 + info_for_artifacts.top
-                );
-                enigo.mouse_click(enigo::MouseButton::Left);
-                sleep(100);
+                // enigo.mouse_move_to(
+                //     info_for_artifacts.artifact_upgrade_x as i32 + info_for_artifacts.left,
+                //     info_for_artifacts.artifact_upgrade_y as i32 + info_for_artifacts.top
+                // );
+                // enigo.mouse_click(enigo::MouseButton::Left);
+                // sleep(100);
 
-                enigo.mouse_move_to(
-                    info_for_artifacts.artifact_skip_x as i32 + info_for_artifacts.left,
-                    info_for_artifacts.artifact_skip1_y as i32 + info_for_artifacts.top
-                );
-                enigo.mouse_click(enigo::MouseButton::Left);
-                sleep(100);
+                // enigo.mouse_move_to(
+                //     info_for_artifacts.artifact_skip_x as i32 + info_for_artifacts.left,
+                //     info_for_artifacts.artifact_skip1_y as i32 + info_for_artifacts.top
+                // );
+                // enigo.mouse_click(enigo::MouseButton::Left);
+                // sleep(100);
 
-                enigo.mouse_move_to(
-                    info_for_artifacts.artifact_skip_x as i32 + info_for_artifacts.left,
-                    info_for_artifacts.artifact_skip2_y as i32 + info_for_artifacts.top
-                );
-                enigo.mouse_click(enigo::MouseButton::Left);
-                sleep(100);
+                // enigo.mouse_move_to(
+                //     info_for_artifacts.artifact_skip_x as i32 + info_for_artifacts.left,
+                //     info_for_artifacts.artifact_skip2_y as i32 + info_for_artifacts.top
+                // );
+                // enigo.mouse_click(enigo::MouseButton::Left);
+                // sleep(100);
 
-                enigo.mouse_move_to(  
-                    info_for_artifacts.artifact_put_in_x as i32 + info_for_artifacts.left, 
-                    info_for_artifacts.artifact_put_in_y as i32 + info_for_artifacts.top
-                );
+                // enigo.mouse_move_to(  
+                //     info_for_artifacts.artifact_put_in_x as i32 + info_for_artifacts.left, 
+                //     info_for_artifacts.artifact_put_in_y as i32 + info_for_artifacts.top
+                // );
             }
         ).unwrap();
 
